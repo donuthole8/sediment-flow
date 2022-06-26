@@ -27,7 +27,7 @@ def detect_flow(deg):
 	# 注目画素からの移動画素
 	dx, dy = 0, 0
 	if   (math.isnan(deg)):
-		return np.nan
+		return np.nan, np.nan
 	elif (deg > 337.5) or  (deg <= 22.5):
 		dx, dy = 0, 1
 	elif (deg > 22.5)  and (deg <= 67.5):
@@ -45,16 +45,16 @@ def detect_flow(deg):
 	elif (deg > 292.5) and (deg <= 337.5):
 		dx, dy = -1, 1
 
-	print("--------------")
-
 	return dx, dy
 
 
-def estimate_flow(dsm, deg):
+def estimate_flow(dsm, deg, img):
 	"""
 	流出方向の予測
 	
+	dsm: 標高データ
 	deg: 傾斜方向データ
+	img: 画像データ
 	"""
 	# 領域データ読み込み
 	with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
@@ -77,27 +77,42 @@ def estimate_flow(dsm, deg):
 		## 領域内での→を付けたい！！
 		## 下端まで〜
 
+		x, y = cx, cy
+
 		# 傾斜方向の標高
-		while True:
+		for i in range(0, 30):
 			# 注目領域の重心標高から傾斜方向を探査
 			dx, dy = detect_flow(deg[cy, cx])
+			x, y = x + dx, y + dy
 
-			cx, cy = cx + dx, cy + dy
-			print(cx,cy)
-
-			if ((dsm[cy, cx]) > pix) or (math.isnan(dx)):
+			# nanだった場合
+			if (math.isnan(dx)):
 				break
-			
-			
+			# 標高が上がった場合
+			if ((dsm[y, x]) > pix):
+				break
 
+		# print("---???", x,y, cx, cy)
+		# 流出先の重心座標
+		# _cx, _cy = int(area_list[m][2]), int(area_list[m][3])
 
+		print(x, y)
 
-		# downstread_pix = dsm[]
-
-
-		sub_elevation = dsm_sub[cy, cx][0]
-
-
+		try:
+			if (i > 7):
+				# 矢印の描画
+				cv2.arrowedLine(
+					img=img,            # 画像
+					pt1=(cx, cy),       # 始点
+					pt2=(x, y),         # 終点
+					color=(20,20,180),  # 色
+					thickness=3,        # 太さ
+					tipLength=0.3         # 矢先の長さ
+				)
+		except:
+			pass
+	
+	cv2.imwrite("mapdd.png", img)
 
 def main():
 	"""
@@ -113,7 +128,7 @@ def main():
 	dsm  = tif.load_tif(path1).astype(np.float32)
 	deg  = tif.load_tif(path2).astype(np.float32)
 	mask = cv2.imread(path3, cv2.IMREAD_GRAYSCALE)
-	img  = cv2.imread(path4)
+	org_img  = cv2.imread(path4)
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
@@ -126,7 +141,7 @@ def main():
 	# 土砂領域以外の除去
 	print("# 植生領域の除去")
 	# img = process.remove_vegitation(img)
-	img = process.remove_black_pix(img, "./outputs/vegitation.png")
+	img = process.remove_black_pix(org_img, "./outputs/vegitation.png")
 
 	# カラー画像の領域分割
 	print("# 土砂領域の領域分割")
@@ -140,4 +155,4 @@ def main():
 	# driver.extract_region(img, regions_num)
 
 	# 流出推定
-	estimate_flow(dsm, deg)
+	estimate_flow(dsm, deg, org_img)
