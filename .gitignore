@@ -1,0 +1,33 @@
+# images
+inputs/*
+inputs_trim/*
+inputs_re/*
+outputs/*
+piv_out/*
+
+# area_data
+area_data/*
+
+# data
+*.tif
+*.png
+*.csv
+*.txt
+*.xml
+
+# pymeanshift
+pymeanshift/*
+
+# test-code
+modules/backup.py
+modules/test_code.py
+
+# .vscode
+.vscode
+
+# __pycache__
+*.pyc
+
+# .DS_Store
+*/.DS_Store
+.DS_Store
