@@ -38,8 +38,10 @@ path7 = './inputs_re/heli_img.tif'
 
 def piv_ana():
 	# 読み込み
-	uav  = cv2.imread(path6)
-	heli = cv2.imread(path7)
+	# uav  = cv2.imread(path6)
+	# heli = cv2.imread(path7)
+	uav  = tif.load_tif(path1).astype(np.float32)
+	heli = tif.load_tif(path2).astype(np.float32)
 
 	print(uav,  "uav")
 	print(heli, "heli")
@@ -52,7 +54,8 @@ def piv_ana():
 
 	# 航空写真DSM・DEMの不要範囲除去（UAVでの透過背景消去）
 	idx = np.where(uav == background_pix)
-	resize_heli[idx] = 0
+	# resize_heli[idx] = 0
+	resize_heli[idx] = np.nan
 
 	# PIV解析
 	piv.piv_analysis([resize_heli, uav])

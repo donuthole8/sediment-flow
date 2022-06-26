@@ -1,5 +1,6 @@
 import cv2
 import csv
+import math
 import numpy as np
 
 from modules import tif
@@ -21,12 +22,13 @@ def detect_flow(deg):
 
 	deg: 角度
 	"""
-	print("deg",deg)
+	print("deg", deg)
 
 	# 注目画素からの移動画素
 	dx, dy = 0, 0
-
-	if   (deg > 337.5) or  (deg <= 22.5):
+	if   (math.isnan(deg)):
+		return np.nan
+	elif (deg > 337.5) or  (deg <= 22.5):
 		dx, dy = 0, 1
 	elif (deg > 22.5)  and (deg <= 67.5):
 		dx, dy = 1, 1
@@ -43,8 +45,9 @@ def detect_flow(deg):
 	elif (deg > 292.5) and (deg <= 337.5):
 		dx, dy = -1, 1
 
-	return dx, dy
+	print("--------------")
 
+	return dx, dy
 
 
 def estimate_flow(dsm, deg):
@@ -61,7 +64,7 @@ def estimate_flow(dsm, deg):
 		area_list.pop(0)
 		# 背景領域を削除
 		area_list.pop(0)
-	
+
 	## 斜面崩壊領域を処理対象としてforを回す
 	for area in area_list:
 		## 注目画素から傾斜方向 + 隣接2方向の画素の標高値を調べる（傾斜方向はQgisの出力を近傍8画素に割り当て,　多分↑が0°になってるので上方向は 337.5° ~ 360° & 0° - 22.5°みたいな？）
@@ -70,18 +73,20 @@ def estimate_flow(dsm, deg):
 		cx, cy = int(area[2]), int(area[3])
 		pix = dsm[cy, cx]
 
-
 		## 標高値が注目画素よりも小さければそこも斜面崩壊領域としてもう一回ⅱをやるを繰り返してたと思う。（もとは傾斜とか条件つけてたけど全然領域が広がらなかったので標高の大小だけにした気がする）
-
-		area_id_list = []
+		## 領域内での→を付けたい！！
+		## 下端まで〜
 
 		# 傾斜方向の標高
 		while True:
 			# 注目領域の重心標高から傾斜方向を探査
 			dx, dy = detect_flow(deg[cy, cx])
 
-			if (dsm[cy + dy, cx + dx]) > pix:
-				continue
+			cx, cy = cx + dx, cy + dy
+			print(cx,cy)
+
+			if ((dsm[cy, cx]) > pix) or (math.isnan(dx)):
+				break
 			
 			
 
@@ -114,6 +119,10 @@ def main():
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
 	dsm, _, _, deg, mask = driver.resampling_dsm(dsm, dsm, deg, deg, mask)
 
+	# 次元を減らす
+	dsm = cv2.split(dsm)[0]
+	deg = cv2.split(deg)[0]
+
 	# 土砂領域以外の除去
 	print("# 植生領域の除去")
 	# img = process.remove_vegitation(img)
@@ -121,8 +130,8 @@ def main():
 
 	# カラー画像の領域分割
 	print("# 土砂領域の領域分割")
-	img, regions_num = driver.divide_area(img, 3, 4.5, 100)
-	# img = cv2.imread("./outputs/meanshift.png")
+	# img, regions_num = driver.divide_area(img, 3, 4.5, 100)
+	img = cv2.imread("./outputs/meanshift.png")
 
 	# 斜面崩壊領域データをすべて抽出
 	print("# 土砂マスク中の領域のみでラベリング")
