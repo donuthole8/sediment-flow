@@ -149,10 +149,10 @@ def divide_area(img, spatial_radius, range_radius, min_density):
 	lab_img, label_image, number_regions = pms.segment(cv2.cvtColor(img, cv2.COLOR_BGR2Lab), spatial_radius, range_radius,min_density)
 	img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR)
 	cv2.imwrite('./outputs/meanshift.png',img)
-	cv2.imwrite('./outputs/.png', label_image)
+	cv2.imwrite('./outputs/pms_label.png', label_image)
 	print("- label-num:", number_regions)
 
-	return img
+	return img, number_regions
 
 
 @tool.stop_watch
@@ -222,6 +222,7 @@ def labeling_bin(mask, img):
 	ret, markers, stats, centroids = cv2.connectedComponentsWithStats(
 		image=dst, 
 		connectivity=4
+		# connectivity=8
 	)
 
 	# ラベル数を表示
@@ -461,4 +462,40 @@ def normalize_height(dsm, normed_min, normed_max):
 	tif.save_tif(normed_dsm, "./inputs/dsm_img.tif", "./outputs/normed_dsm.tif")
 
 	return normed_dsm
+
+
+# def extract_region(img, num):
+# 	"""
+# 	領域データを抽出
+
+# 	img: 領域分割画像
+# 	num: 領域数
+# 	"""
+# 	h, w = img.shape
+# 	# table = np.zeros((h+2, w+2),dtype=int)
+# 	table = []
+# 	label = 1
+	
+# 	# ラスタスキャンを行い同一色の画素値をテーブルに追加
+# 	for i in range(img.shape[0]):
+# 		for j in range(img.shape[1]):
+# 			pix = img[i,j]
+# 			print(pix)
+
+# 			if (pix == [0, 0, 0]) and ():
+# 				continue
+
+# 			table.append([label, pix])
+# 			label += 1
+
+# 	print("- label num:", label)
+# 	print("- regions num:", num)
+
+# 	for i in range(num):
+		
+		
+# 		# print(i)
+
+
+# 		pass
 

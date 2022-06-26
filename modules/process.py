@@ -294,44 +294,6 @@ def extract_sub(dsm_sub):
 # 建物領域にも矢印があるので除去など
 
 
-# def calc_horizontal(move_list, area_list, img):
-#   """
-#   水平移動距離を計算
-
-#   move_list: 土砂移動データ
-#   area_list: 領域データ
-#   img: 地図画像
-#   """
-#   # 解像度（m）
-#   resolution = 0.075
-
-#   for i, move in enumerate(move_list):
-#     if (move != []):
-#       # 注目領域の重心座標
-#       cx, cy = int(area_list[i][2]), int(area_list[i][3])
-
-#       # 土砂の流出方向へ→を描画
-#       for m in move:
-#         # 注目領域の重心座標
-
-
-
-
-
-	
-
-
-# def calc_vertical(move_list, area_list, img):
-#   """
-#   垂直移動距離を計算
-
-#   move_list: 土砂移動データ
-#   area_list: 領域データ
-#   img: 地図画像
-#   """
-#   pass
-
-
 @tool.stop_watch
 def make_map(move_list, dsm, path):
 	"""
@@ -496,5 +458,26 @@ def remove_vegitation(img):
 	img = np.dstack((np.dstack((b, g)), r))
 
 	cv2.imwrite('outputs/vegitation.png', img)
+
+	return img
+
+
+def remove_black_pix(img, path):
+	"""
+	読み込み画像の黒画素領域を除去
+
+	img: 除去対象の画像
+	path: 読み込み対象の画像
+	"""
+	# マスク画像を読み込み
+	mask = cv2.imread(path)
+
+	# 黒画素のインデックスを取得
+	idx = np.where(mask == 0)
+
+	# 黒画素領域を除去
+	img[idx] = 0
+
+	cv2.imwrite("outputs/test.png", img)
 
 	return img
