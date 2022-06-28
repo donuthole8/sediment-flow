@@ -22,7 +22,6 @@ def detect_flow(deg):
 
 	deg: 角度
 	"""
-	print("deg", deg)
 
 	# 注目画素からの移動画素
 	dx, dy = 0, 0
@@ -77,12 +76,14 @@ def estimate_flow(dsm, deg, img):
 		## 領域内での→を付けたい！！
 		## 下端まで〜
 
+		# 始点
 		x, y = cx, cy
 
 		# 傾斜方向の標高
 		for i in range(0, 30):
 			# 注目領域の重心標高から傾斜方向を探査
 			dx, dy = detect_flow(deg[cy, cx])
+			# 終点
 			x, y = x + dx, y + dy
 
 			# nanだった場合
@@ -92,13 +93,8 @@ def estimate_flow(dsm, deg, img):
 			if ((dsm[y, x]) > pix):
 				break
 
-		# print("---???", x,y, cx, cy)
-		# 流出先の重心座標
-		# _cx, _cy = int(area_list[m][2]), int(area_list[m][3])
-
-		print(x, y)
-
 		try:
+			# 矢印の距離が短すぎる領域は除去
 			if (i > 7):
 				# 矢印の描画
 				cv2.arrowedLine(
@@ -107,7 +103,7 @@ def estimate_flow(dsm, deg, img):
 					pt2=(x, y),         # 終点
 					color=(20,20,180),  # 色
 					thickness=3,        # 太さ
-					tipLength=0.3         # 矢先の長さ
+					tipLength=0.3       # 矢先の長さ
 				)
 		except:
 			pass
@@ -138,6 +134,10 @@ def main():
 	dsm = cv2.split(dsm)[0]
 	deg = cv2.split(deg)[0]
 
+	# 傾斜方位の正規化（0-255 -> 0-360）
+	print("# 傾斜方向の正規化")
+	deg = driver.norm_degree_v2(deg)
+
 	# 土砂領域以外の除去
 	print("# 植生領域の除去")
 	# img = process.remove_vegitation(img)
@@ -153,6 +153,9 @@ def main():
 	# driver.labeling_color_v1(mask, img)
 	driver.labeling_bin(mask, img)
 	# driver.extract_region(img, regions_num)
+
+
+
 
 	# 流出推定
 	estimate_flow(dsm, deg, org_img)

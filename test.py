@@ -42,23 +42,23 @@ def piv_ana():
 	# heli = cv2.imread(path7)
 	uav  = tif.load_tif(path1).astype(np.float32)
 	heli = tif.load_tif(path2).astype(np.float32)
+	mask = cv2.imread(path5, cv2.IMREAD_GRAYSCALE)
 
-	print(uav,  "uav")
-	print(heli, "heli")
+	# 航空画像のDSMとDEMの切り抜き・リサンプリング
+	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
+	uav, heli, _, _, mask = driver.resampling_dsm(uav, heli, uav, uav, mask)
 
-	# バイキュービック補間で解像度の統一
-	resize_heli = cv2.resize(heli, (uav.shape[1], uav.shape[0]), interpolation=cv2.INTER_CUBIC)
-
-	# UAV画像のDSMの最小値を算出（領域外の透過背景値）
-	background_pix = np.min(uav)
-
-	# 航空写真DSM・DEMの不要範囲除去（UAVでの透過背景消去）
-	idx = np.where(uav == background_pix)
-	# resize_heli[idx] = 0
-	resize_heli[idx] = np.nan
+	# 土砂マスク
+	print("# 土砂マスクによる土砂領域抽出")
+	# uav  = process.extract_sediment(uav,  mask)
+	# heli = process.extract_sediment(heli, mask)
+	uav = process.remove_black_pix(uav, "./outputs/vegitation.png")
+	heli = process.remove_black_pix(heli, "./outputs/vegitation.png")
 
 	# PIV解析
-	piv.piv_analysis([resize_heli, uav])
+	print("# PIV解析")
+	piv.piv_analysis([heli, uav])
+	# piv.open_piv([heli, uav])
 
 
 def resize():
@@ -191,11 +191,11 @@ if __name__ == "__main__":
 	# mask()
 
 	# PIV解析
-	# piv_ana()
+	piv_ana()
 
 	# 画像サイズ変更
 	# resize()
 
 	# Flow-R
-	flow_r_ana()
+	# flow_r_ana()
 	

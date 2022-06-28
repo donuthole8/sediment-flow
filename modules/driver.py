@@ -229,7 +229,8 @@ def labeling_bin(mask, img):
 	print("- label num :", ret)
 
 	# 小領域除去しcsvに保存
-	area_th = 3
+	# area_th = 3
+	area_th = 12
 	# stats, centroids, markers = tool.labeling2csv(area_th, stats, centroids, markers)
 	tool.labeling2csv(area_th, stats, centroids, markers)
 
@@ -390,6 +391,26 @@ def norm_degree(deg):
 	"""
 	# 0-360度に変換
 	deg = deg / 255 * 360
+
+	return deg
+
+
+def norm_degree_v2(deg):
+	"""
+	入力された傾斜方位（負値含む）を実際の角度（0-360）に正規化
+
+	deg: 傾斜方位データ
+	"""
+	# 最大・最小
+	deg_max = np.nanmax(deg)
+	deg_min = np.nanmin(deg)
+
+	# normed_dsm = (dsm-dsm_min) / (dsm_max-dsm_min) * (normed_max-normed_min) + normed_min
+
+	# 0-360度に変換
+	deg = (deg - deg_min) / (deg_max - deg_min) * 360
+
+	# deg = deg / 255 * 360
 
 	return deg
 

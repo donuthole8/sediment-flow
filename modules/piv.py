@@ -1,7 +1,7 @@
 import os
 import glob
 import numpy as np
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 import cv2
 
 
@@ -132,5 +132,10 @@ def piv_analysis(img_list, wsize=32, overlap=0, threshold=30):
 
     return
 
-# # PIV解析の関数を実行
-# piv(dir='input', out_dir='piv_out')
+
+def open_piv(img_list):
+    """
+    OpenPIVによるPIV解析
+
+    img_list: ヘリDSMとUAVDSM
+    """
