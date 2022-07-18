@@ -150,7 +150,7 @@ def divide_area(img, spatial_radius, range_radius, min_density):
 	img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR)
 	cv2.imwrite('./outputs/meanshift.png',img)
 	cv2.imwrite('./outputs/pms_label.png', label_image)
-	print("- label-num:", number_regions)
+	print("- meanshift-num:", number_regions)
 
 	return img, number_regions
 

@@ -472,6 +472,9 @@ def remove_black_pix(img, path):
 	# マスク画像を読み込み
 	mask = cv2.imread(path)
 
+	# マスク画像の次元サイズ変更
+	mask = cv2.split(mask)[0]
+
 	# 黒画素のインデックスを取得
 	idx = np.where(mask == 0)
 
@@ -481,3 +484,4 @@ def remove_black_pix(img, path):
 	cv2.imwrite("outputs/test.png", img)
 
 	return img
+

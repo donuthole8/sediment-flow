@@ -71,6 +71,7 @@ def main():
 	# normed_mask = driver.use_org_mask(mask)
 
 	# 領域分割
+	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# 土砂領域の領域分割")
 	# div_img = driver.divide_area(path6, 3, 4.5, 100)
 	div_img = cv2.imread("./outputs/__meanshift.png")

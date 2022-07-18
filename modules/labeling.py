@@ -220,9 +220,10 @@ def labeling_color(src_img, bin_img):
     カラー画像をRGBデータでラベリング
 
     img: 領域分割済みのカラー画像
-    """    
+    """
     label = Labeling()
     label_table = label.do_labeling(bin_img)
 
     label.debug_write()
     cv2.imwrite("label_img.png", put_color_to_objects(src_img, label_table))
+    
