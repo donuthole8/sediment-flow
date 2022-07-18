@@ -106,6 +106,71 @@ def get_contours(mask, scale):
 	return contours, dst
 
 
+def get_contours_pms(region_list, shape):
+	"""
+	各領域をキャンパスに描画し1つずつ領域データを抽出
+	
+	region_list: 領域分割で得た領域データ
+	shape: 領域分割画像の形状（幅・高さ）
+	"""
+	with open('./area_data/region.csv', 'w') as f:
+		# ヘッダを追加
+		# columns_list = ['id', 'area', 'x_centroid', 'y_centroid']
+		# columns_list = ['id', 'area', 'x_centroid', 'y_centroid']
+		f.write("id, area, x_centroid, y_centroid" + '\n')
+
+		for region in region_list:
+			# 領域データを取得
+			label, cords, area = tool.decode_area(region)
+
+			# 注目領域のマスク画像を作成
+			mask = draw_region(shape, cords)
+
+			# 輪郭抽出
+			contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+			# FIXME: contoursが2要素以上出てくる場合がある
+			# FIXME: pmsで算出した面積と異なる場合がある
+
+			# 面積
+			area = cv2.contourArea(contours[0])
+			area = int(area)
+
+			# 輪郭の重心
+			M = cv2.moments(contours[0])
+			try:
+				cx = int((M["m10"] / M["m00"]))
+				cy = int((M["m01"] / M["m00"]))
+			except:
+				cx, cy = 0, 0
+
+			# csvファイルに保存
+			data_list = [label, area, cx, cy]
+			f.write(str(data_list) + '\n')
+	
+	return
+
+
+def draw_region(shape, cords):
+	"""
+	与えられた座標を領域とし白画素で埋める
+
+	shape: 領域分割画像の形状（幅・高さ）
+	cords: 領域の座標群
+	"""
+	# キャンパス描画
+	campus = np.zeros(shape)
+
+	# 領域座標を白画素で埋める
+	for cord in cords:
+		campus[cord] = 255
+
+	# # グレースケール化
+	# gray = cv2.cvtColor(campus, cv2.COLOR_BGR2GRAY)
+
+	# return gray
+	return campus
+
 def extract_sediment(img, mask):
 	"""
 	標高データから土砂領域を抽出

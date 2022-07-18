@@ -149,10 +149,25 @@ def divide_area(img, spatial_radius, range_radius, min_density):
 	lab_img, label_image, number_regions = pms.segment(cv2.cvtColor(img, cv2.COLOR_BGR2Lab), spatial_radius, range_radius,min_density)
 	img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR)
 	cv2.imwrite('./outputs/meanshift.png',img)
-	cv2.imwrite('./outputs/pms_label.png', label_image)
+	cv2.imwrite('./outputs/meanshift_label.png', label_image)
 	print("- meanshift-num:", number_regions)
 
-	return img, number_regions
+	return img
+
+
+@tool.stop_watch
+def calc_contours(shape):
+	"""
+	csvに保存された領域の座標データより領域データを算出
+
+	shape: 領域分割画像の形状（幅・高さ）
+	"""
+	# 領域データ読み込み
+	region_list = tool.load_csv("./area_data/pms_label.csv")
+
+	# 各領域をキャンパスに描画し1つずつ領域データを抽出
+	process.get_contours_pms(region_list, shape)
+
 
 
 @tool.stop_watch
