@@ -124,6 +124,8 @@ def contours2csv(contours, mask, area_th, scale):
 	# スケールを戻す
 	normed_mask = cv2.resize(normed_mask, (int(w/scale), int(h/scale)))
 
+	cv2.imwrite("./output/normed_mask.png", normed_mask)
+
 	return normed_mask
 
 

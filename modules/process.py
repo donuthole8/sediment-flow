@@ -111,13 +111,13 @@ def get_contours_pms(region_list, shape):
 	各領域をキャンパスに描画し1つずつ領域データを抽出
 	
 	region_list: 領域分割で得た領域データ
-	shape: 領域分割画像の形状（幅・高さ）
+	shape: 領域分割画像の形状
 	"""
 	with open('./area_data/region.csv', 'w') as f:
+		writer = csv.writer(f)
+
 		# ヘッダを追加
-		# columns_list = ['id', 'area', 'x_centroid', 'y_centroid']
-		# columns_list = ['id', 'area', 'x_centroid', 'y_centroid']
-		f.write("id, area, x_centroid, y_centroid" + '\n')
+		writer.writerow(["id", "area", "x_centroid", "y_centroid"])
 
 		for region in region_list:
 			# 領域データを取得
@@ -146,7 +146,7 @@ def get_contours_pms(region_list, shape):
 
 			# csvファイルに保存
 			data_list = [label, area, cx, cy]
-			f.write(str(data_list) + '\n')
+			writer.writerow(data_list)
 	
 	return
 
@@ -155,7 +155,7 @@ def draw_region(shape, cords):
 	"""
 	与えられた座標を領域とし白画素で埋める
 
-	shape: 領域分割画像の形状（幅・高さ）
+	shape: 領域分割画像の形状
 	cords: 領域の座標群
 	"""
 	# キャンパス描画
@@ -165,11 +165,8 @@ def draw_region(shape, cords):
 	for cord in cords:
 		campus[cord] = 255
 
-	# # グレースケール化
-	# gray = cv2.cvtColor(campus, cv2.COLOR_BGR2GRAY)
-
-	# return gray
 	return campus
+
 
 def extract_sediment(img, mask):
 	"""
@@ -199,7 +196,8 @@ def extract_neighbor():
 	隣接している領域の組を全て抽出
 	"""
 	# 領域データ読み込み
-	with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
+	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
+	# with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
 		area = csv.reader(f)
 		area_list = [a for a in area]
 		# ヘッダを削除
@@ -255,7 +253,8 @@ def extract_direction(deg, dem, dsm):
 	"""
 	# 傾斜方向データでやりたい
 	# 領域データ読み込み
-	with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
+	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
+	# with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
 		area = csv.reader(f)
 		area_list = [a for a in area]
 		# ヘッダを削除
@@ -303,7 +302,8 @@ def extract_sub(dsm_sub):
 	dsm_sub: 災害前後の標高差分
 	"""
 	# 領域データ読み込み
-	with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
+	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
+	# with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
 		area = csv.reader(f)
 		area_list = [a for a in area]
 		# ヘッダを削除
@@ -368,7 +368,8 @@ def make_map(move_list, dsm, path):
 	dsm: UAVのDSM 
 	"""
 	# 領域データ読み込み
-	with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
+	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
+	# with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
 		area = csv.reader(f)
 		area_list = [a for a in area]
 		# ヘッダを削除
@@ -536,6 +537,9 @@ def remove_black_pix(img, path):
 	"""
 	# マスク画像を読み込み
 	mask = cv2.imread(path)
+
+	# マスク画像サイズをあわせる
+	mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
 
 	# マスク画像の次元サイズ変更
 	mask = cv2.split(mask)[0]

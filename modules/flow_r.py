@@ -10,10 +10,15 @@ from modules import process
 from modules import test_code
 
 
-path1 = './inputs_re/dsm_uav.tif'
-path2 = './inputs_re/degree.tif'
-path3 = './inputs_re/manual_mask.png'
-path4 = './inputs_re/uav_img.tif'
+# path1 = './inputs_re/dsm_uav.tif'
+# path2 = './inputs_re/degree.tif'
+# path3 = './inputs_re/manual_mask.png'
+# path4 = './inputs_re/uav_img.tif'
+
+path1 = './inputs_trim/dsm_uav_re.tif'
+path2 = './inputs_trim/degree.tif'
+path3 = './inputs_trim/manual_mask.png'
+path4 = './inputs_trim/uav_img.tif'
 
 
 def detect_flow(deg):
@@ -28,21 +33,21 @@ def detect_flow(deg):
 	if   (math.isnan(deg)):
 		return np.nan, np.nan
 	elif (deg > 337.5) or  (deg <= 22.5):
-		dx, dy = 0, 1
+		dx, dy = 0, -1
 	elif (deg > 22.5)  and (deg <= 67.5):
-		dx, dy = 1, 1
+		dx, dy = 1, -1
 	elif (deg > 67.5)  and (deg <= 112.5):
 		dx, dy = 1, 0
 	elif (deg > 112.5) and (deg <= 157.5):
-		dx, dy = 1, -1
+		dx, dy = 1, 1
 	elif (deg > 157.5) and (deg <= 202.5):
-		dx, dy = 0, -1
+		dx, dy = 0, 1
 	elif (deg > 202.5) and (deg <= 247.5):
-		dx, dy = -1, -1
+		dx, dy = -1, 1
 	elif (deg > 247.5) and (deg <= 292.5):
 		dx, dy = -1, 0
 	elif (deg > 292.5) and (deg <= 337.5):
-		dx, dy = -1, 1
+		dx, dy = -1, -1
 
 	return dx, dy
 
@@ -56,7 +61,8 @@ def estimate_flow(dsm, deg, img):
 	img: 画像データ
 	"""
 	# 領域データ読み込み
-	with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
+	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
+	# with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
 		area = csv.reader(f)
 		area_list = [a for a in area]
 		# ヘッダを削除
@@ -80,7 +86,9 @@ def estimate_flow(dsm, deg, img):
 		x, y = cx, cy
 
 		# 傾斜方向の標高
-		for i in range(0, 30):
+		# NOTE: しきい値変えれる
+		# for i in range(0, 30):
+		for i in range(0, 10):
 			# 注目領域の重心標高から傾斜方向を探査
 			dx, dy = detect_flow(deg[cy, cx])
 			# 終点
@@ -90,11 +98,16 @@ def estimate_flow(dsm, deg, img):
 			if (math.isnan(dx)):
 				break
 			# 標高が上がった場合
-			if ((dsm[y, x]) > pix):
-				break
-
+			try:
+				if ((dsm[y, x]) > pix):
+					break
+			except:
+				print("err")
+				if ((dsm[y-1, x-1]) > pix):
+					break
 		try:
 			# 矢印の距離が短すぎる領域は除去
+			# NOTE: しきい値変えれる
 			if (i > 7):
 				# 矢印の描画
 				cv2.arrowedLine(
@@ -108,8 +121,10 @@ def estimate_flow(dsm, deg, img):
 		except:
 			pass
 	
-	cv2.imwrite("mapdd.png", img)
+	cv2.imwrite("test_map.png", img)
 
+
+@tool.stop_watch
 def main():
 	"""
 	Flow-R・中山さん手法による土砂流出予想
@@ -124,11 +139,16 @@ def main():
 	dsm  = tif.load_tif(path1).astype(np.float32)
 	deg  = tif.load_tif(path2).astype(np.float32)
 	mask = cv2.imread(path3, cv2.IMREAD_GRAYSCALE)
-	org_img  = cv2.imread(path4)
+	org_img = cv2.imread(path4)
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
 	dsm, _, _, deg, mask = driver.resampling_dsm(dsm, dsm, deg, deg, mask)
+
+	print(dsm.shape)
+	print(deg.shape)
+	print(mask.shape)
+	print(org_img.shape)
 
 	# 次元を減らす
 	dsm = cv2.split(dsm)[0]
@@ -139,20 +159,28 @@ def main():
 	deg = driver.norm_degree_v2(deg)
 
 	# 土砂領域以外の除去
-	print("# 植生領域の除去")
+	# print("# 植生領域の除去")
 	# img = process.remove_vegitation(img)
-	img = process.remove_black_pix(org_img, "./outputs/vegitation.png")
+	# img = process.remove_black_pix(org_img, "./outputs/vegitation.png")
+
+	# 土砂マスク
+	print("# 土砂マスクによる土砂領域抽出")
+	img = process.extract_sediment(org_img, mask)
 
 	# カラー画像の領域分割
 	print("# 土砂領域の領域分割")
-	# img, regions_num = driver.divide_area(img, 3, 4.5, 100)
-	img = cv2.imread("./outputs/meanshift.png")
+	img = driver.divide_area(img, 3, 4.5, 100)
+	# img = cv2.imread("./outputs/meanshift.png")
 
-	# 斜面崩壊領域データをすべて抽出
-	print("# 土砂マスク中の領域のみでラベリング")
-	# driver.labeling_color_v1(mask, img)
-	driver.labeling_bin(mask, img)
-	# driver.extract_region(img, regions_num)
+	# 輪郭・重心データ抽出
+	print("# 領域分割・土砂マスク済み画像から輪郭データ抽出")
+	driver.calc_contours((img.shape[0], img.shape[1]))
+
+	# # 斜面崩壊領域データをすべて抽出
+	# print("# 土砂マスク中の領域のみでラベリング")
+	# # driver.labeling_color_v1(mask, img)
+	# driver.labeling_bin(mask, img)
+	# # driver.extract_region(img, regions_num)
 
 
 

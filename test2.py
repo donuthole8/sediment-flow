@@ -18,9 +18,10 @@ path1 = './inputs_trim/dsm_uav_re.tif'
 path2 = './inputs_trim/dsm_heli.tif'
 path3 = './inputs_trim/dem.tif'
 path4 = './inputs_trim/degree.tif'
-path5 = './inputs_trim/mask.png'
-# path5 = './inputs/manual_mask.png'
-path6 = './inputs_trim/uav_img_re.tif'
+# path5 = './inputs_trim/mask.png'
+# path5 = './inputs_trim/manual_mask.png'
+path5 = './inputs_trim/normed_mask.png'
+path6 = './inputs_trim/uav_img.tif'
 path7 = './inputs_trim/heli_img.tif'
 
 
@@ -55,16 +56,6 @@ def main():
 	mask     = cv2.imread(path5, cv2.IMREAD_GRAYSCALE)
 	img      = cv2.imread(path6)
 
-	# 画像サイズの確認
-	print("# 入力画像のサイズ確認")
-	tool.show_image_size(
-			dsm_uav, 
-			dsm_heli, 
-			dem_org, 
-			deg, 
-			mask
-	)
-
 	# DEMより傾斜データを抽出
 	print("# DEMより傾斜データを抽出")
 	grad = driver.dem2gradient(dem_org, 5)
@@ -84,31 +75,39 @@ def main():
 	tool.show_image_size(
 			dsm_uav, 
 			dsm_heli, 
-			dem_org, 
+			dem, 
 			deg, 
 			mask
 	)
+	print("- img-size  :", img.shape)
 
 	# 土砂マスクの前処理
 	# TODO: 精度向上させる
 	print("# マスク画像の前処理")
-	# normed_mask = driver.norm_mask(mask)
+	normed_mask = driver.norm_mask(mask)
 	# 作成済みのマスク画像を使用
 	# normed_mask = cv2.imread("./outputs/normed_mask.png")
 	# normed_mask = cv2.imread("./inputs/manual_mask.png")
-	normed_mask = mask
+	# normed_mask = mask
 	# マスク画像の前処理無し
 	# normed_mask = driver.use_org_mask(mask)
 
+	# 土砂マスク
+	print("# 土砂マスクによる土砂領域抽出")
+	# img = process.extract_sediment(img, mask)
+	# uav = process.remove_black_pix(uav, "./outputs/vegitation.png")
+	# heli = process.remove_black_pix(heli, "./outputs/vegitation.png")
+
 	# 領域分割
 	print("# 土砂領域の領域分割")
-	
-	div_img = driver.divide_area(img, 3, 4.5, 100)
+	# div_img = driver.divide_area(img, 3, 4.5, 100)
+	# div_img = driver.divide_area(img, 15, 4.5, 300)
+	div_img = driver.divide_area(img, 2, 2, 20)
 	# div_img = cv2.imread("./outputs/meanshift.png")
 
 	# 輪郭・重心データ抽出
 	print("# 領域分割・土砂マスク済み画像から輪郭データ抽出")
-	driver.calc_contours((div_img.shape[1], div_img.shape[0]))
+	driver.calc_contours((div_img.shape[0], div_img.shape[1]))
 
 	# 標高モデルのマッチング
 	# TODO: 絶対値で算出できるよう実装を行う
@@ -139,7 +138,7 @@ def main():
 		deg,
 		grad, 
 		dsm_uav,
-		path6
+		path6,
 	)
 
 

@@ -110,6 +110,7 @@ def norm_mask(mask):
 
 	# 輪郭データをcsvに保存
 	normed_mask = tool.contours2csv(contours, normed_mask, area_th, scale)
+	# cv2.imwrite("normed_mask.png", normed_mask)
 
 	return normed_mask
 
@@ -160,7 +161,7 @@ def calc_contours(shape):
 	"""
 	csvに保存された領域の座標データより領域データを算出
 
-	shape: 領域分割画像の形状（幅・高さ）
+	shape: 領域分割画像の形状
 	"""
 	# 領域データ読み込み
 	region_list = tool.load_csv("./area_data/pms_label.csv")
