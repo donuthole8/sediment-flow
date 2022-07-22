@@ -103,6 +103,42 @@ def get_contours(mask, scale):
 	return contours, dst
 
 
+def remove_small_area(contours, area_th, scale, mask):
+	"""
+	面積が閾値以下の領域を除去
+
+	contours: 輪郭データ
+	area_th: 面積の閾値
+	scale: 拡大倍率
+	mask: マスク画像
+	"""
+	# 輪郭データをフィルタリング
+	contours = list(filter(lambda x: cv2.contourArea(x) >= area_th * scale, contours))
+
+	# 画像の高さと幅を取得
+	h, w = mask.shape
+
+	# 黒画像
+	campus = np.zeros(mask.shape)
+
+	# TODO: スケール分は考慮して割る必要あり
+	for i, contour in enumerate(contours):
+		# 面積
+		area = int(cv2.contourArea(contour) / scale)
+
+		# 閾値以上の面積の場合画像に出力
+		if (area >= area_th):
+			normed_mask = cv2.drawContours(campus, contours, i, 255, -1)
+
+	# スケールを戻す
+	normed_mask = cv2.resize(normed_mask, (int(w/scale), int(h/scale)))
+
+	cv2.imwrite("./outputs/normed_mask.png", normed_mask)
+
+	return normed_mask
+
+
+
 def get_contours_pms(region_list, shape):
 	"""
 	各領域をキャンパスに描画し1つずつ領域データを抽出

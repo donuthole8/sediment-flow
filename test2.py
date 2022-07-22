@@ -78,12 +78,6 @@ def main():
 	# TODO: 精度向上させる
 	print("# マスク画像の前処理")
 	normed_mask = driver.norm_mask(mask)
-	# 作成済みのマスク画像を使用
-	# normed_mask = cv2.imread("./outputs/normed_mask.png")
-	# normed_mask = cv2.imread("./inputs/manual_mask.png")
-	# normed_mask = mask
-	# マスク画像の前処理無し
-	# normed_mask = driver.use_org_mask(mask)
 
 	# 土砂マスク
 	print("# 土砂マスクによる土砂領域抽出")

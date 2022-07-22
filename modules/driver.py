@@ -102,12 +102,16 @@ def norm_mask(mask):
 	# contours, normed_mask = process.get_norm_contours(morpho_mask, scale, 15)
 	contours, normed_mask = process.get_norm_contours(morpho_mask, scale, 3)
 
-	# 面積が閾値未満の領域を削除
-	contours = list(filter(lambda x: cv2.contourArea(x) >= 50000, contours))
+	# 面積が閾値未満の領域を除去
+	print("dddddd")
+	process.remove_small_area(contours, area_th, scale, normed_mask)
 
-	# 輪郭データをcsvに保存
-	normed_mask = tool.contours2csv(contours, normed_mask, area_th, scale)
-	# cv2.imwrite("normed_mask.png", normed_mask)
+
+	# contours = list(filter(lambda x: cv2.contourArea(x) >= 50000, contours))
+
+	# # 輪郭データをｒ
+	# normed_mask = tool.contours2csv(contours, normed_mask, area_th, scale)
+	# # cv2.imwrite("normed_mask.png", normed_mask)
 
 	return normed_mask
 
