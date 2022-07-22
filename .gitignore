@@ -16,14 +16,14 @@ area_data/*
 *.xml
 
 # pymeanshift
-pymeanshift/*
+# 内部モジュールを変更したため
+# pymeanshift/*
 
 # openpiv
 openpiv-python/*
 
 # test-code
 modules/backup.py
-modules/test_code.py
 
 # .vscode
 .vscode

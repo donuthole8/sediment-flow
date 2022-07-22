@@ -60,7 +60,7 @@ def show_area_num():
 	マスク画像の領域数を表示
 	"""
 	# 領域データ読み込み
-	with open("./area_data/area.csv", encoding='utf8', newline='') as f:
+	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
 		area = csv.reader(f)
 		area_list = [a for a in area]
 
