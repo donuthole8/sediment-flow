@@ -1,10 +1,7 @@
-import enum
-from re import A
 import cv2
 import csv
 import numpy as np
 from math import dist
-from collections import deque
 import scipy.ndimage as ndimage
 
 from modules import tif
@@ -231,7 +228,9 @@ def extract_neighbor():
 			idx for idx, d in enumerate(dist_list) 
 			# if ((d > 5) and (d <= 10))
 			# if ((d <= 10))
-			if ((d > 7) and (d <= 20))
+			if ((d > 5) and (d <= 15))
+			# if ((d > 6) and (d <= 15))
+			# if ((d > 8) and (d <= 15))
 			# if ((d > 5) and (d <= 30))
 			# if (d <= 30)
 		]
@@ -399,9 +398,17 @@ def make_map(move_list, dsm, path):
 					pt1=(cx, cy),       # 始点
 					pt2=(_cx, _cy),     # 終点
 					color=(20,20,180),  # 色
-					thickness=1,        # 太さ
-					tipLength=1         # 矢先の長さ
+					thickness=2,        # 太さ
+					tipLength=0.4       # 矢先の長さ
 				)
+				# cv2.arrowedLine(
+				# 	img=ortho,          # 画像
+				# 	pt1=(cx, cy),       # 始点
+				# 	pt2=(_cx, _cy),     # 終点
+				# 	color=(20,20,180),  # 色
+				# 	thickness=1,        # 太さ
+				# 	tipLength=1         # 矢先の長さ
+				# )
 
 				# # 水平距離
 				# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)

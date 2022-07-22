@@ -1,11 +1,10 @@
 import cv2
-from cv2 import norm
 import numpy as np
-from torch import div
 
 from modules import tif
 from modules import tool
 from modules import driver
+
 
 # 入力画像パス
 path1 = './inputs/dsm_uav.tif'

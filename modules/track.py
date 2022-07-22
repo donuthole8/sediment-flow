@@ -61,17 +61,3 @@ def lucas_kanade(gray2, gray1):
 	# cv2.imwrite("circle.png", img_circle)
 
 	return
-
-
-
-
-		# cap.release()
-
-		# # 次のフレーム、ポイントの準備
-		# gray1 = gray2.copy() # 次のフレームを最初のフレームに設定
-		# ft1 = good2.reshape(-1, 1, 2) # 次の点を最初の点に設定
-
-		# # qキーが押されたら途中終了
-		# if cv2.waitKey(30) & 0xFF == ord('q'):
-		# 		break
-

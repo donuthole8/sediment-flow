@@ -1,16 +1,15 @@
 import cv2
 from cv2 import norm
 import numpy as np
-from torch import div
 
-from modules import tif
 from modules import piv
+from modules import track
+from modules import temp
+from modules import flow
+from modules import tif
 from modules import tool
 from modules import driver
 from modules import process
-from modules import track
-from modules import test_code
-from modules import flow_r
 
 
 # トリミングしたテスト用画像
@@ -87,15 +86,15 @@ def open_piv():
 
 
 def resize():
-	test_code.resize_img(path6, "./inputs_trim/uav_img_re.tif", (1000 ,1000))
+	temp.resize_img(path6, "./inputs_trim/uav_img_re.tif", (1000 ,1000))
 
 
 def mask():
-	test_code.make_mask('./inputs_trim/answer.tif')
+	temp.make_mask('./inputs_trim/answer.tif')
 
 
 def flow_r_ana():
-	flow_r.main()
+	flow.main()
 
 
 @tool.stop_watch
@@ -160,15 +159,15 @@ def main():
 
 	# 領域分割
 	print("# 土砂領域の領域分割")
-	# div_img = driver.divide_area(path6, 3, 4.5, 100)
-	div_img = cv2.imread("./outputs/meanshift.png")
+	div_img = driver.divide_area(path6, 10, 2, 100)
+	# div_img = cv2.imread("./outputs/meanshift.png")
 
 	# ラベリング
-	print("# 土砂マスク中の領域のみでラベリング")
+	# print("# 土砂マスク中の領域のみでラベリング")
 	# TODO: 出力画像がおかしい
 	# driver.labeling_color_v1(normed_mask, div_img)
 	# driver.labeling_color(normed_mask, div_img)
-	driver.labeling_bin(normed_mask, div_img)
+	# driver.labeling_bin(normed_mask, div_img)
 
 	# # 土砂マスク中の領域のみを算出
 	# print("# 土砂マスク中の領域の輪郭抽出")
@@ -278,13 +277,14 @@ def labeling():
 	# img = tif.load_tif(path6)
 	img = cv2.imread(path6)
 	img = cv2.resize(img, (dsm_uav.shape[1], dsm_uav.shape[0]))
-	div_img, num = driver.divide_area(img, 3, 4.5, 100)
+	div_img= driver.divide_area(img, 3, 4.5, 100)
 	# div_img = cv2.imread("./outputs/meanshift.png")
 
 	# ラベリング
 	print("# ラベリング")
+	driver.labeling_bin(normed_mask, div_img)
 	# driver.labeling_color(normed_mask, div_img)
-	driver.labeling_color_v1(mask, img)
+	# driver.labeling_color_v1(mask, img)
 
 
 def pymeanshift():
@@ -309,20 +309,20 @@ def pymeanshift():
 # メイン関数
 if __name__ == "__main__":
 	# テスト実行
-	# main()
+	main()
 
 	# マスク画像作成
 	# mask()
 
 	# PIV解析
 	# piv_ana()
-	# open_piv()
+	open_piv()
 
 	# 画像サイズ変更
 	# resize()
 
 	# Flow-R
-	flow_r_ana()
+	# flow_r_ana()
 	
 	# オプティカルフロー
 	# opt_flow()

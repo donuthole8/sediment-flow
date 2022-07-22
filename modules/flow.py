@@ -7,7 +7,7 @@ from modules import tif
 from modules import tool
 from modules import driver
 from modules import process
-from modules import test_code
+from modules import temp
 
 
 # path1 = './inputs_re/dsm_uav.tif'
@@ -55,7 +55,7 @@ def detect_flow(deg):
 def estimate_flow(dsm, deg, img):
 	"""
 	流出方向の予測
-	
+
 	dsm: 標高データ
 	deg: 傾斜方向データ
 	img: 画像データ

@@ -135,7 +135,7 @@ def get_band4(path):
   return src.GetRasterBand(4).ReadAsArray()
 
 
-def set_band(banc, tif):
+def set_band(band, tif):
   """
   バンドデータを変更
   """

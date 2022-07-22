@@ -1,16 +1,9 @@
 import cv2
-from cv2 import norm
 import numpy as np
-from torch import div
 
 from modules import tif
-from modules import piv
 from modules import tool
 from modules import driver
-from modules import process
-from modules import track
-from modules import test_code
-from modules import flow_r
 
 
 # トリミングしたテスト用画像
@@ -100,9 +93,9 @@ def main():
 
 	# 領域分割
 	print("# 土砂領域の領域分割")
-	# div_img = driver.divide_area(img, 3, 4.5, 100)
+	div_img = driver.divide_area(img, 3, 4.5, 100)
 	# div_img = driver.divide_area(img, 15, 4.5, 300)
-	div_img = driver.divide_area(img, 2, 2, 20)
+	# div_img = driver.divide_area(img, 2, 2, 20)
 	# div_img = cv2.imread("./outputs/meanshift.png")
 
 	# 輪郭・重心データ抽出

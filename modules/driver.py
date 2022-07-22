@@ -1,14 +1,11 @@
-from os import stat
 import cv2
 import math
-import random
 import numpy as np
 import pymeanshift as pms
 
 from modules import tif
 from modules import tool
 from modules import process
-from modules import labeling
 
 
 def dem2gradient(dem, mesh_size):
@@ -250,6 +247,9 @@ def labeling_bin(mask, img):
 	# stats, centroids, markers = tool.labeling2csv(area_th, stats, centroids, markers)
 	tool.labeling2csv(area_th, stats, centroids, markers)
 
+	cv2.imwrite("./outputs/labeling_bin.png", img)
+
+
 	# 小領域除去後のラベル数を表示
 	# ret = len(stats)
 	# print("- label num(norm) :", ret)
@@ -292,7 +292,7 @@ def labeling_bin(mask, img):
 	# # オブジェクトの総数を黄文字で表示
 	# cv2.putText(img, str(ret - 1), (100, 100), cv2.FONT_HERSHEY_PLAIN, 100, (255, 255, 255))
 
-	# # 画像を保存
+	# 画像を保存
 	# tool.save_resize_image("./outputs/labeling_bin.png", img, (int(height/5), int(width/5)))
 
 	return
