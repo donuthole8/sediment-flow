@@ -20,7 +20,7 @@ area_data/*
 # pymeanshift/*
 
 # openpiv
-openpiv-python/*
+openpiv-python
 
 # test-code
 modules/backup.py
