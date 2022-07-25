@@ -49,6 +49,9 @@ def main():
 	mask     = cv2.imread(path5, cv2.IMREAD_GRAYSCALE)
 	img      = cv2.imread(path6)
 
+	# TODO: 建物輪郭データとか？？読み込み？？
+	# TODO: 建物使うべき？？
+
 	# DEMより傾斜データを抽出
 	print("# DEMより傾斜データを抽出")
 	grad = driver.dem2gradient(dem_org, 5)
@@ -81,19 +84,17 @@ def main():
 
 	# 土砂マスク
 	print("# 土砂マスクによる土砂領域抽出")
-	# img = process.extract_sediment(img, mask)
-	# uav = process.remove_black_pix(uav, "./outputs/vegitation.png")
-	# heli = process.remove_black_pix(heli, "./outputs/vegitation.png")
+	img = driver.extract_sediment(img, mask)
 
 	# 領域分割
-	print("# 土砂領域の領域分割")
+	print("# オルソ画像の領域分割")
 	div_img = driver.divide_area(img, 3, 4.5, 100)
 	# div_img = driver.divide_area(img, 15, 4.5, 300)
 	# div_img = driver.divide_area(img, 2, 2, 20)
 	# div_img = cv2.imread("./outputs/meanshift.png")
 
 	# 輪郭・重心データ抽出
-	print("# 領域分割・土砂マスク済み画像から輪郭データ抽出")
+	print("# 領域分割結果から領域データ抽出")
 	driver.calc_contours((div_img.shape[0], div_img.shape[1]))
 
 	# 標高モデルのマッチング
@@ -104,6 +105,14 @@ def main():
 		dsm_heli,
 		dem
 	)
+
+	# 標高座標の最適化
+	# print("# 標高座標の最適化")
+	# dsm_uav, dsm_heli = driver.norm_cord(
+	# 	dsm_uav,
+	# 	dsm_heli,
+	# 	dem
+	# )
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")

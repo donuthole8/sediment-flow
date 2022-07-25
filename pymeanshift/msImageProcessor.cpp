@@ -3053,9 +3053,9 @@ void msImageProcessor::Prune(int minRegion)
 
 	// ファイルストリーム指定
 	using std::ofstream;
-	ofstream ofs1("./area_data/pms_all_pix.csv");
+	ofstream ofs1("./area_data/pms_pix.csv");
 	ofs1 << "id, x-cord, y-cord" << std::endl;
-	ofstream ofs2("./area_data/pms_label.csv");
+	ofstream ofs2("./area_data/pms_cords.csv");
 	ofs2 << "id, (x-cord, y-cord), area" << std::endl;
 	// ofstream ofs3("./area_data/pms.csv");
 	// ofs3 << "id, area, x_centroid, y_centroid, " << std::endl;

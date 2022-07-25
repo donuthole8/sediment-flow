@@ -34,7 +34,7 @@ def dem2gradient(dem, mesh_size):
 
 	# 画像を保存
 	tif.save_tif(gradient, "./inputs/dem.tif", "./outputs/angle.tif")
-	
+
 	return gradient
 
 
@@ -103,9 +103,7 @@ def norm_mask(mask):
 	contours, normed_mask = process.get_norm_contours(morpho_mask, scale, 3)
 
 	# 面積が閾値未満の領域を除去
-	print("dddddd")
 	process.remove_small_area(contours, area_th, scale, normed_mask)
-
 
 	# contours = list(filter(lambda x: cv2.contourArea(x) >= 50000, contours))
 
@@ -165,141 +163,25 @@ def calc_contours(shape):
 	shape: 領域分割画像の形状
 	"""
 	# 領域データ読み込み
-	region_list = tool.load_csv("./area_data/pms_label.csv")
+	region_list = tool.load_csv("./area_data/pms_cords.csv")
 
 	# 各領域をキャンパスに描画し1つずつ領域データを抽出
-	process.get_contours_pms(region_list, shape)
-
-
-
-@tool.stop_watch
-def labeling_color(mask, img):
-	"""
-	カラー画像をRGBデータでラベリング
-
-	img: 領域分割済みのカラー画像
-	"""
-	# 土砂マスクを用いて土砂領域以外を除去
-	sed = process.extract_sediment(img, mask)
-
-	# 二値化
-	bin = process.binarize(sed, 150, cv2.THRESH_BINARY_INV)
-
-	# ラベリング
-	labeling.labeling_color(sed, bin)
-
-
-@tool.stop_watch
-def labeling_color_v1(mask, img):
-	"""
-	土砂マスク中の領域のみを算出
-
-	mask: マスク画像
-	img: 領域分割画像
-	"""
-	# 土砂マスクを用いて土砂領域以外を除去
-	sed = process.extract_sediment(img, mask)
-
-	# ラベリング
-	dummy, labels, label_num = labeling_color(sed)
-
-	# 画像を保存
-	np.savetxt('outputs/dummy.txt', dummy.astype(np.uint8),fmt='%d')
-	with open('outputs/label.txt', 'w') as f:
-		print(label_num, file=f)
-	cv2.imwrite('outputs/labeling.png', labels.astype(np.uint8))
-	cv2.imwrite('outputs/dummy.png', dummy.astype(np.uint8))
-
-	# 領域データを保存
-	tool.labeling2centroid()
+	process.get_pms_contours(region_list, shape)
 
 	return
 
 
-@tool.stop_watch
-def labeling_bin(mask, img):
+def extract_sediment(img, mask):
 	"""
-	土砂マスク中の領域のみを算出
+	標高データから土砂領域を抽出
 
-	mask: マスク画像
-	img: 領域分割画像
+	img: 抽出対象の画像 
+	mask: 土砂領域マスク
 	"""
 	# 土砂マスクを用いて土砂領域以外を除去
 	sed = process.extract_sediment(img, mask)
 
-	# 二値化
-	# dst = process.binarize(sed, 150, cv2.THRESH_BINARY_INV)
-	gray_img = cv2.cvtColor(sed, cv2.COLOR_BGR2GRAY)
-	# blur_img = cv2.GaussianBlur(gray_img, (5, 5), 2)
-	_, dst = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-	# ラベリング
-	# 4-con : 36979 -> 5172
-	# 8-con :  8253 -> 2436
-	ret, markers, stats, centroids = cv2.connectedComponentsWithStats(
-		image=dst, 
-		connectivity=4
-		# connectivity=8
-	)
-
-	# ラベル数を表示
-	print("- label num :", ret)
-
-	# 小領域除去しcsvに保存
-	# area_th = 3
-	area_th = 12
-	# stats, centroids, markers = tool.labeling2csv(area_th, stats, centroids, markers)
-	tool.labeling2csv(area_th, stats, centroids, markers)
-
-	cv2.imwrite("./outputs/labeling_bin.png", img)
-
-
-	# 小領域除去後のラベル数を表示
-	# ret = len(stats)
-	# print("- label num(norm) :", ret)
-
-	# # ラベリング結果書き出し準備
-	# height, width = dst.shape[:2]
-	# colors = []
-
-	# うまく動いているペイント（FIXME: 除去領域分も回しているので遅い）
-	# # 各オブジェクトをランダム色でペイント
-	# for i in range(1, ret):
-	#   colors.append(np.array([
-	#     random.randint(0, 255), 
-	#     random.randint(0, 255), 
-	#     random.randint(0, 255)
-	#   ]))
-	# print("- color listed")
-	# for i in range(1, ret):
-	#   if stats[i][4] > area_th:
-	#       img[markers == i, ] = colors[i - 1]
-	# print("- color painted")
-
-
-
-	# label_img = np.zeros_like(img)
-	# for marker in range(markers.max() + 1):
-	#   label_group_index = np.where(markers == marker)
-	#   label_img[label_group_index] = random.sample(range(255), k=3)
-
-	# for i in range(1, ret):
-	#   colors.append(np.array([
-	#     random.randint(0, 255), 
-	#     random.randint(0, 255), 
-	#     random.randint(0, 255)
-	#   ]))
-	# for i in range(1, ret):
-	#   # if stats[i][4] >= area_th:
-	#     img[markers[0] == i, ] = colors[i - 1]
-	
-	# # オブジェクトの総数を黄文字で表示
-	# cv2.putText(img, str(ret - 1), (100, 100), cv2.FONT_HERSHEY_PLAIN, 100, (255, 255, 255))
-
-	# 画像を保存
-	# tool.save_resize_image("./outputs/labeling_bin.png", img, (int(height/5), int(width/5)))
-
-	return
+	return sed
 
 
 @tool.stop_watch
@@ -351,23 +233,23 @@ def norm_elevation(dsm_uav, dsm_heli, dem):
 	# 最小値・最大値算出
 	min_uav,  max_uav  = tool.calc_min_max(dsm_uav)
 	min_heli, max_heli = tool.calc_min_max(dsm_heli)
-	min_dem,  max_dem  = tool.calc_min_max(dem)
+	# min_dem,  max_dem  = tool.calc_min_max(dem)
 	# print("- uav-range  :", min_uav , max_uav)    # 1.0 255.0
 	# print("- heli-range :", min_heli, max_heli)   # 52.16754 180.19545
 	# print("- dem-range  :", min_dem , max_dem)    # -0.54201436 146.51208
 
 	# 植生を加味
-	# max_dem += 15
-	# max_dem += 10
+	# veg_height = 15
+	# veg_height = 10
 
 	# 正規化処理
-	# _dsm_uav  = (dsm_uav-min_uav)   / (max_uav-min_uav)   * (max_dem + 15)
-	# _dsm_heli = (dsm_heli-min_heli) / (max_heli-min_heli) * (max_dem + 10)
-	_dsm_uav  = (dsm_uav-min_uav)   / (max_uav-min_uav)
+	# _dsm_uav  = (dsm_uav-min_uav) / (max_uav-min_uav) * (max_dem + veg_height)
+	# _dsm_heli = (dsm_heli-min_heli) / (max_heli-min_heli) * (max_dem + veg_height)
+	_dsm_uav  = (dsm_uav-min_uav) / (max_uav-min_uav)
 	_dsm_heli = (dsm_heli-min_heli) / (max_heli-min_heli)
 
 	# 画像を保存
-	tool.save_resize_image("./outputs/uav_norm.png" , _dsm_uav,  (500,500))
+	tool.save_resize_image("./outputs/uav_norm.png",  _dsm_uav,  (500,500))
 	tool.save_resize_image("./outputs/heli_norm.png", _dsm_heli, (500,500))
 
 	return _dsm_uav, _dsm_heli

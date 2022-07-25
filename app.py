@@ -86,7 +86,7 @@ def main():
 	# print("# 土砂マスク中の領域の輪郭抽出")
 	# driver.extract_contours(normed_mask, div_img)
 
-	# 標高モデルのマッチング
+	# 標高値のマッチング
 	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
 	dsm_uav, dsm_heli = driver.norm_elevation(
@@ -94,6 +94,14 @@ def main():
 		dsm_heli,
 		dem
 	)
+
+	# 標高座標の最適化
+	# print("# 標高座標の最適化")
+	# dsm_uav, dsm_heli = driver.norm_cord(
+	# 	dsm_uav,
+	# 	dsm_heli,
+	# 	dem
+	# )
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")

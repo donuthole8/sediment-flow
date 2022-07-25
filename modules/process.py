@@ -139,7 +139,7 @@ def remove_small_area(contours, area_th, scale, mask):
 
 
 
-def get_contours_pms(region_list, shape):
+def get_pms_contours(region_list, shape):
 	"""
 	各領域をキャンパスに描画し1つずつ領域データを抽出
 	
