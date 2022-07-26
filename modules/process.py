@@ -1,5 +1,6 @@
 import cv2
 import csv
+import math
 import numpy as np
 from math import dist
 import scipy.ndimage as ndimage
@@ -18,6 +19,33 @@ def binarize(src_img, thresh, mode):
 	return bin_img
 
 
+def calc_gradient(dem, mesh_size):
+	"""
+	勾配データの算出
+
+	dem: 国土地理院DEM
+	mesh_size: DEMのメッシュサイズ
+	"""
+	# サイズ
+	width, height = dem.shape[1], dem.shape[0]
+
+	# 勾配データの算出
+	max = 0
+	grad = np.zeros((height - 2, width -2, 1))
+	for y in range(1, height - 2):
+		for  x in range(1, width - 2):
+			for j in range(-1, 2):
+				for i in range(1, 2):
+					angle = math.degrees((float(abs(dem[y + j, x + i][0] - dem[y, x][0])) / float(mesh_size)))
+					if angle > max:
+						max = angle
+			grad[y,x] = angle
+			max = 0
+	grad = grad.astype(np.int16)
+
+	return grad
+
+
 def morphology(mask, ksize, exe_num):
 	"""
 	モルフォロジー処理
@@ -29,10 +57,10 @@ def morphology(mask, ksize, exe_num):
 	# モルフォロジー処理によるノイズ除去
 	kernel = np.ones((ksize, ksize), np.uint8)
 	opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-	for i in range(1,exe_num):
+	for i in range(1, exe_num):
 		opening = cv2.morphologyEx(opening, cv2.MORPH_OPEN, kernel)
 	closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
-	for i in range(1,exe_num):
+	for i in range(1, exe_num):
 		closing = cv2.morphologyEx(closing, cv2.MORPH_CLOSE, kernel)
 
 	# クロージング処理による建物領域の穴埋め
@@ -42,9 +70,8 @@ def morphology(mask, ksize, exe_num):
 	closing = cv2.erode (closing, kernel, iterations = 1)
 
 	# 画像の保存
-	height, width = closing.shape[:2]
-	tool.save_resize_image("closing.png", closing, (int(height/5), int(width/5)))
-	tool.save_resize_image("opening.png", opening, (int(height/5), int(width/5)))
+	tool.save_resize_image("closing.png", closing, (500, 500))
+	tool.save_resize_image("opening.png", opening, (500, 500))
 
 	return closing
 

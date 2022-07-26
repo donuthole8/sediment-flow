@@ -1,5 +1,4 @@
 import cv2
-import math
 import numpy as np
 import pymeanshift as pms
 
@@ -37,27 +36,18 @@ class ImageOp():
 
 		mesh_size: DEMのメッシュサイズ
 		"""
-		max = 0
-		width, height = self.dem.shape[1], self.dem.shape[0]
-		grad = np.zeros((height - 2, width -2, 1))
-		for y in range(1, height - 2):
-			for  x in range(1, width - 2):
-				for j in range(-1, 2):
-					for i in range(1, 2):
-						angle = math.degrees((float(abs(self.dem[y + j, x + i][0] - self.dem[y, x][0])) / float(mesh_size)))
-						if angle > max:
-							max = angle
-				grad[y,x] = angle
-				max = 0
-		grad = grad.astype(np.int16)
+		# 勾配データの算出
+		grad = process.calc_gradient(self.dem, mesh_size)
 
-		# 3次元に戻す
+		# 3次元に変換
 		self.gradient = cv2.merge((grad, grad, grad))
 
 		# 画像を保存
 		tif.save_tif(self.gradient, "dem.tif", "angle.tif")
 
 		return
+
+
 	def norm_degree(self):
 		"""
 		入力された傾斜方位（0-255）を実際の角度（0-360）に正規化
