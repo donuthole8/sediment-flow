@@ -1,4 +1,3 @@
-import re
 import cv2
 import csv
 import time
@@ -31,26 +30,29 @@ def save_resize_image(path, image, size):
 		"""
 		# 画像をリサイズ
 		resize_img = cv2.resize(
-				image, 
-				(size[1], size[0]), 
-				interpolation=cv2.INTER_CUBIC
+			image, 
+			(size[1], size[0]), 
+			interpolation=cv2.INTER_CUBIC
 		)
 
 		# 画像を保存
-		cv2.imwrite(path, resize_img)
+		cv2.imwrite("./outputs/" + path, resize_img)
 
 		return
 
 
-def show_image_size(dsm_uav, dsm_heli, dem, deg, mask):
+def show_image_size(obj):
 	"""
 	画像サイズの確認
+
+	obj: クラスオブジェクト
 	"""
-	print("- uav-size  :", dsm_uav.shape)
-	print("- heli-size :", dsm_heli.shape)
-	print("- dem-size  :", dem.shape)
-	print("- deg-size  :", deg.shape)
-	print("- mask-size :", mask.shape)
+	print("- uav-size  :", obj.dsm_uav.shape)
+	print("- heli-size :", obj.dsm_heli.shape)
+	print("- dem-size  :", obj.dem.shape)
+	print("- deg-size  :", obj.degree.shape)
+	print("- mask-size :", obj.mask.shape)
+	print("- img-size  :", obj.ortho.shape)
 
 	return
 

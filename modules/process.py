@@ -43,8 +43,8 @@ def morphology(mask, ksize, exe_num):
 
 	# 画像の保存
 	height, width = closing.shape[:2]
-	tool.save_resize_image("./outputs/closing.png", closing, (int(height/5), int(width/5)))
-	tool.save_resize_image("./outputs/opening.png", opening, (int(height/5), int(width/5)))
+	tool.save_resize_image("closing.png", closing, (int(height/5), int(width/5)))
+	tool.save_resize_image("opening.png", opening, (int(height/5), int(width/5)))
 
 	return closing
 
@@ -133,10 +133,10 @@ def remove_small_area(contours, area_th, scale, mask):
 	# スケールを戻す
 	normed_mask = cv2.resize(normed_mask, (int(w/scale), int(h/scale)))
 
+	# 画像の保存
 	cv2.imwrite("./outputs/normed_mask.png", normed_mask)
 
 	return normed_mask
-
 
 
 def get_pms_contours(region_list, shape):
@@ -217,10 +217,28 @@ def extract_sediment(img, mask):
 	# idx = np.where(mask == 0).astype(np.float32)
 	# # 土砂領域以外の標高データを消去
 	# sed[idx] = np.nan
-	# tif.save_tif(dsm, "./inputs/dsm_uav.tif", "./outputs/sediment.tif")
+	# tif.save_tif(dsm, "dsm_uav.tif", "sediment.tif")
 	# return sed.astype(np.uint8)
 
+	# 画像の保存
+	tool.save_resize_image("masked_img.png", sed, (500,500))
+
 	return sed
+
+
+def bin_2area(dsm_sub):
+	"""
+	堆積領域と侵食領域で二値化
+
+	dsm_sub: 標高差分値モデル
+	"""
+	dsm_bin = dsm_sub.copy()
+	idx = np.where(dsm_sub >  0)
+	dsm_bin[idx] = 255
+	idx = np.where(dsm_sub <= 0)
+	dsm_bin[idx] = 0
+
+	return dsm_bin
 
 
 @tool.stop_watch
@@ -483,7 +501,7 @@ def make_map(move_list, dsm, path):
 	# ortho = tool.draw_color(ortho, idx, (0, 0, 0))
 
 	# 土砂移動図の保存
-	cv2.imwrite("./outputs/map.png", ortho)
+	tool.save_resize_image("map.png", ortho, (1000, 1000))
 
 	return
 
@@ -521,13 +539,13 @@ def normalize_height(dsm, normed_min, normed_max):
 
 	# 正規化処理
 	normed_dsm = (dsm-dsm_min) / (dsm_max-dsm_min) * (normed_max-normed_min) + normed_min
-	tif.save_tif(normed_dsm, "./inputs/dsm_img.tif", "./outputs/normed_dsm.tif")
+	tif.save_tif(normed_dsm, "dsm_img.tif", "normed_dsm.tif")
 
 	return normed_dsm
 
 
 def test():
-	ortho = cv2.imread("./inputs/koyaura_resize.tif")
+	ortho = cv2.imread("koyaura_resize.tif")
 	# dsm_sub = cv2.imread("./outputs/dsm_sub.tif")
 
 	tes = cv2.split(ortho)

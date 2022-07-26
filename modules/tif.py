@@ -88,6 +88,10 @@ def save_tif(data, load_path, save_path):
   load_path: 入力tifファイルのパス
   save_path: 出力tifファイルのパス
   """
+  # 入出力パス
+  load_path = "./inputs/"  + load_path
+  save_path = "./outputs/" + save_path
+
   # tif画像テンプレ読み込み
   src = gdal.Open(load_path)
 

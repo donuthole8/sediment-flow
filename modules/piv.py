@@ -1,5 +1,4 @@
 import os
-import glob
 import numpy as np
 from matplotlib import pyplot as plt
 import cv2
@@ -8,7 +7,6 @@ from openpiv import tools, pyprocess, validation, filters, scaling
 import numpy as np
 import matplotlib.pyplot as plt
 # %matplotlib inline
-import imageio
 
 
 # PIV解析をする関数
