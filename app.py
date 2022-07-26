@@ -80,12 +80,9 @@ def main():
 	# image_op.divide_area(2, 2, 20)
 	image_op.div_img = cv2.imread("./outputs/meanshift.png")
 
-	# 輪郭・重心データ抽出
-	print("# 領域分割結果から領域データ抽出")
-	image_op.calc_contours((
-		image_op.div_img.shape[0], 
-		image_op.div_img.shape[1]
-	))	# 画像サイズ
+	# 輪郭・重心データ抽出・ラベル画像作成
+	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
+	image_op.calc_contours()
 
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う

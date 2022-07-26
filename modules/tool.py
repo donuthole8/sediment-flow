@@ -31,7 +31,7 @@ def save_resize_image(path, image, size):
 		# 画像をリサイズ
 		resize_img = cv2.resize(
 			image, 
-			(size[1], size[0]), 
+			size, 
 			interpolation=cv2.INTER_CUBIC
 		)
 

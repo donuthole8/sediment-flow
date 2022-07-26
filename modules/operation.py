@@ -29,6 +29,11 @@ class ImageOp():
 		self.div_img  = None
 		self.dsm_sub  = None
 
+		# 画像サイズ
+		self.size_3d   = self.dsm_uav.shape
+		self.size_2d   = (self.size_3d[1], self.size_3d[0])
+		self.s_size_2d = (int(self.size_3d[1] / 2), int(self.size_3d[0] / 2))
+
 
 	def dem2gradient(self, mesh_size):
 		"""
@@ -79,15 +84,12 @@ class ImageOp():
 		# 3次元に変更
 		self.mask = cv2.merge((self.mask, self.mask, self.mask))
 
-		# UAVのDSMサイズ
-		size = (self.dsm_uav.shape[1], self.dsm_uav.shape[0])
-
 		# バイキュービック補間で解像度の統一
-		self.dsm_heli = cv2.resize(self.dsm_heli, size, interpolation=cv2.INTER_CUBIC)
-		self.dem      = cv2.resize(self.dem,      size, interpolation=cv2.INTER_CUBIC)
-		self.degree   = cv2.resize(self.degree,   size, interpolation=cv2.INTER_CUBIC)
-		self.mask     = cv2.resize(self.mask,     size, interpolation=cv2.INTER_CUBIC)
-		self.ortho    = cv2.resize(self.ortho,    size, interpolation=cv2.INTER_CUBIC)
+		self.dsm_heli = cv2.resize(self.dsm_heli, self.size_2d, interpolation=cv2.INTER_CUBIC)
+		self.dem      = cv2.resize(self.dem,      self.size_2d, interpolation=cv2.INTER_CUBIC)
+		self.degree   = cv2.resize(self.degree,   self.size_2d, interpolation=cv2.INTER_CUBIC)
+		self.mask     = cv2.resize(self.mask,     self.size_2d, interpolation=cv2.INTER_CUBIC)
+		self.ortho    = cv2.resize(self.ortho,    self.size_2d, interpolation=cv2.INTER_CUBIC)
 
 		# UAV画像のDSMの最小値を算出（領域外の透過背景値）
 		background_pix = np.min(self.dsm_uav)
@@ -102,11 +104,11 @@ class ImageOp():
 		self.ortho[idx]    = 0
 
 		# 画像の保存
-		tool.save_resize_image("resamp_heli.png",  self.dsm_heli, (500,500))
-		tool.save_resize_image("resamp_dem.png",   self.dem,      (500,500))
-		tool.save_resize_image("resamp_deg.png",   self.degree,   (500,500))
-		tool.save_resize_image("resamp_mask.png",  self.mask,     (500,500))
-		tool.save_resize_image("resamp_ortho.png", self.ortho,    (500,500))
+		tool.save_resize_image("resamp_heli.png",  self.dsm_heli, self.s_size_2d)
+		tool.save_resize_image("resamp_dem.png",   self.dem,      self.s_size_2d)
+		tool.save_resize_image("resamp_deg.png",   self.degree,   self.s_size_2d)
+		tool.save_resize_image("resamp_mask.png",  self.mask,     self.s_size_2d)
+		tool.save_resize_image("resamp_ortho.png", self.ortho,    self.s_size_2d)
 
 		# 1次元に戻す
 		self.mask = cv2.split(self.mask)[0]
@@ -171,19 +173,30 @@ class ImageOp():
 		return
 
 
-	@staticmethod
 	@tool.stop_watch
-	def calc_contours(size):
+	def calc_contours(self):
 		"""
 		csvに保存された領域の座標データより領域データを算出
-
-		size: 領域分割画像のサイズ
 		"""
 		# 領域データ読み込み
 		region_list = tool.load_csv("./area_data/pms_cords.csv")
 
 		# 各領域をキャンパスに描画し1つずつ領域データを抽出
-		process.get_pms_contours(region_list, size)
+		process.get_pms_contours(region_list, self.size_2d)
+
+		return
+
+
+	@tool.stop_watch
+	def label_image(self):
+		"""
+		領域分割結果からラベリング画像を作成
+		"""
+		# 領域毎の座標データ読み込み
+		cords_list = tool.load_csv("./area_data/pms_pix.csv")
+
+		# 各領域をランダム色でペイント
+		process.paint_label(cords_list, self.size_2d)
 
 		return
 
@@ -201,8 +214,8 @@ class ImageOp():
 		self.dsm_heli = (self.dsm_heli-min_heli) / (max_heli-min_heli)
 
 		# 画像を保存
-		tool.save_resize_image("normed_uav.png",  self.dsm_uav,  (500,500))
-		tool.save_resize_image("normed_heli.png", self.dsm_heli, (500,500))
+		tool.save_resize_image("normed_uav.png",  self.dsm_uav,  self.s_size_2d)
+		tool.save_resize_image("normed_heli.png", self.dsm_heli, self.s_size_2d)
 
 		return
 
@@ -252,8 +265,8 @@ class ImageOp():
 		self.dsm_heli = (self.dsm_heli-min_heli) / (max_heli-min_heli) * (max_dem + veg_height)
 
 		# 画像を保存
-		tool.save_resize_image("normed_uav.png",  self.dsm_uav,  (500,500))
-		tool.save_resize_image("normed_heli.png", self.dsm_heli, (500,500))
+		tool.save_resize_image("normed_uav.png",  self.dsm_uav,  self.s_size_2d)
+		tool.save_resize_image("normed_heli.png", self.dsm_heli, self.s_size_2d)
 
 		return
 
@@ -275,7 +288,7 @@ class ImageOp():
 
 		# tif画像への書き出し
 		tif.save_tif(self.dsm_sub, "dsm_uav.tif", "dsm_sub.tif")
-		tool.save_resize_image("dsm_bin.png", dsm_bin, (500, 500))
+		tool.save_resize_image("dsm_bin.png", dsm_bin, self.s_size_2d)
 
 		return
 

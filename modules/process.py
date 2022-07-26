@@ -1,6 +1,7 @@
 import cv2
 import csv
 import math
+import random
 import numpy as np
 from math import dist
 import scipy.ndimage as ndimage
@@ -68,10 +69,6 @@ def morphology(mask, ksize, exe_num):
 	closing = cv2.dilate(closing, kernel, iterations = 1)
 	closing = cv2.erode (closing, kernel, iterations = 1)
 	closing = cv2.erode (closing, kernel, iterations = 1)
-
-	# 画像の保存
-	tool.save_resize_image("closing.png", closing, (500, 500))
-	tool.save_resize_image("opening.png", opening, (500, 500))
 
 	return closing
 
@@ -166,12 +163,40 @@ def remove_small_area(contours, area_th, scale, mask):
 	return normed_mask
 
 
-def get_pms_contours(region_list, shape):
+def draw_region(label_img, cords, size):
+	"""
+	与えられた座標を領域とし特定画素で埋める
+
+	label_img: ラベル画像
+	cords: 領域の座標群
+	size: 領域分割画像の形状
+	"""
+	# キャンパス描画
+	campus = np.zeros((size[1], size[0]))
+
+	# ランダム色を生成
+	color = [
+		random.randint(0, 255),
+		random.randint(0, 255),
+		random.randint(0, 255),
+	]
+
+	for cord in cords:
+		# ランダム色のラベル画像を作成
+		label_img[cord] = color
+		# 領域座標を白画素で埋める
+		campus[cord] = 255
+
+	return label_img, campus
+
+
+def get_pms_contours(region_list, size):
 	"""
 	各領域をキャンパスに描画し1つずつ領域データを抽出
-	
+	領域分割結果からラベリング画像を作成
+
 	region_list: 領域分割で得た領域データ
-	shape: 領域分割画像の形状
+	size: 領域分割画像のサイズ
 	"""
 	with open('./area_data/region.csv', 'w') as f:
 		writer = csv.writer(f)
@@ -179,12 +204,18 @@ def get_pms_contours(region_list, shape):
 		# ヘッダを追加
 		writer.writerow(["id", "area", "x_centroid", "y_centroid"])
 
+		# キャンパス描画
+		label_img = np.zeros((size[1], size[0], 3))
+
 		for region in region_list:
 			# 領域データを取得
 			label, cords, area = tool.decode_area(region)
 
 			# 注目領域のマスク画像を作成
-			mask = draw_region(shape, cords)
+			label_img, mask = draw_region(label_img, cords, size)
+
+			# # ランダムカラーで塗る
+			# compus = paint_label(cords)
 
 			# 輪郭抽出
 			contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -207,25 +238,34 @@ def get_pms_contours(region_list, shape):
 			# csvファイルに保存
 			data_list = [label, area, cx, cy]
 			writer.writerow(data_list)
+
+		# 画像を保存
+		cv2.imwrite("./outputs/label.png", label_img)
 	
 	return
 
 
-def draw_region(shape, cords):
-	"""
-	与えられた座標を領域とし白画素で埋める
+# def paint_label(cords_list, size):
+# 	"""
+# 	領域分割結果からラベリング画像を作成
+	
+# 	cords_list: 領域分割で得た領域座標データ
+# 	size: 領域分割画像のサイズ
+# 	"""
+# 	# キャンパス描画
+# 	campus = np.zeros(size)
 
-	shape: 領域分割画像の形状
-	cords: 領域の座標群
-	"""
-	# キャンパス描画
-	campus = np.zeros(shape)
+# 	for cords in cords_list:
+# 		label, cord = tool.decode_pix(cords)
+		
+# 		# 領域座標をランダムカラーで塗る
+# 		for cord in cords:
+# 			campus[cord] = 
 
-	# 領域座標を白画素で埋める
-	for cord in cords:
-		campus[cord] = 255
-
-	return campus
+# 		# 領域データを取得
+# 		# label, cords, area = tool.decode_area(region)
+	
+# 	return
 
 
 def extract_sediment(img, mask):
@@ -246,9 +286,6 @@ def extract_sediment(img, mask):
 	# sed[idx] = np.nan
 	# tif.save_tif(dsm, "dsm_uav.tif", "sediment.tif")
 	# return sed.astype(np.uint8)
-
-	# 画像の保存
-	tool.save_resize_image("masked_img.png", sed, (500,500))
 
 	return sed
 

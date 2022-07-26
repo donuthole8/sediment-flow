@@ -10,11 +10,8 @@ def resize_img(in_path, out_path, size):
     out_path: 出力画像パス
     """
     img = cv2.imread(in_path)
-    print(img.shape)
     resize_img = cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
     cv2.imwrite(out_path, resize_img)
-    print(resize_img)
-    print(resize_img.shpae)
 
 
 def moment():
