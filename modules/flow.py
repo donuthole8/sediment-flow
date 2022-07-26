@@ -5,7 +5,7 @@ import numpy as np
 
 from modules import tif
 from modules import tool
-from modules import driver
+from modules import operation
 from modules import process
 from modules import temp
 
@@ -143,7 +143,7 @@ def main():
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
-	dsm, _, _, deg, mask = driver.resampling_dsm(dsm, dsm, deg, deg, mask)
+	dsm, _, _, deg, mask = operation.resampling_dsm(dsm, dsm, deg, deg, mask)
 
 	print(dsm.shape)
 	print(deg.shape)
@@ -156,7 +156,7 @@ def main():
 
 	# 傾斜方位の正規化（0-255 -> 0-360）
 	print("# 傾斜方向の正規化")
-	deg = driver.norm_degree_v2(deg)
+	deg = operation.norm_degree_v2(deg)
 
 	# 土砂領域以外の除去
 	# print("# 植生領域の除去")
@@ -169,12 +169,12 @@ def main():
 
 	# カラー画像の領域分割
 	print("# 土砂領域の領域分割")
-	img = driver.divide_area(img, 3, 4.5, 100)
+	img = operation.divide_area(img, 3, 4.5, 100)
 	# img = cv2.imread("./outputs/meanshift.png")
 
 	# 輪郭・重心データ抽出
 	print("# 領域分割・土砂マスク済み画像から輪郭データ抽出")
-	driver.calc_contours((img.shape[0], img.shape[1]))
+	operation.calc_contours((img.shape[0], img.shape[1]))
 
 	# # 斜面崩壊領域データをすべて抽出
 	# print("# 土砂マスク中の領域のみでラベリング")

@@ -8,7 +8,7 @@ from modules import temp
 from modules import flow
 from modules import tif
 from modules import tool
-from modules import driver
+from modules import operation
 from modules import process
 
 
@@ -71,7 +71,7 @@ def open_piv():
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
-	uav, heli, _, _, mask = driver.resampling_dsm(uav, heli, uav, uav, mask)
+	uav, heli, _, _, mask = operation.resampling_dsm(uav, heli, uav, uav, mask)
 	uav, heli = cv2.split(uav)[0], cv2.split(heli)[0]
 
 	# 土砂マスク
@@ -124,11 +124,11 @@ def main():
 
 	# DEMより傾斜データを抽出
 	print("# DEMより傾斜データを抽出")
-	grad = driver.dem2gradient(dem_org, 5)
+	grad = operation.dem2gradient(dem_org, 5)
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
-	dsm_uav, dsm_heli, dem, deg, mask = driver.resampling_dsm(
+	dsm_uav, dsm_heli, dem, deg, mask = operation.resampling_dsm(
 		dsm_uav, 
 		dsm_heli, 
 		dem_org, 
@@ -159,7 +159,7 @@ def main():
 
 	# 領域分割
 	print("# 土砂領域の領域分割")
-	div_img = driver.divide_area(path6, 10, 2, 100)
+	div_img = operation.divide_area(path6, 10, 2, 100)
 	# div_img = cv2.imread("./outputs/meanshift.png")
 
 	# ラベリング
@@ -176,7 +176,7 @@ def main():
 	# 標高モデルのマッチング
 	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
-	dsm_uav, dsm_heli = driver.norm_elevation(
+	dsm_uav, dsm_heli = operation.norm_elevation(
 		dsm_uav,
 		dsm_heli,
 		dem
@@ -184,7 +184,7 @@ def main():
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")
-	dsm_sub = driver.calc_sedimentation(
+	dsm_sub = operation.calc_sedimentation(
 		dsm_uav,
 		dsm_heli,
 		normed_mask
@@ -192,11 +192,11 @@ def main():
 
 	# 傾斜方位の正規化（0-255 -> 0-360）
 	print("# 傾斜方向の正規化")
-	deg = driver.norm_degree(deg)
+	deg = operation.norm_degree(deg)
 
 	# 土砂移動推定
 	print("# 土砂移動推定")
-	driver.calc_movement(
+	operation.calc_movement(
 		dsm_sub,
 		dem,
 		deg,
@@ -215,13 +215,13 @@ def opt_flow():
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
-	uav, heli, dem, _, mask = driver.resampling_dsm(uav, heli, dem, dem, mask)
+	uav, heli, dem, _, mask = operation.resampling_dsm(uav, heli, dem, dem, mask)
 	uav, heli = cv2.split(uav)[0], cv2.split(heli)[0]
 
 	# 標高モデルのマッチング
 	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
-	dsm_uav, dsm_heli = driver.norm_elevation(uav, heli, dem)
+	dsm_uav, dsm_heli = operation.norm_elevation(uav, heli, dem)
 
 	# 土砂マスク
 	print("# 土砂マスクによる土砂領域抽出")
@@ -253,7 +253,7 @@ def labeling():
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
-	dsm_uav, dsm_heli, dem, deg, mask = driver.resampling_dsm(
+	dsm_uav, dsm_heli, dem, deg, mask = operation.resampling_dsm(
 		dsm_uav, 
 		dsm_heli, 
 		dem_org, 
@@ -277,12 +277,12 @@ def labeling():
 	# img = tif.load_tif(path6)
 	img = cv2.imread(path6)
 	img = cv2.resize(img, (dsm_uav.shape[1], dsm_uav.shape[0]))
-	div_img= driver.divide_area(img, 3, 4.5, 100)
+	div_img= operation.divide_area(img, 3, 4.5, 100)
 	# div_img = cv2.imread("./outputs/meanshift.png")
 
 	# ラベリング
 	print("# ラベリング")
-	driver.labeling_bin(normed_mask, div_img)
+	operation.labeling_bin(normed_mask, div_img)
 	# driver.labeling_color(normed_mask, div_img)
 	# driver.labeling_color_v1(mask, img)
 
@@ -296,7 +296,7 @@ def pymeanshift():
 	# print("size: ", (img.shape[1], img.shape[0]))
 	img = cv2.resize(img, (int(img.shape[1]/5), int(img.shape[0]/5)))
 
-	div_img, num = driver.divide_area(img, 3, 4.5, 100)
+	div_img, num = operation.divide_area(img, 3, 4.5, 100)
 
 	print("size: ", (img.shape[1], img.shape[0]))
 	print("area: ", (img.shape[1] * img.shape[0]))
