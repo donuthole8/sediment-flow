@@ -1,4 +1,3 @@
-from imp import is_builtin
 import cv2
 import csv
 import math
@@ -22,15 +21,15 @@ def binarize(src_img, thresh, mode):
 	return bin_img
 
 
-def calc_gradient(dem, mesh_size):
+@tool.stop_watch
+def calc_gradient(self, mesh_size):
 	"""
 	勾配データの算出
 
-	dem: 国土地理院DEM
 	mesh_size: DEMのメッシュサイズ
 	"""
 	# サイズ
-	width, height = dem.shape[1], dem.shape[0]
+	width, height = self.dem.shape[1], self.dem.shape[0]
 
 	# 勾配データの算出
 	max = 0
@@ -39,7 +38,9 @@ def calc_gradient(dem, mesh_size):
 		for  x in range(1, width - 2):
 			for j in range(-1, 2):
 				for i in range(1, 2):
-					angle = math.degrees((float(abs(dem[y + j, x + i][0] - dem[y, x][0])) / float(mesh_size)))
+					angle = math.degrees((
+						float(abs(self.dem[y + j, x + i][0] - self.dem[y, x][0])) / float(mesh_size)
+					))
 					if angle > max:
 						max = angle
 			grad[y,x] = angle
@@ -49,17 +50,16 @@ def calc_gradient(dem, mesh_size):
 	return grad
 
 
-def morphology(mask, ksize, exe_num):
+def morphology(self, ksize, exe_num):
 	"""
 	モルフォロジー処理
 
-	mask: 処理対象のマスク画像
 	ksize: カーネルサイズ
 	exe_num: 実行回数
 	"""
 	# モルフォロジー処理によるノイズ除去
 	kernel = np.ones((ksize, ksize), np.uint8)
-	opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+	opening = cv2.morphologyEx(self.mask, cv2.MORPH_OPEN, kernel)
 	for i in range(1, exe_num):
 		opening = cv2.morphologyEx(opening, cv2.MORPH_OPEN, kernel)
 	closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
@@ -72,80 +72,67 @@ def morphology(mask, ksize, exe_num):
 	closing = cv2.erode (closing, kernel, iterations = 1)
 	closing = cv2.erode (closing, kernel, iterations = 1)
 
-	return closing
+	# 画像を保存
+	tool.save_resize_image("opening.png", opening, self.s_size_2d)
+	tool.save_resize_image("closing.png", closing, self.s_size_2d)
+
+	# 結果を保存
+	self.mask = closing
+
+	return
 
 
-def get_norm_contours(mask, scale, ksize):
+def get_norm_contours(self, scale, ksize):
 	"""
 	輪郭をぼやけさせて抽出
 
-	mask: マスク画像
 	scale: 拡大倍率
 	ksize: カーネルサイズ
 	"""
 	# 画像の高さと幅を取得
-	h, w = mask.shape
+	w, h = self.size_2d
+
 	# 拡大することで輪郭をぼけさせ境界を識別しやすくする
-	img_resize = cv2.resize(mask, (w * scale, h * scale))
+	img_resize = cv2.resize(self.mask, (w * scale, h * scale))
 
 	# ガウシアンによるぼかし処理
 	img_blur = cv2.GaussianBlur(img_resize, (ksize,ksize), 0)
 
 	# 二値化と大津処理
-	r, dst = cv2.threshold(img_blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+	_, dst = cv2.threshold(img_blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
 	# モルフォロジー膨張処理
 	kernel = np.ones((ksize,ksize), np.uint8)
 	dst = cv2.dilate(dst, kernel, iterations = 1)
 
 	# 画像欠けがあった場合に塗りつぶし
-	dst_fill = ndimage.binary_fill_holes(dst).astype(int) * 255
+	self.mask = ndimage.binary_fill_holes(dst).astype(int) * 255
 
 	# 輪郭抽出
-	contours, _ = cv2.findContours(dst_fill.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  
+	contours, _ = cv2.findContours(self.mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	return contours, dst_fill
+	# 画像を保存
+	cv2.imwrite("./outputs/dst_fill.png", self.mask)
 
-
-def get_contours(mask, scale):
-	"""
-	輪郭を抽出
-
-	mask: マスク画像
-	scale: 拡大倍率
-	ksize: カーネルサイズ
-	"""
-	# 画像の高さと幅を取得
-	h, w = mask.shape
-	# 拡大することで輪郭をぼけさせ境界を識別しやすくする
-	img_resize = cv2.resize(mask, (w * scale, h * scale))
-
-	# 二値化と大津処理
-	r, dst = cv2.threshold(img_resize, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-	# 輪郭抽出
-	contours, _ = cv2.findContours(dst.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  
-
-	return contours, dst
+	return contours
 
 
-def remove_small_area(contours, area_th, scale, mask):
+def remove_small_area(self, contours, area_th, scale):
 	"""
 	面積が閾値以下の領域を除去
 
 	contours: 輪郭データ
 	area_th: 面積の閾値
 	scale: 拡大倍率
-	mask: マスク画像
 	"""
+	# 画像の高さと幅を取得
+	h, w = self.mask.shape
+
 	# 輪郭データをフィルタリング
 	contours = list(filter(lambda x: cv2.contourArea(x) >= area_th * scale, contours))
 
-	# 画像の高さと幅を取得
-	h, w = mask.shape
-
 	# 黒画像
-	campus = np.zeros(mask.shape)
+	campus = np.zeros((h, w))
 
 	# TODO: スケール分は考慮して割る必要あり
 	for i, contour in enumerate(contours):
@@ -157,48 +144,42 @@ def remove_small_area(contours, area_th, scale, mask):
 			normed_mask = cv2.drawContours(campus, contours, i, 255, -1)
 
 	# スケールを戻す
-	normed_mask = cv2.resize(normed_mask, (int(w/scale), int(h/scale)))
+	self.mask = cv2.resize(normed_mask, (int(w/scale), int(h/scale)))
 
 	# 画像の保存
 	cv2.imwrite("./outputs/normed_mask.png", normed_mask)
 
-	return normed_mask
+	return
 
 
-def draw_region(label_img, cords, size):
+def extract_sediment(self):
 	"""
-	与えられた座標を領域とし特定画素で埋める
-
-	label_img: ラベル画像
-	cords: 領域の座標群
-	size: 領域分割画像の形状
+	標高データから土砂領域を抽出
 	"""
-	# キャンパス描画
-	campus = np.zeros((size[1], size[0]))
+	# 土砂マスクを用いて土砂領域以外を除去
+	self.masked_ortho = np.zeros(self.ortho.shape).astype(np.uint8)
+	idx = np.where(self.mask == 0)
+	self.masked_ortho[idx] = self.ortho[idx]
 
-	# ランダム色を生成
-	color = [
-		random.randint(0, 255),
-		random.randint(0, 255),
-		random.randint(0, 255),
-	]
+	# # 土砂領域を抽出
+	# idx = np.where(mask == 0).astype(np.float32)
+	# # 土砂領域以外の標高データを消去
+	# sed[idx] = np.nan
+	# tif.save_tif(dsm, "dsm_uav.tif", "sediment.tif")
+	# return sed.astype(np.uint8)
 
-	for cord in cords:
-		# ランダム色のラベル画像を作成
-		label_img[cord] = color
-		# 領域座標を白画素で埋める
-		campus[cord] = 255
+	# 画像を保存
+	tool.save_resize_image("masked_img.png", self.masked_ortho, self.size_2d)
 
-	return label_img, campus
+	return
 
 
-def get_pms_contours(region_list, size):
+def get_pms_contours(self, region_list):
 	"""
 	各領域をキャンパスに描画し1つずつ領域データを抽出
 	領域分割結果からラベリング画像を作成
 
 	region_list: 領域分割で得た領域データ
-	size: 領域分割画像のサイズ
 	"""
 	with open('./area_data/region.csv', 'w') as f:
 		writer = csv.writer(f)
@@ -207,14 +188,14 @@ def get_pms_contours(region_list, size):
 		writer.writerow(["id", "area", "x_centroid", "y_centroid", "circularity"])
 
 		# キャンパス描画
-		label_img = np.zeros((size[1], size[0], 3))
+		label_img = np.zeros((self.size_2d[1], self.size_2d[0], 3))
 
 		for region in region_list:
 			# 領域データを取得
 			label, cords, area = tool.decode_area(region)
 
 			# 注目領域のマスク画像を作成
-			label_img, mask = draw_region(label_img, cords, size)
+			label_img, mask = draw_region(self, label_img, cords)
 
 			# 輪郭抽出
 			contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -250,36 +231,44 @@ def get_pms_contours(region_list, size):
 	return
 
 
-def is_building(img, cir, cord):
+def draw_region(self, label_img, cords):
 	"""
-	建物領域かどうかを判別
+	与えられた座標を領域とし特定画素で埋める
 
-	img: 領域分割後画像
-	cir: 円形度
-	cord: 該当領域の座標
+	label_img: ラベル画像
+	cords: 領域の座標群
 	"""
-	# 円形度
-	if not (cir > 50):
-		return False
-	else:
-		return True
+	# キャンパス描画
+	campus = np.zeros((self.size_2d[1], self.size_2d[0]))
 
-	# TODO: 土砂・植生等も判別
-	# # 土砂領域
-	# if not (img[cord] ):
+	# ランダム色を生成
+	color = [
+		random.randint(0, 255),
+		random.randint(0, 255),
+		random.randint(0, 255),
+	]
+
+	for cord in cords:
+		# ランダム色のラベル画像を作成
+		label_img[cord] = color
+		# 領域座標を白画素で埋める
+		campus[cord] = 255
+
+	return label_img, campus
 
 
-def extract_building(div_img, bld_img, region_list, cords_list, size):
+def extract_building(self, region_list, cords_list):
 	"""
 	建物領域を抽出
 
-	img: オルソ画像
 	region_list: 領域の詳細データ
 	cords_list: 領域分割で得た領域座標データ
-	size: 領域分割画像のサイズ
 	"""
+	# 建物領域検出用画像
+	bld_img = self.ortho.copy()
+
 	# キャンパス描画
-	cir_img = np.zeros((size[1], size[0]))
+	cir_img = np.zeros((self.size_2d[1], self.size_2d[0]))
 
 	for region, cords in zip(region_list, cords_list):
 		# 領域・座標データを取得
@@ -294,50 +283,44 @@ def extract_building(div_img, bld_img, region_list, cords_list, size):
 			cir_img[cord] = circularity
 
 		# 建物領域の検出
-		if is_building(div_img, circularity, cords[0]):
+		if is_building(self, circularity, cords[0]):
 			# 塗りつぶし
 			for cord in cords:
 				bld_img[cord] = [0, 0, 220]
 
 	# 画像を保存
-	tool.save_resize_image("circularity.png", cir_img, (500, 500))
-	tool.save_resize_image("building.png", bld_img, (500, 500))
+	tool.save_resize_image("circularity.png", cir_img, self.s_size_2d)
+	tool.save_resize_image("building.png", bld_img, self.s_size_2d)
 	
 	return
 
 
-def extract_sediment(img, mask):
+def is_building(self, cir, cord):
 	"""
-	標高データから土砂領域を抽出
+	建物領域かどうかを判別
 
-	img: 抽出対象の画像 
-	mask: 土砂領域マスク
+	cir: 円形度
+	cord: 該当領域の座標
 	"""
-	# 土砂マスクを用いて土砂領域以外を除去
-	sed = np.zeros(img.shape).astype(np.uint8)
-	idx = np.where(mask == 0)
-	sed[idx] = img[idx]
+	# 円形度
+	if not (cir > 50):
+		return False
+	else:
+		return True
 
-	# # 土砂領域を抽出
-	# idx = np.where(mask == 0).astype(np.float32)
-	# # 土砂領域以外の標高データを消去
-	# sed[idx] = np.nan
-	# tif.save_tif(dsm, "dsm_uav.tif", "sediment.tif")
-	# return sed.astype(np.uint8)
-
-	return sed
+	# TODO: 土砂・植生等も判別
+	# # 土砂領域
+	# if not (img[cord] ):
 
 
-def bin_2area(dsm_sub):
+def bin_2area(self):
 	"""
 	堆積領域と侵食領域で二値化
-
-	dsm_sub: 標高差分値モデル
 	"""
-	dsm_bin = dsm_sub.copy()
-	idx = np.where(dsm_sub >  0)
+	dsm_bin = self.dsm_sub.copy()
+	idx = np.where(self.dsm_sub >  0)
 	dsm_bin[idx] = 255
-	idx = np.where(dsm_sub <= 0)
+	idx = np.where(self.dsm_sub <= 0)
 	dsm_bin[idx] = 0
 
 	return dsm_bin
@@ -398,13 +381,9 @@ def extract_neighbor():
 
 
 @tool.stop_watch
-def extract_direction(deg, dem, dsm):
+def extract_direction(self):
 	"""
 	傾斜方向が上流から下流の領域の組を全て抽出
-	
-	deg: 傾斜方向データ
-	dem: 国土地理院DEM
-	dsm: UAV画像のDSM
 	"""
 	# 傾斜方向データでやりたい
 	# 領域データ読み込み
@@ -424,7 +403,7 @@ def extract_direction(deg, dem, dsm):
 		# 重心の標高値を算出
 		cx, cy = int(area[2]), int(area[3])
 		# FIXME: DEMかDSMかは要検討
-		centroid_elevation = dem[cy, cx]
+		centroid_elevation = self.dem[cy, cx]
 
 		# リストに追加
 		ave_elevation_list.append(centroid_elevation[0])
@@ -450,11 +429,9 @@ def extract_direction(deg, dem, dsm):
 
 
 @tool.stop_watch
-def extract_sub(dsm_sub):
+def extract_sub(self):
 	"""
 	侵食と堆積の領域の組を全て抽出
-
-	dsm_sub: 災害前後の標高差分
 	"""
 	# 領域データ読み込み
 	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
@@ -473,12 +450,12 @@ def extract_sub(dsm_sub):
 		cx, cy = int(area[2]), int(area[3])
 
 		# 注目領域の重心の標高変化
-		sub_elevation = dsm_sub[cy, cx][0]
+		sub_elevation = self.dsm_sub[cy, cx][0]
 
 		# 堆積・侵食の組み合わせを算出
 		idx_list = [
 			idx for idx, sub in enumerate(area_list)
-			if ((sub_elevation > dsm_sub[int(sub[3]), int(sub[2])][0]))
+			if ((sub_elevation > self.dsm_sub[int(sub[3]), int(sub[2])][0]))
 		]
 
 		# リストに追加
@@ -515,12 +492,11 @@ def extract_sub(dsm_sub):
 
 
 @tool.stop_watch
-def make_map(move_list, dsm, path):
+def make_map(self, move_list):
 	"""
 	土砂移動図の作成
 
 	list: 土砂移動推定箇所のリスト
-	dsm: UAVのDSM 
 	"""
 	# 領域データ読み込み
 	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
@@ -531,9 +507,6 @@ def make_map(move_list, dsm, path):
 		area_list.pop(0)
 		# 背景領域を削除
 		area_list.pop(0)
-
-	# オルソ画像の読み込み
-	ortho = cv2.imread(path)
 
 	# 解像度（cm）
 	resolution = 7.5
@@ -550,7 +523,7 @@ def make_map(move_list, dsm, path):
 				# 流出先の重心座標
 				_cx, _cy = int(area_list[m][2]), int(area_list[m][3])
 				cv2.arrowedLine(
-					img=ortho,          # 画像
+					img=self.ortho,     # 画像
 					pt1=(cx, cy),       # 始点
 					pt2=(_cx, _cy),     # 終点
 					color=(20,20,180),  # 色
@@ -603,7 +576,7 @@ def make_map(move_list, dsm, path):
 	# ortho = tool.draw_color(ortho, idx, (0, 0, 0))
 
 	# 土砂移動図の保存
-	tool.save_resize_image("map.png", ortho, (1000, 1000))
+	tool.save_resize_image("map.png", self.ortho, self.size_2d)
 
 	return
 

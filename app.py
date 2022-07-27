@@ -47,6 +47,7 @@ def main():
 	image_op = operation.ImageOp(path_list)
 
 	# DEMより傾斜データを抽出
+	# NOTE: リサンプリング後に行った方が良いかも
 	print("# DEMより傾斜データを抽出")
 	image_op.dem2gradient(10)	# メッシュサイズ
 

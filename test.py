@@ -340,6 +340,8 @@ def building():
 	image_op.extract_building()
 	
 
+
+
 # メイン関数
 if __name__ == "__main__":
 	# テスト実行
