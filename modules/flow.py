@@ -145,11 +145,6 @@ def main():
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
 	dsm, _, _, deg, mask = operation.resampling_dsm(dsm, dsm, deg, deg, mask)
 
-	print(dsm.shape)
-	print(deg.shape)
-	print(mask.shape)
-	print(org_img.shape)
-
 	# 次元を減らす
 	dsm = cv2.split(dsm)[0]
 	deg = cv2.split(deg)[0]

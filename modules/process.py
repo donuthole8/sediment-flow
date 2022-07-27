@@ -111,9 +111,6 @@ def get_norm_contours(self, scale, ksize):
 	# 輪郭抽出
 	contours, _ = cv2.findContours(self.mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	# 画像を保存
-	cv2.imwrite("./outputs/dst_fill.png", self.mask)
-
 	return contours
 
 
@@ -152,14 +149,22 @@ def remove_small_area(self, contours, area_th, scale):
 	return
 
 
-def extract_sediment(self):
+def masking(self, img, mask):
 	"""
-	標高データから土砂領域を抽出
+	マスク処理にて不要領域を除去
+
+	img: マスク対象の画像
+	mask: マスク画像
 	"""
-	# 土砂マスクを用いて土砂領域以外を除去
-	self.masked_ortho = np.zeros(self.ortho.shape).astype(np.uint8)
-	idx = np.where(self.mask == 0)
-	self.masked_ortho[idx] = self.ortho[idx]
+	# 画像のコピー
+	masked_img = img.copy()
+
+	# マスク領域以外を除去
+	idx = np.where(mask != 0)
+	try:
+		masked_img[idx] = np.nan
+	except:
+		masked_img[idx] = 0
 
 	# # 土砂領域を抽出
 	# idx = np.where(mask == 0).astype(np.float32)
@@ -169,9 +174,9 @@ def extract_sediment(self):
 	# return sed.astype(np.uint8)
 
 	# 画像を保存
-	tool.save_resize_image("masked_img.png", self.masked_ortho, self.size_2d)
+	tool.save_resize_image("masked_img.png", masked_img, self.s_size_2d)
 
-	return
+	return masked_img
 
 
 def get_pms_contours(self, region_list):

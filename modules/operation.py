@@ -24,8 +24,8 @@ class ImageOp():
 		self.dem         = tif.load_tif(path_list[2]).astype(np.float32)
 		self.degree      = tif.load_tif(path_list[3]).astype(np.float32)
 		self.mask        = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
-		self.ortho       = cv2.imread(path_list[5])
-		self.maked_ortho = cv2.imread(path_list[5])
+		self.ortho       = cv2.imread(path_list[5]).astype(np.float32)
+		self.maked_ortho = None
 		self.gradient    = None
 		self.div_img     = None
 		self.dsm_sub     = None
@@ -145,10 +145,10 @@ class ImageOp():
 
 	def extract_sediment(self):
 		"""
-		標高データから土砂領域を抽出
+		土砂領域のみを抽出
 		"""
 		# 土砂マスクを用いて土砂領域以外を除去
-		process.extract_sediment(self)
+		self.masked_ortho = process.masking(self, self.ortho, self.mask)
 
 		return
 
@@ -162,11 +162,22 @@ class ImageOp():
 		range_radius: 範囲半径
 		min_density: 最小密度
 		"""
-		# 領域分割
+		# Lab表色系に変換
+		# NOTE: RGB表色系のままでも良いかも
+		lab_img = cv2.cvtColor(self.ortho, cv2.COLOR_BGR2Lab)
+		# lab_img = cv2.cvtColor(self.masked_ortho, cv2.COLOR_BGR2Lab)
+
+		# PyMeanShiftによる域分割
 		# TODO: マスク済みオルソ画像を用いると良いかも
-		lab_img, _, number_regions = pms.segment(cv2.cvtColor(self.ortho, cv2.COLOR_BGR2Lab), spatial_radius, range_radius,min_density)
-		# lab_img, _, number_regions = pms.segment(cv2.cvtColor(self.masked_ortho, cv2.COLOR_BGR2Lab), spatial_radius, range_radius,min_density)
-		self.div_img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR)
+		lab_img, _, number_regions = pms.segment(
+			lab_img.astype(np.uint8), 
+			spatial_radius, 
+			range_radius, 
+			min_density
+		)
+
+		# RGB表色系に変換
+		self.div_img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR).astype(np.float32)
 
 		# 画像の保存
 		cv2.imwrite('./outputs/meanshift.png', self.div_img)
@@ -317,7 +328,7 @@ class ImageOp():
 
 		# 土砂移動図の作成
 		process.make_map(self, area_list)
-		print("- area-list :", area_list)
+		# print("- area-list :", area_list)
 		print("- area-num  :", len(area_list))
 
 		return
