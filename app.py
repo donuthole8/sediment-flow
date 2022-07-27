@@ -80,9 +80,15 @@ def main():
 	# image_op.divide_area(2, 2, 20)
 	image_op.div_img = cv2.imread("./outputs/meanshift.png")
 
+	# TODO: 大きすぎた領域のみさらに領域分割する
+
 	# 輪郭・重心データ抽出・ラベル画像作成
 	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
 	image_op.calc_contours()
+
+	# 建物領域の検出
+	print("# 建物領域を検出する")
+	image_op.extract_building()
 
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う

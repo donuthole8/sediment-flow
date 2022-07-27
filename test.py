@@ -17,11 +17,11 @@ path1 = './inputs_trim/dsm_uav_re.tif'
 path2 = './inputs_trim/dsm_heli.tif'
 path3 = './inputs_trim/dem.tif'
 path4 = './inputs_trim/degree.tif'
-path5 = './inputs_trim/mask.png'
-# path5 = './inputs/manual_mask.png'
-path6 = './inputs_trim/uav_img_re.tif'
+# path5 = './inputs_trim/mask.png'
+# path5 = './inputs_trim/manual_mask.png'
+path5 = './inputs_trim/normed_mask.png'
+path6 = './inputs_trim/uav_img.tif'
 path7 = './inputs_trim/heli_img.tif'
-
 
 # # リサイズしたテスト用画像
 # path1 = './inputs_re/dsm_uav.tif'
@@ -32,6 +32,8 @@ path7 = './inputs_trim/heli_img.tif'
 # path5 = './inputs_re/manual_mask.png'
 # path6 = './inputs_re/uav_img.tif'
 # path7 = './inputs_re/heli_img.tif'
+
+path_list = [path1, path2, path3, path4, path5, path6]
 
 
 # TODO: ラプラシアンフィルタとかを領域に使って勾配を求める
@@ -306,17 +308,49 @@ def pymeanshift():
 # PruneはちがうかもMinがあｒ
 
 
+
+def building():
+	# import xml.etree.ElementTree as ET
+
+	# bld_line = cv2.imread("./inputs_trim/bld_line.xml")
+	# print("bld line", bld_line)
+
+	# # XMLデータの読み込み
+	# xml = ET.parse('./inputs_trim/bld_line.xml') 
+	# root = xml.getroot()
+	# print(root)
+
+	# クラス初期化
+	# image_data = image.ImageData(path_list)
+	# image = image.ImageData()
+
+
+	image_op = operation.ImageOp(path_list)
+
+
+
+	# 領域分割
+	# image_op.divide_area(3, 4.5, 100)
+	image_op.div_img = cv2.imread("./outputs/meanshift.png")
+
+	# # 輪郭・重心データ抽出・ラベル画像作成
+	# image_op.calc_contours()
+
+	# 建物領域の検出
+	image_op.extract_building()
+	
+
 # メイン関数
 if __name__ == "__main__":
 	# テスト実行
-	main()
+	# main()
 
 	# マスク画像作成
 	# mask()
 
 	# PIV解析
 	# piv_ana()
-	open_piv()
+	# open_piv()
 
 	# 画像サイズ変更
 	# resize()
@@ -332,4 +366,7 @@ if __name__ == "__main__":
 
 	# PyMeanShift
 	# pymeanshift()
+
+	# 建物輪郭抽出
+	building()
 	

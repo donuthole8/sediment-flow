@@ -187,16 +187,16 @@ class ImageOp():
 		return
 
 
-	@tool.stop_watch
-	def label_image(self):
+	def extract_building(self):
 		"""
-		領域分割結果からラベリング画像を作成
+		円形度より建物領域を抽出する
 		"""
-		# 領域毎の座標データ読み込み
-		cords_list = tool.load_csv("./area_data/pms_pix.csv")
+		# 領域・座標データ読み込み
+		region_list = tool.load_csv("./area_data/region.csv")
+		cords_list  = tool.load_csv("./area_data/pms_cords.csv")
 
-		# 各領域をランダム色でペイント
-		process.paint_label(cords_list, self.size_2d)
+		# 建物領域を抽出
+		process.extract_building(self.div_img, self.ortho, region_list, cords_list, self.size_2d)
 
 		return
 

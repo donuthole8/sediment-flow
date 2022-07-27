@@ -1,3 +1,4 @@
+from imp import is_builtin
 import cv2
 import csv
 import math
@@ -8,6 +9,7 @@ import scipy.ndimage as ndimage
 
 from modules import tif
 from modules import tool
+
 
 
 def binarize(src_img, thresh, mode):
@@ -202,7 +204,7 @@ def get_pms_contours(region_list, size):
 		writer = csv.writer(f)
 
 		# ヘッダを追加
-		writer.writerow(["id", "area", "x_centroid", "y_centroid"])
+		writer.writerow(["id", "area", "x_centroid", "y_centroid", "circularity"])
 
 		# キャンパス描画
 		label_img = np.zeros((size[1], size[0], 3))
@@ -214,9 +216,6 @@ def get_pms_contours(region_list, size):
 			# 注目領域のマスク画像を作成
 			label_img, mask = draw_region(label_img, cords, size)
 
-			# # ランダムカラーで塗る
-			# compus = paint_label(cords)
-
 			# 輪郭抽出
 			contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -224,8 +223,8 @@ def get_pms_contours(region_list, size):
 			# FIXME: pmsで算出した面積と異なる場合がある
 
 			# 面積
-			area = cv2.contourArea(contours[0])
-			area = int(area)
+			area_float = cv2.contourArea(contours[0])
+			area = int(area_float)
 
 			# 輪郭の重心
 			M = cv2.moments(contours[0])
@@ -235,8 +234,14 @@ def get_pms_contours(region_list, size):
 			except:
 				cx, cy = 0, 0
 
+			# 輪郭の周囲長
+			arc_len = cv2.arcLength(contours[0], True)
+
+			# 円形度
+			circularity = 4.0 * math.pi * area_float / (arc_len * arc_len)
+
 			# csvファイルに保存
-			data_list = [label, area, cx, cy]
+			data_list = [label, area, cx, cy, circularity]
 			writer.writerow(data_list)
 
 		# 画像を保存
@@ -245,27 +250,60 @@ def get_pms_contours(region_list, size):
 	return
 
 
-# def paint_label(cords_list, size):
-# 	"""
-# 	領域分割結果からラベリング画像を作成
-	
-# 	cords_list: 領域分割で得た領域座標データ
-# 	size: 領域分割画像のサイズ
-# 	"""
-# 	# キャンパス描画
-# 	campus = np.zeros(size)
+def is_building(img, cir, cord):
+	"""
+	建物領域かどうかを判別
 
-# 	for cords in cords_list:
-# 		label, cord = tool.decode_pix(cords)
+	img: 領域分割後画像
+	cir: 円形度
+	cord: 該当領域の座標
+	"""
+	# 円形度
+	if not (cir > 50):
+		return False
+	else:
+		return True
+
+	# TODO: 土砂・植生等も判別
+	# # 土砂領域
+	# if not (img[cord] ):
+
+
+def extract_building(div_img, bld_img, region_list, cords_list, size):
+	"""
+	建物領域を抽出
+
+	img: オルソ画像
+	region_list: 領域の詳細データ
+	cords_list: 領域分割で得た領域座標データ
+	size: 領域分割画像のサイズ
+	"""
+	# キャンパス描画
+	cir_img = np.zeros((size[1], size[0]))
+
+	for region, cords in zip(region_list, cords_list):
+		# 領域・座標データを取得
+		circularity = region[4]
+		_, cords, _  = tool.decode_area(cords)
 		
-# 		# 領域座標をランダムカラーで塗る
-# 		for cord in cords:
-# 			campus[cord] = 
+		# 円形度を0-255に正規化
+		circularity = int(float(circularity) * 255)
 
-# 		# 領域データを取得
-# 		# label, cords, area = tool.decode_area(region)
+		# 円形度を大小で描画
+		for cord in cords:
+			cir_img[cord] = circularity
+
+		# 建物領域の検出
+		if is_building(div_img, circularity, cords[0]):
+			# 塗りつぶし
+			for cord in cords:
+				bld_img[cord] = [0, 0, 220]
+
+	# 画像を保存
+	tool.save_resize_image("circularity.png", cir_img, (500, 500))
+	tool.save_resize_image("building.png", bld_img, (500, 500))
 	
-# 	return
+	return
 
 
 def extract_sediment(img, mask):
