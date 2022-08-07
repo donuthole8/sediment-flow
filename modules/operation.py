@@ -19,10 +19,16 @@ class ImageOp():
 		self.path_list = path_list
 
 		# 画像
-		self.dsm_uav     = tif.load_tif(path_list[0]).astype(np.float32)
-		self.dsm_heli    = tif.load_tif(path_list[1]).astype(np.float32)
-		self.dem         = tif.load_tif(path_list[2]).astype(np.float32)
-		self.degree      = tif.load_tif(path_list[3]).astype(np.float32)
+		# self.dsm_uav     = tif.load_tif(path_list[0]).astype(np.float32)
+		# self.dsm_heli    = tif.load_tif(path_list[1]).astype(np.float32)
+		# self.dem         = tif.load_tif(path_list[2]).astype(np.float32)
+		# self.degree      = tif.load_tif(path_list[3]).astype(np.float32)
+
+		self.dsm_uav     = cv2.imread(path_list[0], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.dsm_heli    = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.dem         = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.degree      = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+
 		self.mask        = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
 		self.ortho       = cv2.imread(path_list[5]).astype(np.float32)
 		self.maked_ortho = None
@@ -34,6 +40,9 @@ class ImageOp():
 		self.size_3d   = self.dsm_uav.shape
 		self.size_2d   = (self.size_3d[1], self.size_3d[0])
 		self.s_size_2d = (int(self.size_3d[1] / 2), int(self.size_3d[0] / 2))
+
+		# 領域データ
+		self.building = []
 
 
 	def dem2gradient(self, mesh_size):
@@ -90,7 +99,7 @@ class ImageOp():
 		self.dem      = cv2.resize(self.dem,      self.size_2d, interpolation=cv2.INTER_CUBIC)
 		self.degree   = cv2.resize(self.degree,   self.size_2d, interpolation=cv2.INTER_CUBIC)
 		self.mask     = cv2.resize(self.mask,     self.size_2d, interpolation=cv2.INTER_CUBIC)
-		self.ortho    = cv2.resize(self.ortho,    self.size_2d, interpolation=cv2.INTER_CUBIC)
+		self.ortho    = cv2.resize(self.ortho,    self.size_2d, interpolation=cv2.INTER_CUBIC)		
 
 		# UAV画像のDSMの最小値を算出（領域外の透過背景値）
 		background_pix = np.min(self.dsm_uav)
@@ -169,15 +178,21 @@ class ImageOp():
 
 		# PyMeanShiftによる域分割
 		# TODO: マスク済みオルソ画像を用いると良いかも
+		# lab_img, _, number_regions = pms.segment(
+		# 	lab_img.astype(np.uint8), 
+		# 	spatial_radius, 
+		# 	range_radius, 
+		# 	min_density
+		# )
 		lab_img, _, number_regions = pms.segment(
-			lab_img.astype(np.uint8), 
+			self.ortho.astype(np.uint8), 
 			spatial_radius, 
 			range_radius, 
 			min_density
 		)
 
-		# RGB表色系に変換
-		self.div_img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR).astype(np.float32)
+		# # RGB表色系に変換
+		# self.div_img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR).astype(np.float32)
 
 		# 画像の保存
 		cv2.imwrite('./outputs/meanshift.png', self.div_img)
@@ -210,8 +225,17 @@ class ImageOp():
 		cords_list  = tool.load_csv("./area_data/pms_cords.csv")
 
 		# 建物領域を抽出
-		# process.extract_building(self, self.div_img, self.ortho, region_list, cords_list, self.size_2d)
 		process.extract_building(self, region_list, cords_list)
+
+		return
+
+
+	def norm_building(self):
+		"""
+		建物領域の標高値を地表面と同等に補正する
+		"""
+		# 標高データを補正
+		process.norm_building(self)
 
 		return
 
@@ -299,7 +323,7 @@ class ImageOp():
 		self.dsm_sub[idx_mask] = np.nan
 
 		# 堆積領域と侵食領域で二値化
-		dsm_bin = process.bin_2area(self)
+		dsm_bin = process.binarize_2area(self)
 
 		# 画像の保存
 		tif.save_tif(self.dsm_sub, "dsm_uav.tif", "dsm_sub.tif")
@@ -321,6 +345,9 @@ class ImageOp():
 
 		## 侵食と堆積の領域の組を全て抽出
 		area_list3 = process.extract_sub(self)
+
+		## 災害前地形より流出推定
+		area_list4 = process.estimate_flow(self)
 
 		# 上記3つの条件を全て満たす領域の組を抽出
 		# area_list = tool.and_operation_2(area_list1, area_list2)

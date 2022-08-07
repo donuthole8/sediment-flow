@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 from modules import tool
 from modules import operation
@@ -31,6 +32,11 @@ path_list = [path1, path2, path3, path4, path5, path6]
 
 # TODO: ラプラシアンフィルタとかを領域に使って勾配を求める
 # TODO: テクスチャかDLで建物検出
+# ラベリングの改良
+# ラベリングについて領域サイズを一定に
+# 領域同士が隣接している領域を輪郭データ等で算出
+# 傾斜方向が上から下である領域を平均標高値や傾斜方向で算出
+# 建物領域にも矢印があるので除去など
 
 
 @tool.stop_watch
@@ -46,14 +52,14 @@ def main():
 	# クラス初期化
 	image_op = operation.ImageOp(path_list)
 
-	# DEMより傾斜データを抽出
-	# NOTE: リサンプリング後に行った方が良いかも
-	print("# DEMより傾斜データを抽出")
-	image_op.dem2gradient(10)	# メッシュサイズ
+	# # DEMより傾斜データを抽出
+	# # NOTE: リサンプリング後に行った方が良いかも
+	# print("# DEMより傾斜データを抽出")
+	# image_op.dem2gradient(10)	# メッシュサイズ
 
-	# 傾斜方位の正規化（0-255 -> 0-360）
-	print("# 傾斜方向の正規化")
-	image_op.norm_degree()
+	# # 傾斜方位の正規化（0-255 -> 0-360）
+	# print("# 傾斜方向の正規化")
+	# image_op.norm_degree()
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
@@ -76,10 +82,10 @@ def main():
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")	# 空間半径,範囲半径,最小密度
-	image_op.divide_area(3, 4.5, 100)
+	# image_op.divide_area(3, 4.5, 100)
 	# image_op.divide_area(15, 4.5, 300)
 	# image_op.divide_area(2, 2, 20)
-	# image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
+	image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
 
@@ -87,19 +93,24 @@ def main():
 	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
 	image_op.calc_contours()
 
-	# 建物領域の検出
-	print("# 建物領域を検出する")
-	image_op.extract_building()
-
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
 	image_op.norm_elevation_0to1()
 	# image_op.norm_elevation_meter()
 
-	# 標高座標の最適化
+	# # 標高座標の最適化
+	# # TODO: 実装する,論文手法
 	# print("# 標高座標の最適化")
 	# image_op.norm_cord()
+
+	# 建物領域の検出
+	print("# 建物領域を検出する")
+	image_op.extract_building()
+
+	# TODO: 建物領域の標高値を地表面と同じ標高値にする
+	print("建物領域の標高値を地表面標高値に補正")
+	image_op.norm_building()
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")

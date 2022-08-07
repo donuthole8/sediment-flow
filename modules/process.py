@@ -293,6 +293,14 @@ def extract_building(self, region_list, cords_list):
 			for cord in cords:
 				bld_img[cord] = [0, 0, 220]
 
+			# 建物領域の保存
+			self.building.append([
+				region[0], 
+				region[2], 
+				region[3], 
+				tuple(cords)
+			])
+
 	# 画像を保存
 	tool.save_resize_image("circularity.png", cir_img, self.s_size_2d)
 	tool.save_resize_image("building.png", bld_img, self.s_size_2d)
@@ -318,7 +326,29 @@ def is_building(self, cir, cord):
 	# if not (img[cord] ):
 
 
-def bin_2area(self):
+def norm_building(self):
+	"""
+	建物領域の標高値を地表面と同等に補正する
+
+	building_list: 建物領域データ
+	"""
+	# 建物領域毎に処理
+	for bld in self.building:
+		for cords in bld[3]:
+			# UAVのDSMの建物領域を10m降下させる
+			self.dsm_uav[cords] -= 10
+
+			# 航空DSMの建物領域を10m降下させる
+			self.dsm_heli[cords] -= 10
+
+			# TODO: subも検討
+			# self.dsm_sub[cords] -= 10
+	
+
+	return
+
+
+def binarize_2area(self):
 	"""
 	堆積領域と侵食領域で二値化
 	"""
@@ -411,7 +441,8 @@ def extract_direction(self):
 		centroid_elevation = self.dem[cy, cx]
 
 		# リストに追加
-		ave_elevation_list.append(centroid_elevation[0])
+		# ave_elevation_list.append(centroid_elevation[0])
+		ave_elevation_list.append(centroid_elevation)
 
 	# 重心標高値より下流の領域を保持する
 	downstream_idx_list = []
@@ -455,12 +486,14 @@ def extract_sub(self):
 		cx, cy = int(area[2]), int(area[3])
 
 		# 注目領域の重心の標高変化
-		sub_elevation = self.dsm_sub[cy, cx][0]
+		# sub_elevation = self.dsm_sub[cy, cx][0]
+		sub_elevation = self.dsm_sub[cy, cx]
 
 		# 堆積・侵食の組み合わせを算出
 		idx_list = [
 			idx for idx, sub in enumerate(area_list)
-			if ((sub_elevation > self.dsm_sub[int(sub[3]), int(sub[2])][0]))
+			# if ((sub_elevation > self.dsm_sub[int(sub[3]), int(sub[2])][0]))
+			if ((sub_elevation > self.dsm_sub[int(sub[3]), int(sub[2])]))
 		]
 
 		# リストに追加
@@ -488,12 +521,77 @@ def extract_sub(self):
 	return sub_idx_list
 
 
-# TODO: クラス化してcsv読み込みをselfにする
-# ラベリングの改良
-# ラベリングについて領域サイズを一定に
-# 領域同士が隣接している領域を輪郭データ等で算出
-# 傾斜方向が上から下である領域を平均標高値や傾斜方向で算出
-# 建物領域にも矢印があるので除去など
+
+def estimate_flow(dsm, deg, img):
+	"""
+	流出方向の予測
+
+	dsm: 標高データ
+	deg: 傾斜方向データ
+	img: 画像データ
+	"""
+	# 領域データ読み込み
+	with open("./area_data/region.csv", encoding='utf8', newline='') as f:
+	# with open("./area_data/l-centroid.csv", encoding='utf8', newline='') as f:
+		area = csv.reader(f)
+		area_list = [a for a in area]
+		# ヘッダを削除
+		area_list.pop(0)
+		# 背景領域を削除
+		area_list.pop(0)
+
+	## 斜面崩壊領域を処理対象としてforを回す
+	for area in area_list:
+		## 注目画素から傾斜方向 + 隣接2方向の画素の標高値を調べる（傾斜方向はQgisの出力を近傍8画素に割り当て,　多分↑が0°になってるので上方向は 337.5° ~ 360° & 0° - 22.5°みたいな？）
+
+		# 注目領域の重心標高
+		cx, cy = int(area[2]), int(area[3])
+		pix = dsm[cy, cx]
+
+		## 標高値が注目画素よりも小さければそこも斜面崩壊領域としてもう一回ⅱをやるを繰り返してたと思う。（もとは傾斜とか条件つけてたけど全然領域が広がらなかったので標高の大小だけにした気がする）
+		## 領域内での→を付けたい！！
+		## 下端まで〜
+
+		# 始点
+		x, y = cx, cy
+
+		# 傾斜方向の標高
+		# NOTE: しきい値変えれる
+		# for i in range(0, 30):
+		for i in range(0, 10):
+			# 注目領域の重心標高から傾斜方向を探査
+			dx, dy = detect_flow(deg[cy, cx])
+			# 終点
+			x, y = x + dx, y + dy
+
+			# nanだった場合
+			if (math.isnan(dx)):
+				break
+			# 標高が上がった場合
+			try:
+				if ((dsm[y, x]) > pix):
+					break
+			except:
+				print("err")
+				if ((dsm[y-1, x-1]) > pix):
+					break
+		try:
+			# 矢印の距離が短すぎる領域は除去
+			# NOTE: しきい値変えれる
+			if (i > 7):
+				# 矢印の描画
+				cv2.arrowedLine(
+					img=img,            # 画像
+					pt1=(cx, cy),       # 始点
+					pt2=(x, y),         # 終点
+					color=(20,20,180),  # 色
+					thickness=3,        # 太さ
+					tipLength=0.3       # 矢先の長さ
+				)
+		except:
+			pass
+	
+	cv2.imwrite("test_map.png", img)
 
 
 @tool.stop_watch
@@ -581,6 +679,7 @@ def make_map(self, move_list):
 	# ortho = tool.draw_color(ortho, idx, (0, 0, 0))
 
 	# 土砂移動図の保存
+	print("------------")
 	tool.save_resize_image("map.png", self.ortho, self.size_2d)
 
 	return

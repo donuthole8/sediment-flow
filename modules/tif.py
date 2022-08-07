@@ -1,5 +1,5 @@
 import cv2
-from osgeo import gdal
+# from osgeo import gdal
 # from osgeo import osr
 
 
@@ -81,6 +81,10 @@ def load_tif(path):
 
 
 def save_tif(data, load_path, save_path):
+  cv2.imwrite(save_path, data)
+
+
+def _save_tif(data, load_path, save_path):
   """
   tifファイルの書き込み
 
