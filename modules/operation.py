@@ -42,7 +42,10 @@ class ImageOp():
 		self.s_size_2d = (int(self.size_3d[1] / 2), int(self.size_3d[0] / 2))
 
 		# 領域データ
-		self.building = []
+		self.pms_cords = []
+		self.pms_pix   = []
+		self.region    = []
+		self.building  = []
 
 
 	def dem2gradient(self, mesh_size):
@@ -178,14 +181,8 @@ class ImageOp():
 
 		# PyMeanShiftによる域分割
 		# TODO: マスク済みオルソ画像を用いると良いかも
-		# lab_img, _, number_regions = pms.segment(
-		# 	lab_img.astype(np.uint8), 
-		# 	spatial_radius, 
-		# 	range_radius, 
-		# 	min_density
-		# )
 		lab_img, _, number_regions = pms.segment(
-			self.ortho.astype(np.uint8), 
+			self.lab_img.astype(np.uint8), 
 			spatial_radius, 
 			range_radius, 
 			min_density
@@ -193,6 +190,10 @@ class ImageOp():
 
 		# # RGB表色系に変換
 		# self.div_img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR).astype(np.float32)
+		self.div_img = lab_img
+
+		# 領域データの保存
+		tool.csv2self(self)
 
 		# 画像の保存
 		cv2.imwrite('./outputs/meanshift.png', self.div_img)
@@ -207,11 +208,8 @@ class ImageOp():
 		"""
 		csvに保存された領域の座標データより領域データを算出
 		"""
-		# 領域データ読み込み
-		region_list = tool.load_csv("./area_data/pms_cords.csv")
-
 		# 各領域をキャンパスに描画し1つずつ領域データを抽出
-		process.get_pms_contours(self, region_list)
+		process.get_pms_contours(self)
 
 		return
 
@@ -220,12 +218,8 @@ class ImageOp():
 		"""
 		円形度より建物領域を抽出する
 		"""
-		# 領域・座標データ読み込み
-		region_list = tool.load_csv("./area_data/region.csv")
-		cords_list  = tool.load_csv("./area_data/pms_cords.csv")
-
 		# 建物領域を抽出
-		process.extract_building(self, region_list, cords_list)
+		process.extract_building(self)
 
 		return
 
@@ -307,6 +301,11 @@ class ImageOp():
 		tool.save_resize_image("normed_uav.png",  self.dsm_uav,  self.s_size_2d)
 		tool.save_resize_image("normed_heli.png", self.dsm_heli, self.s_size_2d)
 
+		# 画像の保存
+		cv2.imwrite("meterd_uav_dsm.tif", self.dsm_uav)
+		cv2.imwrite("meterd_uav_heli.tif", self.dsm_heli)
+
+
 		return
 
 
@@ -338,7 +337,7 @@ class ImageOp():
 		"""
 		# 上流が侵食かつ下流が堆積の領域の組を全て抽出
 		## 領域が隣接している領域の組を全て抽出
-		area_list1 = process.extract_neighbor()
+		area_list1 = process.extract_neighbor(self)
 
 		## 傾斜方向が上から下の領域の組を全て抽出
 		area_list2 = process.extract_direction(self)
@@ -346,9 +345,8 @@ class ImageOp():
 		## 侵食と堆積の領域の組を全て抽出
 		area_list3 = process.extract_sub(self)
 
-		## 災害前地形より流出推定
-		area_list4 = process.estimate_flow(self)
-
+		## 災害後地形より流出推定
+		# area_list4 = process.estimate_flow(self)
 		# 上記3つの条件を全て満たす領域の組を抽出
 		# area_list = tool.and_operation_2(area_list1, area_list2)
 		area_list = tool.and_operation(area_list1, area_list2, area_list3)

@@ -87,8 +87,8 @@ def estimate_flow(dsm, deg, img):
 
 		# 傾斜方向の標高
 		# NOTE: しきい値変えれる
-		# for i in range(0, 30):
-		for i in range(0, 10):
+		for i in range(0, 30):
+		# for i in range(0, 10):
 			# 注目領域の重心標高から傾斜方向を探査
 			dx, dy = detect_flow(deg[cy, cx])
 			# 終点

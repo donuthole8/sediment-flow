@@ -72,6 +72,21 @@ def show_area_num():
 	return
 
 
+def csv2self(self):
+	"""
+	PyMeanShiftで取得したcsvファイルをselfに格納
+	"""
+	# 領域データ読み込み
+	cords_list = load_csv("./area_data/pms_cords.csv")
+	pix_list   = load_csv("./area_data/pms_pix.csv")
+
+	# selfに格納
+	self.pms_cords = cords_list
+	self.pms_pix   = pix_list
+
+	return
+
+
 def contours2csv(contours, mask, area_th, scale):
 	"""
 	輪郭データをcsvに保存
@@ -367,7 +382,7 @@ if __name__ == "__main__":
 
 def load_csv(path):
 	"""
-	cvsデータの読み込み
+	cvsデータを読み込みヘッダを削除
 
 	path: パス
 	"""

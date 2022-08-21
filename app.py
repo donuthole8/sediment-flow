@@ -96,8 +96,8 @@ def main():
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
-	image_op.norm_elevation_0to1()
-	# image_op.norm_elevation_meter()
+	# image_op.norm_elevation_0to1()
+	image_op.norm_elevation_meter()
 
 	# # 標高座標の最適化
 	# # TODO: 実装する,論文手法
@@ -109,7 +109,7 @@ def main():
 	image_op.extract_building()
 
 	# TODO: 建物領域の標高値を地表面と同じ標高値にする
-	print("建物領域の標高値を地表面標高値に補正")
+	print("# 建物領域の標高値を地表面標高値に補正")
 	image_op.norm_building()
 
 	# 土砂マスクを利用し堆積差分算出

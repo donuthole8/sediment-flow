@@ -19,7 +19,8 @@ area_data/*
 openpiv-python
 
 # test-code
-modules/backup.py
+modules/temp.py
+test.py
 
 # .vscode
 .vscode
