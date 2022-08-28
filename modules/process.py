@@ -230,8 +230,8 @@ def get_pms_contours(self):
 		}
 		self.region.append(data_list)
 
-		# 画像を保存
-		cv2.imwrite("./outputs/label.png", label_img)
+	# 画像を保存
+	cv2.imwrite("./outputs/label.png", label_img)
 	
 	return
 
@@ -277,7 +277,7 @@ def extract_building(self):
 
 	for region, cords in zip(self.region, self.pms_cords):
 		# 領域・座標データを取得
-		circularity = region.circularity
+		circularity = region["circularity"]
 		_, cords, _  = tool.decode_area(cords)
 		
 		# 円形度を0-255に正規化
@@ -294,12 +294,12 @@ def extract_building(self):
 				bld_img[cord] = [0, 0, 220]
 
 			# 建物領域の保存
-			self.building.append([
-				region.label, 
-				region.cx, 
-				region.cy, 
-				tuple(cords)
-			])
+			self.building.append({
+				"label": region["label"], 
+				"cx": region["cx"], 
+				"cy": region["cy"], 
+				"cords": tuple(cords)
+			})
 
 	# 画像を保存
 	tool.save_resize_image("circularity.png", cir_img, self.s_size_2d)
@@ -338,10 +338,10 @@ def norm_building(self):
 
 	# 建物領域毎に処理
 	for bld in self.building:
-		for cords in bld[3]:
+		for cords in bld["cords"]:
 			# UAVのDSMの建物領域を10m降下させる
 			self.dsm_uav[cords] -= 8
-			# self.dsm_uav[cords] = get_neighbor_region()
+			# self.dsm_uav[cords] = get_neighbor_region(self)
 
 			# 航空DSMの建物領域を10m降下させる
 			self.dsm_heli[cords] -= 0
@@ -359,7 +359,7 @@ def norm_building(self):
 	return
 
 
-def get_neighbor_region():
+def get_neighbor_region(self):
 	"""
 	建物領域でない隣接領域の標高値を取得
 
@@ -391,6 +391,8 @@ def get_neighbor_region():
 	"""
 	pass
 
+	
+
 
 def binarize_2area(self):
 	"""
@@ -414,11 +416,11 @@ def extract_neighbor(self):
 	neighbor_idx_list = []
 	for area in self.region:
 		# 注目領域の重心
-		cx, cy = int(area.cx), int(area.cy)
+		cx, cy = int(area["cx"]), int(area["cy"])
 
 		# 各重心との距離を求める
 		dist_list = [
-			dist((cy, cx), (int(cent.cx), int(cent.cy))) 
+			dist((cy, cx), (int(cent["cy"]), int(cent["cx"]))) 
 			for cent in self.region
 		]
 
@@ -460,7 +462,7 @@ def extract_direction(self):
 	for i, area in enumerate(self.region):
 
 		# 重心の標高値を算出
-		cx, cy = int(area.cx), int(area.cy)
+		cx, cy = int(area["cx"]), int(area["cy"])
 		# FIXME: DEMかDSMかは要検討
 		centroid_elevation = self.dem[cy, cx]
 
@@ -474,7 +476,7 @@ def extract_direction(self):
 		# 平均標高が小さい領域のインデックスを全て抽出
 		# downstream = [idx for idx, r in enumerate(ave_elevation_list) if (ave_elevation_list[i] > r)]
 
-		# 注目画素の標高 
+		# 注目画素の標高
 		target_elevation = ave_elevation_list[i]
 		
 		downstream = [
@@ -497,7 +499,7 @@ def extract_sub(self):
 	sub_idx_list = []
 	for area in self.region:
 		# 注目領域の重心
-		cx, cy = int(area.cx), int(area.cy)
+		cx, cy = int(area["cx"]), int(area["cy"])
 
 		# 注目領域の重心の標高変化
 		# sub_elevation = self.dsm_sub[cy, cx][0]
@@ -507,7 +509,7 @@ def extract_sub(self):
 		idx_list = [
 			idx for idx, sub in enumerate(self.region)
 			# if ((sub_elevation > self.dsm_sub[int(sub[3]), int(sub[2])][0]))
-			if ((sub_elevation > self.dsm_sub[int(sub.cx), int(sub.cy)]))
+			if ((sub_elevation > self.dsm_sub[int(sub["cy"]), int(sub["cx"])]))
 		]
 
 		# リストに追加
@@ -546,7 +548,7 @@ def estimate_flow(self):
 		## 注目画素から傾斜方向 + 隣接2方向の画素の標高値を調べる（傾斜方向はQgisの出力を近傍8画素に割り当て,　多分↑が0°になってるので上方向は 337.5° ~ 360° & 0° - 22.5°みたいな？）
 
 		# 注目領域の重心標高
-		cx, cy = int(area.cx), int(area.cy)
+		cx, cy = int(area["cx"]), int(area["cy"])
 		pix = self.dsm_uav[cy, cx]
 
 		## 標高値が注目画素よりも小さければそこも斜面崩壊領域としてもう一回ⅱをやるを繰り返してたと思う。（もとは傾斜とか条件つけてたけど全然領域が広がらなかったので標高の大小だけにした気がする）
@@ -576,7 +578,7 @@ def estimate_flow(self):
 					break
 			except:
 				print("err")
-				if ((self.dsm_uav[y-1, x-1]) > pix):
+				if ((self.dsm_uav[y - 1, x - 1]) > pix):
 					break
 
 		# NOTE: ここにもう色々条件書いていっちゃう！！！
@@ -653,12 +655,12 @@ def make_map(self, move_list):
 	for i, move in enumerate(move_list):
 		if (move != []):
 			# 注目領域の重心座標
-			cx, cy = int(self.region[i].cx), int(self.region[i].cy)
+			cx, cy = int(self.region[i]["cx"]), int(self.region[i]["cy"])
 
 			# 土砂の流出方向へ矢印を描画
 			for m in move:
 				# 流出先の重心座標
-				_cx, _cy = int(self.region[m].cx), int(self.region[m].cy)
+				_cx, _cy = int(self.region[m]["cx"]), int(self.region[m]["cy"])
 				cv2.arrowedLine(
 					img=self.ortho,     # 画像
 					pt1=(cx, cy),       # 始点

@@ -24,11 +24,13 @@ class ImageOp():
 		# self.dem         = tif.load_tif(path_list[2]).astype(np.float32)
 		# self.degree      = tif.load_tif(path_list[3]).astype(np.float32)
 
+		# tif画像
 		self.dsm_uav     = cv2.imread(path_list[0], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.dsm_heli    = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.dem         = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.degree      = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
+		# 画像
 		self.mask        = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
 		self.ortho       = cv2.imread(path_list[5]).astype(np.float32)
 		self.maked_ortho = None
@@ -102,7 +104,7 @@ class ImageOp():
 		self.dem      = cv2.resize(self.dem,      self.size_2d, interpolation=cv2.INTER_CUBIC)
 		self.degree   = cv2.resize(self.degree,   self.size_2d, interpolation=cv2.INTER_CUBIC)
 		self.mask     = cv2.resize(self.mask,     self.size_2d, interpolation=cv2.INTER_CUBIC)
-		self.ortho    = cv2.resize(self.ortho,    self.size_2d, interpolation=cv2.INTER_CUBIC)		
+		self.ortho    = cv2.resize(self.ortho,    self.size_2d, interpolation=cv2.INTER_CUBIC)
 
 		# UAV画像のDSMの最小値を算出（領域外の透過背景値）
 		background_pix = np.min(self.dsm_uav)
@@ -176,24 +178,22 @@ class ImageOp():
 		"""
 		# Lab表色系に変換
 		# NOTE: RGB表色系のままでも良いかも
-		lab_img = cv2.cvtColor(self.ortho, cv2.COLOR_BGR2Lab)
+
+		# lab_img = cv2.cvtColor(self.ortho, cv2.COLOR_BGR2Lab)
 		# lab_img = cv2.cvtColor(self.masked_ortho, cv2.COLOR_BGR2Lab)
 
 		# PyMeanShiftによる域分割
 		# TODO: マスク済みオルソ画像を用いると良いかも
-		lab_img, _, number_regions = pms.segment(
-			self.lab_img.astype(np.uint8), 
+		img, _, number_regions = pms.segment(
+			self.ortho.astype(np.uint8), 
 			spatial_radius, 
 			range_radius, 
 			min_density
 		)
 
-		# # RGB表色系に変換
-		# self.div_img = cv2.cvtColor(lab_img, cv2.COLOR_Lab2BGR).astype(np.float32)
-		self.div_img = lab_img
-
-		# 領域データの保存
-		tool.csv2self(self)
+		# # # RGB表色系に変換
+		# self.div_img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR).astype(np.float32)
+		self.div_img = img
 
 		# 画像の保存
 		cv2.imwrite('./outputs/meanshift.png', self.div_img)
@@ -208,6 +208,16 @@ class ImageOp():
 		"""
 		csvに保存された領域の座標データより領域データを算出
 		"""
+		# 領域データの保存
+		tool.csv2self(self)
+
+		# # pymeanshiftの領域データ読み込み
+		# pms_cords = tool.load_csv("./area_data/pms_cords.csv")
+
+		# # pymeanshiftの領域データを保存
+		# self.pms_cords = 
+		# self.pms_pix 
+
 		# 各領域をキャンパスに描画し1つずつ領域データを抽出
 		process.get_pms_contours(self)
 
@@ -294,8 +304,8 @@ class ImageOp():
 		# veg_height = 10
 
 		# 正規化処理
-		self.dsm_uav  = (self.dsm_uav-min_uav) / (max_uav-min_uav) * (max_dem + veg_height)
-		self.dsm_heli = (self.dsm_heli-min_heli) / (max_heli-min_heli) * (max_dem + veg_height)
+		self.dsm_uav  = (self.dsm_uav - min_uav) / (max_uav - min_uav) * (max_dem + veg_height)
+		self.dsm_heli = (self.dsm_heli - min_heli) / (max_heli - min_heli) * (max_dem + veg_height)
 
 		# 画像を保存
 		tool.save_resize_image("normed_uav.png",  self.dsm_uav,  self.s_size_2d)
@@ -304,7 +314,6 @@ class ImageOp():
 		# 画像の保存
 		cv2.imwrite("meterd_uav_dsm.tif", self.dsm_uav)
 		cv2.imwrite("meterd_uav_heli.tif", self.dsm_heli)
-
 
 		return
 
@@ -353,7 +362,7 @@ class ImageOp():
 
 		# 土砂移動図の作成
 		process.make_map(self, area_list)
-		# print("- area-list :", area_list)
+		print("- area-list :", [a for a in area_list if (a != [])])
 		print("- area-num  :", len(area_list))
 
 		return

@@ -1,3 +1,6 @@
+"""
+災害前のDSMに航空画像でなく国土地理院DEMを使用
+"""
 import cv2
 import numpy as np
 
@@ -7,11 +10,9 @@ from modules import operation
 
 # トリミングしたテスト用画像
 path1 = './inputs_trim/dsm_uav_re.tif'
-path2 = './inputs_trim/dsm_heli.tif'
+path2 = './inputs_trim/dem.tif'
 path3 = './inputs_trim/dem.tif'
 path4 = './inputs_trim/degree.tif'
-# path5 = './inputs_trim/mask.png'
-# path5 = './inputs_trim/manual_mask.png'
 path5 = './inputs_trim/normed_mask.png'
 path6 = './inputs_trim/uav_img.tif'
 path7 = './inputs_trim/heli_img.tif'
@@ -84,9 +85,9 @@ def main():
 	print("# オルソ画像の領域分割")	# 空間半径,範囲半径,最小密度
 	# image_op.divide_area(15, 4.5, 300)
 
-	image_op.divide_area(3, 4.5, 100)
-	# image_op.divide_area(2, 2, 20)
-	# image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
+		# image_op.divide_area(2, 2, 20)
+	# image_op.divide_area(3, 4.5, 100)
+	image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
 
