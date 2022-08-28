@@ -36,6 +36,8 @@ class ImageOp():
 		self.maked_ortho = None
 		self.gradient    = None
 		self.div_img     = None
+		self.bld_mask    = None
+		self.normed_dsm  = None
 		self.dsm_sub     = None
 
 		# 画像サイズ
@@ -211,13 +213,6 @@ class ImageOp():
 		"""
 		# 領域データの保存
 		tool.csv2self(self)
-
-		# # pymeanshiftの領域データ読み込み
-		# pms_cords = tool.load_csv("./area_data/pms_cords.csv")
-
-		# # pymeanshiftの領域データを保存
-		# self.pms_cords = 
-		# self.pms_pix 
 
 		# 各領域をキャンパスに描画し1つずつ領域データを抽出
 		process.get_pms_contours(self)

@@ -1,5 +1,4 @@
 import cv2
-import csv
 import math
 import random
 import numpy as np
@@ -109,7 +108,11 @@ def get_norm_contours(self, scale, ksize):
 	self.mask = ndimage.binary_fill_holes(dst).astype(int) * 255
 
 	# 輪郭抽出
-	contours, _ = cv2.findContours(self.mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	contours, _ = cv2.findContours(
+		self.mask.astype(np.uint8), 
+		cv2.RETR_EXTERNAL, 
+		cv2.CHAIN_APPROX_SIMPLE
+	)
 
 	return contours
 
@@ -195,7 +198,11 @@ def get_pms_contours(self):
 		label_img, mask = draw_region(self, label_img, cords)
 
 		# 輪郭抽出
-		contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+		contours, _ = cv2.findContours(
+			mask.astype(np.uint8), 
+			cv2.RETR_EXTERNAL, 
+			cv2.CHAIN_APPROX_SIMPLE
+		)
 
 		# FIXME: contoursが2要素以上出てくる場合がある
 		# FIXME: pmsで算出した面積と異なる場合がある
@@ -273,7 +280,8 @@ def extract_building(self):
 	bld_img = self.ortho.copy()
 
 	# キャンパス描画
-	cir_img = np.zeros((self.size_2d[1], self.size_2d[0]))
+	cir_img  = np.zeros((self.size_2d[1], self.size_2d[0]))
+	bld_mask = np.zeros((self.size_2d[1], self.size_2d[0]))
 
 	for region, cords in zip(self.region, self.pms_cords):
 		# 領域・座標データを取得
@@ -291,7 +299,8 @@ def extract_building(self):
 		if is_building(self, circularity, cords[0]):
 			# 塗りつぶし
 			for cord in cords:
-				bld_img[cord] = [0, 0, 220]
+				bld_img[cord]  = [0, 0, 220]
+				bld_mask[cord] = 255
 
 			# 建物領域の保存
 			self.building.append({
@@ -304,6 +313,9 @@ def extract_building(self):
 	# 画像を保存
 	tool.save_resize_image("circularity.png", cir_img, self.s_size_2d)
 	tool.save_resize_image("building.png", bld_img, self.s_size_2d)
+	cv2.imwrite("./outputs/building_mask.png", bld_mask)
+
+	self.bld_mask = bld_mask
 	
 	return
 
@@ -347,41 +359,42 @@ def is_sediment_or_vegitation(self, cord):
 		return False
 
 
-def is_vegitation(self, cord):
-	"""
-	植生領域かどうかを判別
-
-	cord: 該当領域の座標
-	"""
-
-
-
 def norm_building(self):
 	"""
 	建物領域の標高値を地表面と同等に補正する
 	"""
-	# 最小値・最大値確認
-	min_uav,  max_uav  = tool.calc_min_max(self.dsm_uav)
-	min_heli, max_heli = tool.calc_min_max(self.dsm_heli)
-	print("- 建物補正 min,max uav", min_uav,max_uav)
-	print("- 建物補正 min,max heli", min_heli,max_heli)
+	# 正規化後のDSM標高値
+	# self.normed_dsm = self.dsm_uav.copy()
+
+	# 比較用
+	cv2.imwrite("./outputs/uav_dsm.tif",  self.dsm_uav)
 
 	# 建物領域毎に処理
 	for bld in self.building:
-		for cords in bld["cords"]:
-			# UAVのDSMの建物領域を10m降下させる
-			self.dsm_uav[cords] -= 8
-			# self.dsm_uav[cords] = get_neighbor_region(self)
+		# 建物領域の周囲領域の地表面標高値を取得
+		neighbor_height = get_neighbor_region(self, bld["cords"])
 
-			# 航空DSMの建物領域を10m降下させる
-			self.dsm_heli[cords] -= 0
+		# TODO: できるか試す
+		# self.dsm_uav[bld["cords"]] = neighbor_height
+
+		# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
+		# NOTE: DEMを使う場合はコメントアウトのままで良い
+		# TODO: 航空画像を使う場合は航空画像からも建物領域を検出
+		# neighbor_height_heli = get_neighbor_region(self, cords)
+
+		for cords in bld["cords"]:
+			# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
+			# self.normed_dsm[cords] = neighbor_height
+			print(neighbor_height, "<-", self.dsm_uav[cords])
+			self.dsm_uav[cords] = neighbor_height
 
 			# TODO: subも検討
 			# self.dsm_sub[cords] -= 10
 	
 	# 画像の保存
-	cv2.imwrite("normed_uav_dsm.tif",  self.dsm_uav)
-	cv2.imwrite("normed_uav_heli.tif", self.dsm_heli)
+	# cv2.imwrite("./outputs/normed_uav_dsm.tif",  self.normed_dsm)
+	cv2.imwrite("./outputs/normed_uav_dsm.tif",  self.dsm_uav)
+	# cv2.imwrite("normed_uav_heli.tif", self.dsm_heli)
 
 	# 建物領域データの開放
 	self.building = None
@@ -389,7 +402,7 @@ def norm_building(self):
 	return
 
 
-def get_neighbor_region(self):
+def get_neighbor_region(self, cords):
 	"""
 	建物領域でない隣接領域の標高値を取得
 
@@ -419,9 +432,124 @@ def get_neighbor_region(self):
 	3. 外周方向に座標を走査する（建物マスクに当てはまらない領域）
 	4. 
 	"""
-	pass
+	# キャンパス描画
+	campus = np.zeros((self.size_2d[1], self.size_2d[0]))
 
-	
+	# 注目領域のマスク画像を作成
+	for cord in cords:
+		# 領域座標を白画素で埋める
+		campus[cord] = 255
+
+	# 輪郭抽出
+	contours, _ = cv2.findContours(
+		campus.astype(np.uint8), 
+		cv2.RETR_EXTERNAL, 
+		cv2.CHAIN_APPROX_SIMPLE
+	)
+
+	# 面積
+	area_float = cv2.contourArea(contours[0])
+	area = int(area_float)
+
+	# 輪郭の重心
+	M = cv2.moments(contours[0])
+	try:
+		cx = int((M["m10"] / M["m00"]))
+		cy = int((M["m01"] / M["m00"]))
+	except:
+		cx, cy = 0, 0
+
+	# 輪郭の周囲長
+	arc_len = cv2.arcLength(contours[0], True)
+
+	# 疑似半径
+	r1 = int(math.sqrt(area / math.pi))
+	r2 = int(arc_len / (2 * math.pi))
+
+	# 隣接領域の画素を取得
+	try:
+		if (self.bld_mask[     cy - r1, cx - r1] == 0):
+			return self.dsm_uav[(cy - r1, cx - r1)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy - r1, cx     ] == 0):
+			return self.dsm_uav[(cy - r1, cx     )]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy - r1, cx + r1] == 0):
+			return self.dsm_uav[(cy - r1, cx + r1)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy     , cx + r1] == 0):
+			return self.dsm_uav[(cy     , cx + r1)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r1, cx + r1] == 0):
+			return self.dsm_uav[(cy + r1, cx + r1)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r1, cx     ] == 0):
+			return self.dsm_uav[(cy + r1, cx     )]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r1, cx - r1] == 0):
+			return self.dsm_uav[(cy + r1, cx - r1)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy     , cx - r1] == 0):
+			return self.dsm_uav[(cy     , cx - r1)]
+	except:
+		pass
+
+	try:
+		if (self.bld_mask[     cy - r2, cx - r2] == 0):
+			return self.dsm_uav[(cy - r2, cx - r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy - r2, cx     ] == 0):
+			return self.dsm_uav[(cy - r2, cx     )]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy - r2, cx + r2] == 0):
+			return self.dsm_uav[(cy - r2, cx + r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy     , cx + r2] == 0):
+			return self.dsm_uav[(cy     , cx + r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r2, cx + r2] == 0):
+			return self.dsm_uav[(cy + r2, cx + r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r2, cx     ] == 0):
+			return self.dsm_uav[(cy + r2, cx     )]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r2, cx - r2] == 0):
+			return self.dsm_uav[(cy + r2, cx - r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy     , cx - r2] == 0):
+			return self.dsm_uav[(cy     , cx - r2)]
+	except:
+		pass
+
+	return self.dsm_uav[(cy, cx)]
 
 
 def binarize_2area(self):
