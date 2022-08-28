@@ -315,15 +315,45 @@ def is_building(self, cir, cord):
 	cir: 円形度
 	cord: 該当領域の座標
 	"""
-	# 円形度
 	if not (cir > 50):
+		# 非建物領域
 		return False
+	# elif is_sediment_or_vegitation(self, cord):
+	# 	# 土砂領域・植生領域
+	# 	return False
 	else:
+		# 建物領域
 		return True
 
-	# TODO: 土砂・植生等も判別
-	# # 土砂領域
-	# if not (img[cord] ):
+
+def is_sediment_or_vegitation(self, cord):
+	"""
+	土砂領域かどうかを判別
+
+	cord: 該当領域の座標
+	"""
+	# Lab表色系に変換
+	lab = cv2.cvtColor(self.div_img, cv2.COLOR_BGR2Lab)
+	Lp, ap, bp = cv2.split(lab)
+
+  # 土砂
+	sediment   = (Lp[cord] > 125) & (ap[cord] > 130)
+  # 植生
+	vegitation = (ap[cord] < 110) | (bp[cord] <  70)
+
+	if (sediment | vegitation):
+		return True
+	else:
+		return False
+
+
+def is_vegitation(self, cord):
+	"""
+	植生領域かどうかを判別
+
+	cord: 該当領域の座標
+	"""
+
 
 
 def norm_building(self):

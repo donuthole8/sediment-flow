@@ -186,12 +186,13 @@ class ImageOp():
 		# TODO: マスク済みオルソ画像を用いると良いかも
 		img, _, number_regions = pms.segment(
 			self.ortho.astype(np.uint8), 
+			# self.masked_ortho.astype(np.uint8), 
 			spatial_radius, 
 			range_radius, 
 			min_density
 		)
 
-		# # # RGB表色系に変換
+		# RGB表色系に変換
 		# self.div_img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR).astype(np.float32)
 		self.div_img = img
 

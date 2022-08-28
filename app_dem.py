@@ -83,10 +83,9 @@ def main():
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")	# 空間半径,範囲半径,最小密度
-	# image_op.divide_area(15, 4.5, 300)
-
-		# image_op.divide_area(2, 2, 20)
 	# image_op.divide_area(3, 4.5, 100)
+	# image_op.divide_area(15, 4.5, 300)
+	# image_op.divide_area(2, 2, 20)
 	image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
