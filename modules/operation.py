@@ -296,12 +296,13 @@ class ImageOp():
 		# print("- dem-range  :", min_dem , max_dem)    # -0.54201436 146.51208
 
 		# 植生を加味
+		# veg_height = 0
 		veg_height = 15
 		# veg_height = 10
 
 		# 正規化処理
 		self.dsm_uav  = (self.dsm_uav - min_uav) / (max_uav - min_uav) * (max_dem + veg_height)
-		self.dsm_heli = (self.dsm_heli - min_heli) / (max_heli - min_heli) * (max_dem + veg_height)
+		# self.dsm_heli = (self.dsm_heli - min_heli) / (max_heli - min_heli) * (max_dem + veg_height)
 
 		# 画像を保存
 		tool.save_resize_image("normed_uav.png",  self.dsm_uav,  self.s_size_2d)

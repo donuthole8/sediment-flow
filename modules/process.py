@@ -348,12 +348,13 @@ def is_sediment_or_vegitation(self, cord):
 	lab = cv2.cvtColor(self.div_img, cv2.COLOR_BGR2Lab)
 	Lp, ap, bp = cv2.split(lab)
 
-  # 土砂
-	sediment   = (Lp[cord] > 125) & (ap[cord] > 130)
+  # # 土砂
+	# sediment   = (Lp[cord] > 125) & (ap[cord] > 130)
   # 植生
 	vegitation = (ap[cord] < 110) | (bp[cord] <  70)
 
-	if (sediment | vegitation):
+	# if (sediment | vegitation):
+	if (vegitation):
 		return True
 	else:
 		return False
@@ -385,7 +386,6 @@ def norm_building(self):
 		for cords in bld["cords"]:
 			# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
 			# self.normed_dsm[cords] = neighbor_height
-			print(neighbor_height, "<-", self.dsm_uav[cords])
 			self.dsm_uav[cords] = neighbor_height
 
 			# TODO: subも検討
@@ -466,6 +466,47 @@ def get_neighbor_region(self, cords):
 	r1 = int(math.sqrt(area / math.pi))
 	r2 = int(arc_len / (2 * math.pi))
 
+	try:
+		if (self.bld_mask[     cy - r2, cx - r2] == 0):
+			return self.dsm_uav[(cy - r2, cx - r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy - r2, cx     ] == 0):
+			return self.dsm_uav[(cy - r2, cx     )]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy - r2, cx + r2] == 0):
+			return self.dsm_uav[(cy - r2, cx + r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy     , cx + r2] == 0):
+			return self.dsm_uav[(cy     , cx + r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r2, cx + r2] == 0):
+			return self.dsm_uav[(cy + r2, cx + r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r2, cx     ] == 0):
+			return self.dsm_uav[(cy + r2, cx     )]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy + r2, cx - r2] == 0):
+			return self.dsm_uav[(cy + r2, cx - r2)]
+	except:
+		pass
+	try:
+		if (self.bld_mask[     cy     , cx - r2] == 0):
+			return self.dsm_uav[(cy     , cx - r2)]
+	except:
+		pass
+
 	# 隣接領域の画素を取得
 	try:
 		if (self.bld_mask[     cy - r1, cx - r1] == 0):
@@ -505,47 +546,6 @@ def get_neighbor_region(self, cords):
 	try:
 		if (self.bld_mask[     cy     , cx - r1] == 0):
 			return self.dsm_uav[(cy     , cx - r1)]
-	except:
-		pass
-
-	try:
-		if (self.bld_mask[     cy - r2, cx - r2] == 0):
-			return self.dsm_uav[(cy - r2, cx - r2)]
-	except:
-		pass
-	try:
-		if (self.bld_mask[     cy - r2, cx     ] == 0):
-			return self.dsm_uav[(cy - r2, cx     )]
-	except:
-		pass
-	try:
-		if (self.bld_mask[     cy - r2, cx + r2] == 0):
-			return self.dsm_uav[(cy - r2, cx + r2)]
-	except:
-		pass
-	try:
-		if (self.bld_mask[     cy     , cx + r2] == 0):
-			return self.dsm_uav[(cy     , cx + r2)]
-	except:
-		pass
-	try:
-		if (self.bld_mask[     cy + r2, cx + r2] == 0):
-			return self.dsm_uav[(cy + r2, cx + r2)]
-	except:
-		pass
-	try:
-		if (self.bld_mask[     cy + r2, cx     ] == 0):
-			return self.dsm_uav[(cy + r2, cx     )]
-	except:
-		pass
-	try:
-		if (self.bld_mask[     cy + r2, cx - r2] == 0):
-			return self.dsm_uav[(cy + r2, cx - r2)]
-	except:
-		pass
-	try:
-		if (self.bld_mask[     cy     , cx - r2] == 0):
-			return self.dsm_uav[(cy     , cx - r2)]
 	except:
 		pass
 

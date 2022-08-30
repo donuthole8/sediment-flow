@@ -5,6 +5,18 @@ from modules import tool
 from modules import operation
 
 
+# # 本番用画像
+# path1 = './inputs/dsm_uav.tif'
+# path2 = './inputs/dsm_heli.tif'
+# path3 = './inputs/dem.tif'
+# path4 = './inputs/degree.tif'
+# # path5 = './inputs_trim/mask.png'
+# # path5 = './inputs_trim/manual_mask.png'
+# path5 = './inputs/mask.png'
+# path6 = './inputs/uav_img.tif'
+# path7 = './inputs/heli_img.tif'
+
+
 # トリミングしたテスト用画像
 path1 = './inputs_trim/dsm_uav_re.tif'
 path2 = './inputs_trim/dsm_heli.tif'

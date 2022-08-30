@@ -8,6 +8,18 @@ from modules import tool
 from modules import operation
 
 
+# # 本番用画像
+# path1 = './inputs/dsm_uav.tif'
+# path2 = './inputs/dem.tif'
+# path3 = './inputs/dem.tif'
+# path4 = './inputs/degree.tif'
+# # path5 = './inputs_trim/mask.png'
+# # path5 = './inputs_trim/manual_mask.png'
+# path5 = './inputs/mask.png'
+# path6 = './inputs/uav_img.tif'
+# path7 = './inputs/heli_img.tif'
+
+
 # トリミングしたテスト用画像
 path1 = './inputs_trim/dsm_uav_re.tif'
 path2 = './inputs_trim/dem.tif'
@@ -84,9 +96,10 @@ def main():
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")	# 空間半径,範囲半径,最小密度
 	# image_op.divide_area(3, 4.5, 100)
+	image_op.divide_area(5, 4.5, 100)
 	# image_op.divide_area(15, 4.5, 300)
 	# image_op.divide_area(2, 2, 20)
-	image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
+	# image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
 

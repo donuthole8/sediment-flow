@@ -3,7 +3,7 @@ import csv
 import math
 import numpy as np
 
-from modules import tif
+# from modules import tif
 from modules import tool
 from modules import operation
 from modules import process
@@ -15,7 +15,9 @@ from modules import temp
 # path3 = './inputs_re/manual_mask.png'
 # path4 = './inputs_re/uav_img.tif'
 
-path1 = './inputs_trim/dsm_uav_re.tif'
+# path1 = './inputs_trim/dsm_uav_re.tif'
+
+path1 = './outputs/normed_uav_dsm2.tif'
 path2 = './inputs_trim/degree.tif'
 path3 = './inputs_trim/manual_mask.png'
 path4 = './inputs_trim/uav_img.tif'
@@ -121,7 +123,7 @@ def estimate_flow(dsm, deg, img):
 		except:
 			pass
 	
-	cv2.imwrite("test_map.png", img)
+	cv2.imwrite("estimate_map.png", img)
 
 
 @tool.stop_watch
@@ -136,14 +138,19 @@ def main():
 	正直①のほうに時間かけすぎてかなり適当なので、一番直すべきだったのがここかも
 	"""
 	# 画像の読み込み
-	dsm  = tif.load_tif(path1).astype(np.float32)
-	deg  = tif.load_tif(path2).astype(np.float32)
+	dsm  = cv2.imread(path1, cv2.IMREAD_ANYDEPTH).astype(np.float32)
+	deg  = cv2.imread(path2, cv2.IMREAD_ANYDEPTH).astype(np.float32)
+	# dsm  = tif.load_tif(path1).astype(np.float32)
+	# deg  = tif.load_tif(path2).astype(np.float32)
 	mask = cv2.imread(path3, cv2.IMREAD_GRAYSCALE)
 	org_img = cv2.imread(path4)
 
+	# クラス初期化
+	image_op = operation.ImageOp(path_list)
+
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
-	dsm, _, _, deg, mask = operation.resampling_dsm(dsm, dsm, deg, deg, mask)
+	dsm, _, _, deg, mask = operation.resampling_dsm()
 
 	# 次元を減らす
 	dsm = cv2.split(dsm)[0]
