@@ -117,6 +117,10 @@ def main():
 	# print("# 標高座標の最適化")
 	# image_op.norm_cord()
 
+	# テクスチャ解析
+	print("# テクスチャ解析")
+	image_op.texture_analysis()
+
 	# 建物領域の検出
 	print("# 建物領域を検出する")
 	image_op.extract_building()

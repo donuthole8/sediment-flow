@@ -4,6 +4,8 @@ import random
 import numpy as np
 from math import dist
 import scipy.ndimage as ndimage
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 from modules import tif
 from modules import tool
@@ -269,6 +271,76 @@ def draw_region(self, label_img, cords):
 	return label_img, campus
 
 
+def texture(img):
+	"""
+	オルソ画像に対しテクスチャ解析
+	"""
+	mpl.rc('image', cmap='jet')
+	kernel_size = 5
+	levels = 8
+	symmetric = False
+	normed = True
+	dst = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+	# binarize
+	dst_bin = dst//(256//levels) # [0:255]->[0:7]
+
+	# calc_glcm             
+	h,w = dst.shape
+	glcm = np.zeros((h,w,levels,levels), dtype=np.uint8)
+	kernel = np.ones((kernel_size, kernel_size), np.uint8)
+	dst_bin_r = np.append(dst_bin[:,1:], dst_bin[:,-1:], axis=1)
+	for i in range(levels):
+		for j in range(levels):
+			mask = (dst_bin==i) & (dst_bin_r==j)
+			mask = mask.astype(np.uint8)
+			glcm[:,:,i,j] = cv2.filter2D(mask, -1, kernel)
+	glcm = glcm.astype(np.float32)
+	if symmetric:
+		glcm += glcm[:,:,::-1, ::-1]
+	if normed:
+		glcm = glcm/glcm.sum(axis=(2,3), keepdims=True)
+	# martrix axis
+	axis = np.arange(levels, dtype=np.float32)+1
+	w = axis.reshape(1,1,-1,1)
+	x = np.repeat(axis.reshape(1,-1), levels, axis=0)
+	y = np.repeat(axis.reshape(-1,1), levels, axis=1)
+	# GLCM contrast
+	glcm_contrast = np.sum(glcm*(x-y)**2, axis=(2,3))
+	# GLCM dissimilarity
+	glcm_dissimilarity = np.sum(glcm*np.abs(x-y), axis=(2,3))
+	# GLCM homogeneity
+	glcm_homogeneity = np.sum(glcm/(1.0+(x-y)**2), axis=(2,3))
+	# GLCM energy & ASM
+	glcm_asm = np.sum(glcm**2, axis=(2,3))
+	# GLCM entropy
+	ks = 5 # kernel_size
+	pnorm = glcm / np.sum(glcm, axis=(2,3), keepdims=True) + 1./ks**2
+	glcm_entropy = np.sum(-pnorm * np.log(pnorm), axis=(2,3))
+	# GLCM mean
+	glcm_mean = np.mean(glcm*w, axis=(2,3))
+	# GLCM std
+	glcm_std = np.std(glcm*w, axis=(2,3))
+	# GLCM energy
+	glcm_energy = np.sqrt(glcm_asm)
+	# GLCM max
+	glcm_max = np.max(glcm, axis=(2,3))
+	
+	# plot
+	# plt.figure(figsize=(10,4.5))
+
+	outs =[dst, glcm_mean, glcm_std,
+		glcm_contrast, glcm_dissimilarity, glcm_homogeneity,
+		glcm_asm, glcm_energy, glcm_max,
+		glcm_entropy]
+	titles = ['original','mean','std','contrast','dissimilarity','homogeneity','ASM','energy','max','entropy']
+	for i in range(10):
+		plt.imsave('./outputs/texture/' + titles[i] + '.png', outs[i])
+	
+	return
+
+
+
 def extract_building(self):
 	"""
 	建物領域を抽出
@@ -327,6 +399,8 @@ def is_building(self, cir, cord):
 	cir: 円形度
 	cord: 該当領域の座標
 	"""
+	
+
 	if not (cir > 50):
 		# 非建物領域
 		return False
@@ -348,9 +422,9 @@ def is_sediment_or_vegitation(self, cord):
 	lab = cv2.cvtColor(self.div_img, cv2.COLOR_BGR2Lab)
 	Lp, ap, bp = cv2.split(lab)
 
-  # # 土砂
+	# # 土砂
 	# sediment   = (Lp[cord] > 125) & (ap[cord] > 130)
-  # 植生
+	# 植生
 	vegitation = (ap[cord] < 110) | (bp[cord] <  70)
 
 	# if (sediment | vegitation):
@@ -596,7 +670,9 @@ def extract_neighbor(self):
 			idx for idx, d in enumerate(dist_list) 
 			# if ((d > 5) and (d <= 10))
 			# if ((d <= 10))
-			if ((d > 5) and (d <= 15))
+			# if ((d > 5) and (d <= 15))
+			if ((d > 20) and (d <= 25))
+
 			# if ((d > 6) and (d <= 15))
 			# if ((d > 8) and (d <= 15))
 			# if ((d > 5) and (d <= 30))
@@ -741,7 +817,7 @@ def estimate_flow(self):
 
 		# NOTE: ここにもう色々条件書いていっちゃう！！！
 		# NOTE: 処理ごとに分けない
-			
+
 		try:
 			# 矢印の距離が短すぎる領域は除去
 			# NOTE: しきい値変えれる
@@ -827,14 +903,6 @@ def make_map(self, move_list):
 					thickness=2,        # 太さ
 					tipLength=0.4       # 矢先の長さ
 				)
-				# cv2.arrowedLine(
-				# 	img=ortho,          # 画像
-				# 	pt1=(cx, cy),       # 始点
-				# 	pt2=(_cx, _cy),     # 終点
-				# 	color=(20,20,180),  # 色
-				# 	thickness=1,        # 太さ
-				# 	tipLength=1         # 矢先の長さ
-				# )
 
 				# # 水平距離
 				# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)

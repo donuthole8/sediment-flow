@@ -121,11 +121,14 @@ class ImageOp():
 		self.ortho[idx]    = 0
 
 		# 画像の保存
-		tool.save_resize_image("resamp_heli.png",  self.dsm_heli, self.s_size_2d)
-		tool.save_resize_image("resamp_dem.png",   self.dem,      self.s_size_2d)
-		tool.save_resize_image("resamp_deg.png",   self.degree,   self.s_size_2d)
-		tool.save_resize_image("resamp_mask.png",  self.mask,     self.s_size_2d)
-		tool.save_resize_image("resamp_ortho.png", self.ortho,    self.s_size_2d)
+		cv2.imwrite("dem_powerpo.tif", self.dem)
+		cv2.imwrite("dem_powerpo.png", self.dem)
+
+		# tool.save_resize_image("resamp_heli.png",  self.dsm_heli, self.s_size_2d)
+		# tool.save_resize_image("resamp_dem.png",   self.dem,      self.s_size_2d)
+		# tool.save_resize_image("resamp_deg.png",   self.degree,   self.s_size_2d)
+		# tool.save_resize_image("resamp_mask.png",  self.mask,     self.s_size_2d)
+		# tool.save_resize_image("resamp_ortho.png", self.ortho,    self.s_size_2d)
 
 		# 1次元に戻す
 		self.mask = cv2.split(self.mask)[0]
@@ -216,6 +219,16 @@ class ImageOp():
 
 		# 各領域をキャンパスに描画し1つずつ領域データを抽出
 		process.get_pms_contours(self)
+
+		return
+
+
+	def texture_analysis(self):
+		"""
+		テクスチャ解析
+		"""
+		# テクスチャ解析
+		process.texture(self.ortho)
 
 		return
 
