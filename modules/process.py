@@ -228,7 +228,7 @@ def get_pms_contours(self):
 		circularity = 4.0 * math.pi * area_float / (arc_len * arc_len)
 
 		# データの保存
-		# NOTE: 辞書型の方が良い？
+		# NOTE: selfに保存するなら辞書型の方が良い？
 		# data_list = [label, area, cx, cy, circularity]
 		data_list = {
 			"label":       label, 
@@ -271,7 +271,7 @@ def draw_region(self, label_img, cords):
 	return label_img, campus
 
 
-def texture(img):
+def texture_analysis(self):
 	"""
 	オルソ画像に対しテクスチャ解析
 	"""
@@ -280,12 +280,12 @@ def texture(img):
 	levels = 8
 	symmetric = False
 	normed = True
-	dst = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	dst = cv2.cvtColor(self.ortho, cv2.COLOR_BGR2GRAY)
 
 	# binarize
-	dst_bin = dst//(256//levels) # [0:255]->[0:7]
+	dst_bin = dst // (256 // levels) # [0:255] -> [0:7]
 
-	# calc_glcm             
+	# calc_glcm
 	h,w = dst.shape
 	glcm = np.zeros((h,w,levels,levels), dtype=np.uint8)
 	kernel = np.ones((kernel_size, kernel_size), np.uint8)
@@ -305,15 +305,16 @@ def texture(img):
 	w = axis.reshape(1,1,-1,1)
 	x = np.repeat(axis.reshape(1,-1), levels, axis=0)
 	y = np.repeat(axis.reshape(-1,1), levels, axis=1)
+
 	# GLCM contrast
 	glcm_contrast = np.sum(glcm*(x-y)**2, axis=(2,3))
-	# GLCM dissimilarity
+	# GLCM dissimilarity（不均一性）
 	glcm_dissimilarity = np.sum(glcm*np.abs(x-y), axis=(2,3))
-	# GLCM homogeneity
+	# GLCM homogeneity（均一性）
 	glcm_homogeneity = np.sum(glcm/(1.0+(x-y)**2), axis=(2,3))
 	# GLCM energy & ASM
 	glcm_asm = np.sum(glcm**2, axis=(2,3))
-	# GLCM entropy
+	# GLCM entropy（情報量）
 	ks = 5 # kernel_size
 	pnorm = glcm / np.sum(glcm, axis=(2,3), keepdims=True) + 1./ks**2
 	glcm_entropy = np.sum(-pnorm * np.log(pnorm), axis=(2,3))
@@ -329,16 +330,33 @@ def texture(img):
 	# plot
 	# plt.figure(figsize=(10,4.5))
 
-	outs =[dst, glcm_mean, glcm_std,
+	outs = [dst, glcm_mean, glcm_std,
 		glcm_contrast, glcm_dissimilarity, glcm_homogeneity,
 		glcm_asm, glcm_energy, glcm_max,
 		glcm_entropy]
 	titles = ['original','mean','std','contrast','dissimilarity','homogeneity','ASM','energy','max','entropy']
 	for i in range(10):
 		plt.imsave('./outputs/texture/' + titles[i] + '.png', outs[i])
+
+	# GLCM dissimilarity（不均一性）
+	# - [0.0 - 3.8399997]
+	self.dissimilarity = outs[4]
 	
 	return
 
+
+def edge_detection(self, threshold1, threshold2):
+	"""
+	エッジ抽出
+	"""
+	# グレースケール化
+	img_gray = cv2.cvtColor(self.ortho, cv2.COLOR_BGR2GRAY).astype(np.uint8)
+
+	# エッジ抽出
+	img_canny = cv2.Canny(img_gray, threshold1, threshold2)
+
+	# 画像保存
+	cv2.imwrite("./outputs/edge.png", img_canny)
 
 
 def extract_building(self):
@@ -356,19 +374,17 @@ def extract_building(self):
 	bld_mask = np.zeros((self.size_2d[1], self.size_2d[0]))
 
 	for region, cords in zip(self.region, self.pms_cords):
-		# 領域・座標データを取得
-		circularity = region["circularity"]
+		# 領域・重心・座標データを取得
+		circularity  = int(float(region["circularity"]) * 255)
+		centroids    = (region["cy"], region["cx"])
 		_, cords, _  = tool.decode_area(cords)
-		
-		# 円形度を0-255に正規化
-		circularity = int(float(circularity) * 255)
 
 		# 円形度を大小で描画
 		for cord in cords:
 			cir_img[cord] = circularity
 
 		# 建物領域の検出
-		if is_building(self, circularity, cords[0]):
+		if is_building(self, circularity, centroids):
 			# 塗りつぶし
 			for cord in cords:
 				bld_img[cord]  = [0, 0, 220]
@@ -377,8 +393,8 @@ def extract_building(self):
 			# 建物領域の保存
 			self.building.append({
 				"label": region["label"], 
-				"cx": region["cx"], 
-				"cy": region["cy"], 
+				"cx":    region["cx"], 
+				"cy":    region["cy"], 
 				"cords": tuple(cords)
 			})
 
@@ -392,43 +408,45 @@ def extract_building(self):
 	return
 
 
-def is_building(self, cir, cord):
+def is_building(self, circularity, centroids):
 	"""
 	建物領域かどうかを判別
 
-	cir: 円形度
-	cord: 該当領域の座標
+	circularity: 円形度
+	centroids: 該当領域の重心座標
 	"""
-	
+	# 注目領域の平均異質度を取得
+	dissimilarity = np.mean(self.dissimilarity[centroids])
 
-	if not (cir > 50):
+	if (not (circularity > 40)) or (not (dissimilarity < 1)):
 		# 非建物領域
 		return False
-	# elif is_sediment_or_vegitation(self, cord):
-	# 	# 土砂領域・植生領域
-	# 	return False
+	elif is_sediment_or_vegetation(self, centroids):
+		# 土砂領域・植生領域
+		return False
 	else:
 		# 建物領域
 		return True
 
 
-def is_sediment_or_vegitation(self, cord):
+def is_sediment_or_vegetation(self, centroids):
 	"""
-	土砂領域かどうかを判別
+	土砂・植生領域かどうかを判別
 
-	cord: 該当領域の座標
+	centroids: 該当領域の重心座標
 	"""
 	# Lab表色系に変換
-	lab = cv2.cvtColor(self.div_img, cv2.COLOR_BGR2Lab)
-	Lp, ap, bp = cv2.split(lab)
+	Lp, ap, bp = cv2.split(
+		cv2.cvtColor(self.div_img.astype(np.uint8), cv2.COLOR_BGR2Lab)
+	)
+	Lp, ap, bp = Lp * 255, ap * 255, bp * 255
 
-	# # 土砂
-	# sediment   = (Lp[cord] > 125) & (ap[cord] > 130)
+	# 土砂
+	sediment   = (Lp[centroids] > 125) & (ap[centroids] > 130)
 	# 植生
-	vegitation = (ap[cord] < 110) | (bp[cord] <  70)
+	vegetation = (ap[centroids] < 110) | (bp[centroids] <  70)
 
-	# if (sediment | vegitation):
-	if (vegitation):
+	if (sediment | vegetation):
 		return True
 	else:
 		return False
@@ -464,7 +482,7 @@ def norm_building(self):
 
 			# TODO: subも検討
 			# self.dsm_sub[cords] -= 10
-	
+
 	# 画像の保存
 	# cv2.imwrite("./outputs/normed_uav_dsm.tif",  self.normed_dsm)
 	cv2.imwrite("./outputs/normed_uav_dsm.tif",  self.dsm_uav)
@@ -712,7 +730,7 @@ def extract_direction(self):
 
 		# 注目画素の標高
 		target_elevation = ave_elevation_list[i]
-		
+
 		downstream = [
 			idx for idx, ave in enumerate(ave_elevation_list) 
 			if (target_elevation > ave)
@@ -769,7 +787,6 @@ def extract_sub(self):
 		# sub_idx_list.append(idx_list)
 
 	return sub_idx_list
-
 
 
 def estimate_flow(self):

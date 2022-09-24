@@ -8,7 +8,6 @@ from modules import process
 
 
 class ImageOp():
-
 	def __init__(self, path_list):
 		"""
 		初期化メソッド
@@ -31,14 +30,16 @@ class ImageOp():
 		self.degree      = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
 		# 画像
-		self.mask        = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
-		self.ortho       = cv2.imread(path_list[5]).astype(np.float32)
-		self.maked_ortho = None
-		self.gradient    = None
-		self.div_img     = None
-		self.bld_mask    = None
-		self.normed_dsm  = None
-		self.dsm_sub     = None
+		self.mask          = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
+		self.ortho         = cv2.imread(path_list[5]).astype(np.float32)
+		self.masked_ortho  = None
+		self.gradient      = None
+		self.div_img       = None
+		self.dissimilarity = None
+		self.edge          = None
+		self.bld_mask      = None
+		self.normed_dsm    = None
+		self.dsm_sub       = None
 
 		# 画像サイズ
 		self.size_3d   = self.dsm_uav.shape
@@ -223,16 +224,29 @@ class ImageOp():
 		return
 
 
+	@tool.stop_watch
 	def texture_analysis(self):
 		"""
 		テクスチャ解析
 		"""
 		# テクスチャ解析
-		process.texture(self.ortho)
+		# TODO: オルソ画像でなく領域分割済み画像等でやっても良いかも
+		process.texture_analysis(self)
 
 		return
 
 
+	def edge_detection(self):
+		"""
+		エッジ抽出
+		"""
+		# エッジ抽出
+		process.edge_detection(self, 100, 200)
+
+		return
+
+
+	@tool.stop_watch
 	def extract_building(self):
 		"""
 		円形度より建物領域を抽出する

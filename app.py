@@ -96,9 +96,11 @@ def main():
 	print("# オルソ画像の領域分割")	# 空間半径,範囲半径,最小密度
 	# image_op.divide_area(15, 4.5, 300)
 
-	image_op.divide_area(3, 4.5, 100)
+	# これ使ってた
+	# image_op.divide_area(3, 4.5, 100)
+
 	# image_op.divide_area(2, 2, 20)
-	# image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
+	image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
 
@@ -120,6 +122,10 @@ def main():
 	# テクスチャ解析
 	print("# テクスチャ解析")
 	image_op.texture_analysis()
+
+	# エッジ抽出
+	print("# エッジ抽出")
+	image_op.edge_detection()
 
 	# 建物領域の検出
 	print("# 建物領域を検出する")
