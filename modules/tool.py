@@ -1,6 +1,7 @@
 import cv2
 import csv
 import time
+import random
 import numpy as np
 from PIL import Image
 from functools import wraps
@@ -77,12 +78,12 @@ def csv2self(self):
 	PyMeanShiftで取得したcsvファイルをselfに格納
 	"""
 	# 領域データ読み込み
-	cords_list = load_csv("./area_data/pms_cords.csv")
-	pix_list   = load_csv("./area_data/pms_pix.csv")
+	coords_list = load_csv("./area_data/pms_coords.csv")
+	# pix_list   = load_csv("./area_data/pms_pix.csv")
 
 	# selfに格納
-	self.pms_cords = cords_list
-	self.pms_pix   = pix_list
+	self.pms_coords = coords_list
+	# self.pms_pix   = pix_list
 
 	return
 
@@ -372,14 +373,6 @@ def img2cvs(path):
 			x += width
 
 
-# テスト用メイン関数
-if __name__ == "__main__":
-	l1 = [[1,2],[0],[]]
-	l2 = [[2],  [], []]
-	l3 = [[2],  [2],[]]
-	l = and_operation(l1, l2, l3)
-
-
 def load_csv(path):
 	"""
 	cvsデータを読み込みヘッダを削除
@@ -398,20 +391,134 @@ def load_csv(path):
 		return area_list
 
 
+def coordinates2contours(self, coordinates):
+	"""
+	領域の座標データから輪郭座標を取得
+
+	coordinates: 注目領域の座標群
+	"""
+	# 注目領域のマスク画像を作成
+	mask = draw_region(self, coordinates)
+
+	# 輪郭抽出
+	contours, _ = cv2.findContours(
+		mask.astype(np.uint8), 
+		cv2.RETR_EXTERNAL, 
+		cv2.CHAIN_APPROX_NONE
+	)
+
+	return [(c[0, 1], c[0, 0]) for c in contours[0]]
+
+
+def draw_region(self, coords):
+	"""
+	与えられた座標を領域とし特定画素で埋める
+
+	coords: 領域の座標群
+	"""
+	# キャンパス描画
+	campus = np.zeros((self.size_2d[1], self.size_2d[0]))
+
+	for coord in coords:
+		# 領域座標を白画素で埋める
+		campus[coord] = 255
+
+	return campus
+
+
+def draw_label(self, label_img, coords):
+	"""
+	与えられた座標を領域とし特定画素で埋める
+
+	label_img: ラベル画像
+	coords: 領域の座標群
+	"""
+	# キャンパス描画
+	campus = np.zeros((self.size_2d[1], self.size_2d[0]))
+
+	# ランダム色を生成
+	color = [
+		random.randint(0, 255),
+		random.randint(0, 255),
+		random.randint(0, 255),
+	]
+
+	for coord in coords:
+		# ランダム色のラベル画像を作成
+		label_img[coord] = color
+		# 領域座標を白画素で埋める
+		campus[coord] = 255
+
+	return label_img, campus
+
+
 def decode_area(region):
 	"""
-	領域データをlabel, cords, areaに変換
+	領域データをlabel, coords, areaに変換
 
 	region: PyMeanShiftで抽出した領域csvデータ
 	"""
 	# 領域ID
 	label = int(region[0])
-	# 面積
-	area  = int(region[-2])
 	# 座標
-	cords = [
-		(int(cord_str[1:-1].split(' ')[0]), int(cord_str[1:-1].split(' ')[1])) 
-		for cord_str in region[1:-2]
+	coords = [
+		(int(coord_str[1:-1].split(' ')[0]), int(coord_str[1:-1].split(' ')[1])) 
+		for coord_str in region[1:-2]
 	]
+		# 面積
+	area  = int(region[-2])
 
-	return label, cords, area
+	return label, coords, area
+
+
+def draw_vector(self, centroids):
+	"""
+	土砂移動の矢印を描画
+	"""
+	# 流出先の重心座標
+	_cx, _cy = int(self.region[m]["cx"]), int(self.region[m]["cy"])
+	cv2.arrowedLine(
+		img=self.ortho,     # 画像
+		pt1=(cx, cy),       # 始点
+		pt2=(_cx, _cy),     # 終点
+		color=(20,20,180),  # 色
+		thickness=2,        # 太さ
+		tipLength=0.4       # 矢先の長さ
+	)
+
+	# # 水平距離
+	# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)
+	# # 水平方向の土砂移動を描画
+	# cv2.putText(
+	#   img=ortho,                        # 画像
+	#   text="hor:"+str(dis)+"cm",        # テキスト
+	#   org=(_cx+2, _cy+2),               # 位置
+	#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+	#   fontScale=1,                      # フォントサイズ
+	#   color=(0, 255, 0),                # 色
+	#   thickness=1,                      # 太さ
+	#   lineType=cv2.LINE_AA              # タイプ
+	# )
+
+	# # 垂直距離
+	# # TODO: DSMで良いか検討
+	# dis = int(dsm[cy, cx][0] - dsm[_cy, _cx][0] * 100)
+	# # 垂直方向の土砂変化標高
+	# cv2.putText(
+	#   img=ortho,                        # 画像
+	#   text="ver:"+str(dis)+"cm",        # テキスト
+	#   org=(_cx+2, _cy+14),              # 位置
+	#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+	#   fontScale=1,                      # フォントサイズ
+	#   color=(255, 0, 0),                # 色
+	#   thickness=1,                      # 太さ
+	#   lineType=cv2.LINE_AA              # タイプ
+	# )
+
+
+# テスト用メイン関数
+if __name__ == "__main__":
+	l1 = [[1,2],[0],[]]
+	l2 = [[2],  [], []]
+	l3 = [[2],  [2],[]]
+	l = and_operation(l1, l2, l3)

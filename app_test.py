@@ -56,89 +56,34 @@ def main():
 	"""
 	メイン関数
 	"""
-	# TODO: 建物輪郭データとか？？読み込み？？
-	# TODO: 建物使うべき？？
-
-	# TODO: 土砂マスク画像の作成に中山さんの手法を適用する・海領域の除去・影領域の対処・前後差分の検討
-	# FIXME: 画素値が0-255に正規化されている
 	# クラス初期化
 	image_op = operation.ImageOp(path_list)
-
-	# # DEMより傾斜データを抽出
-	# # NOTE: リサンプリング後に行った方が良いかも
-	# print("# DEMより傾斜データを抽出")
-	# image_op.dem2gradient(10)	# メッシュサイズ
-	image_op.dem2gradient(5)	# メッシュサイズ
-
-	# # 傾斜方位の正規化（0-255 -> 0-360）
-	# print("# 傾斜方向の正規化")
-	# image_op.norm_degree()
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
 	image_op.resampling_dsm()
 
-	# 画像サイズの確認
-	print("# 入力画像のサイズ確認")
-	tool.show_image_size(image_op)
-
 	# 土砂マスクの前処理
 	# TODO: 精度向上させる
 	print("# マスク画像の前処理")
-	image_op.norm_mask(16666, 3)	# 面積の閾値, 拡大倍率
-	# image_op.mask = cv2.imread("./outputs/normed_mask.png")
-
-	# 土砂マスク
-	print("# 土砂マスクによる土砂領域抽出")
-	image_op.extract_sediment()
+	image_op.mask = cv2.imread("./outputs/normed_mask.png")
 
 	# 領域分割
-	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")	# 空間半径,範囲半径,最小密度
-	# image_op.divide_area(15, 4.5, 300)
-
-	# これ使ってた
 	# image_op.divide_area(3, 4.5, 100)
-
-	# image_op.divide_area(2, 2, 20)
 	image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
-
-	# TODO: 大きすぎた領域のみさらに領域分割する
 
 	# 輪郭・重心データ抽出・ラベル画像作成
 	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
 	image_op.calc_contours()
 
 	# 標高値の正規化
-	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
-	# image_op.norm_elevation_0to1()
 	image_op.norm_elevation_meter()
 
-	# # 標高座標の最適化
-	# # TODO: 論文手法を実装する
-	# print("# 標高座標の最適化")
-	# image_op.norm_coord()
-
-	# テクスチャ解析
-	print("# テクスチャ解析")
-	image_op.texture_analysis()
-
-	# エッジ抽出
-	print("# エッジ抽出")
-	image_op.edge_detection()
-
-	# 建物領域の検出
-	print("# 建物領域を検出する")
-	image_op.extract_building()
-
-	# TODO: 建物領域の標高値を地表面と同じ標高値にする
-	print("# 建物領域の標高値を地表面標高値に補正")
-	image_op.norm_building()
-
-	# 土砂マスクを利用し堆積差分算出
-	print("# 堆積差分算出")
-	image_op.calc_sedimentation()
+	# # 土砂マスクを利用し堆積差分算出
+	# print("# 堆積差分算出")
+	# image_op.calc_sedimentation()
 
 	# 土砂移動推定
 	print("# 土砂移動推定")

@@ -3054,9 +3054,9 @@ void msImageProcessor::Prune(int minRegion)
 	// ファイルストリーム指定
 	using std::ofstream;
 	ofstream ofs1("./area_data/pms_pix.csv");
-	ofs1 << "id, x-cord, y-cord" << std::endl;
-	ofstream ofs2("./area_data/pms_cords.csv");
-	ofs2 << "id, (x-cord, y-cord), area" << std::endl;
+	ofs1 << "id, y-coord, x-coord" << std::endl;
+	ofstream ofs2("./area_data/pms_coords.csv");
+	ofs2 << "id, (y-coord, x-coord), area" << std::endl;
 	// ofstream ofs3("./area_data/pms.csv");
 	// ofs3 << "id, area, x_centroid, y_centroid, " << std::endl;
 
@@ -3065,9 +3065,9 @@ void msImageProcessor::Prune(int minRegion)
 
 	// すべての画素のラベル値をcsv保存（多分消す）
 	for(i = 0; i < height*width; i++) {
-		int x_cord = int(i / width);
-		int y_cord = i % width;
-		ofs1 << labels[i] << ", " << x_cord << ", " << y_cord << std::endl;
+		int x_coord = int(i / width);
+		int y_coord = i % width;
+		ofs1 << labels[i] << ", " << x_coord << ", " << y_coord << std::endl;
 	}
 
 	// ラベルごとにcsv保存
@@ -3078,10 +3078,10 @@ void msImageProcessor::Prune(int minRegion)
 
 		for (j = 0; j < height*width; j++) {
 			if (i == label_buffer[raList[labels[j]].label]) {
-				int x_cord = int(j / width);
-				int y_cord = j % width;
+				int x_coord = int(j / width);
+				int y_coord = j % width;
 				area += 1;
-				ofs2 << "(" << x_cord << " " << y_cord << "),";
+				ofs2 << "(" << x_coord << " " << y_coord << "),";
 			}
 		}
 		ofs2 << area << "," << std::endl;
@@ -3095,10 +3095,10 @@ void msImageProcessor::Prune(int minRegion)
 
 	// 	for (j = 0; j < height*width; j++) {
 	// 		if (i == label_buffer[raList[labels[j]].label]) {
-	// 			int x_cord = int(j / width);
-	// 			int y_cord = j % width;
+	// 			int x_coord = int(j / width);
+	// 			int y_coord = j % width;
 	// 			area += 1;
-	// 			ofs3 << "(" << x_cord << "," << y_cord << "),";
+	// 			ofs3 << "(" << x_coord << "," << y_coord << "),";
 	// 		}
 	// 	}
 	// 	ofs2 << area << "," << std::endl;

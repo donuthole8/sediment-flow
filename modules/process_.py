@@ -1,5 +1,6 @@
 import cv2
 import math
+import random
 import numpy as np
 import scipy.ndimage as ndimage
 import matplotlib.pyplot as plt
@@ -10,19 +11,6 @@ from tqdm import trange
 from modules import tif
 from modules import tool
 
-
-# 方向への移動座標(Δx, Δy)
-# FIXME: xとy逆の方が良いかも
-DIRECTION = [
-	( 0, -1),		# 北
-	( 1, -1),		# 北東
-	( 1,  0),		# 東
-	( 1,  1),		# 南東
-	( 0,  1),		# 南
-	(-1,  1),		# 南西
-	(-1,  0),		# 西
-	(-1, -1),		# 北西
-]
 
 
 def binarize(src_img, thresh, mode):
@@ -248,9 +236,8 @@ def get_pms_contours(self):
 		# 領域データを取得
 		label, coords, area = tool.decode_area(region)
 
-		# FIXME: tool.coord2cont使う
 		# 注目領域のマスク画像を作成
-		label_img, mask = tool.draw_label(self, label_img, coords)
+		label_img, mask = draw_region(self, label_img, coords)
 
 		# 輪郭抽出
 		contours, _ = cv2.findContours(
@@ -296,6 +283,32 @@ def get_pms_contours(self):
 	cv2.imwrite("./outputs/label.png", label_img)
 	
 	return
+
+
+def draw_region(self, label_img, coords):
+	"""
+	与えられた座標を領域とし特定画素で埋める
+
+	label_img: ラベル画像
+	coords: 領域の座標群
+	"""
+	# キャンパス描画
+	campus = np.zeros((self.size_2d[1], self.size_2d[0]))
+
+	# ランダム色を生成
+	color = [
+		random.randint(0, 255),
+		random.randint(0, 255),
+		random.randint(0, 255),
+	]
+
+	for coord in coords:
+		# ランダム色のラベル画像を作成
+		label_img[coord] = color
+		# 領域座標を白画素で埋める
+		campus[coord] = 255
+
+	return label_img, campus
 
 
 def texture_analysis(self):
@@ -368,7 +381,7 @@ def texture_analysis(self):
 	# GLCM dissimilarity（不均一性）
 	# - [0.0 - 3.8399997]
 	self.dissimilarity = outs[4]
-
+	
 	return
 
 
@@ -431,7 +444,7 @@ def extract_building(self):
 	cv2.imwrite("./outputs/building_mask.png", bld_mask)
 
 	self.bld_mask = bld_mask
-
+	
 	return
 
 
@@ -685,93 +698,49 @@ def binarize_2area(self):
 
 
 @tool.stop_watch
-def extract_neighbor(self, region):
+def extract_neighbor(self):
 	"""
-	8方向で隣接している領域の組を全て抽出
+	隣接している領域の組を全て抽出
 	"""
-	# 領域座標データを取得
-	_, coordinates, _ = tool.decode_area(self.pms_coords[region["label"]])
+	# 領域の最短距離を算出
+	neighbor_idx_list = []
+	for area in self.region:
+		# 注目領域の重心
+		cx, cy = int(area["cx"]), int(area["cy"])
 
-	# 座標データから輪郭データを取得
-	contour_coordinates = tool.coordinates2contours(self, coordinates)
-
-	# 8方向それぞれの隣接領域を取得
-	neighbor_regions = []
-	for i in range(0, 8):
-		print("i:", i, ", dir:", DIRECTION[i], "cent:", (region["cy"], region["cx"]))
-
-		# 1方向ずつ1画素ずつ走査 or 輪郭の一番端座標からDIRECTION[i]の方向に走査して座標を取得
-		# 輪郭データ使ってるから輪郭データ抽出した方が処理軽いかも？？
-		neighbor_coordinate = get_neighbor_coordinate(
-			DIRECTION[i], 
-			contour_coordinates, 
-			(region["cy"], region["cx"])
-		)
-		print("coord: ", neighbor_coordinate)
-
-
-		# その座標を座標群から取得してラベルID，重心座標等を取得
-		
-
-
-
-		# ラベルID等を配列に入れる
-		# とりあえずラベルIDだけ入れとけば良い気もする
-		# neighbor_regions.append(label)
-
-
-	return neighbor_regions
-
-
-def get_neighbor_coordinate(direction, contour_coordinates, centroids):
-	"""
-	注目座標の輪郭に隣接した領域の座標を1点取得
-
-	direction: 注目方向
-	contour_coordinates: 注目領域の輪郭座標群
-	centroids: 注目座標の重心座標
-	"""
-	# 注目方向によって処理を変更
-	if   (direction == DIRECTION[0]):
-		return (np.min([c[1] for c in contour_coordinates]), centroids[1])
-	elif (direction == DIRECTION[1]):
-		# y = -x + (Δy + Δx) の1次関数
-		linear_function = [
-			c for c in contour_coordinates 
-			if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+		# 各重心との距離を求める
+		dist_list = [
+			dist((cy, cx), (int(cent["cy"]), int(cent["cx"]))) 
+			for cent in self.region
 		]
-		# 注目領域内でx座標の最も大きい座標を取得
-		return max(linear_function, key=lambda x:x[1])
-	elif (direction == DIRECTION[2]):
-		return (centroids[0], np.max([c[0] for c in contour_coordinates]))
-	elif (direction == DIRECTION[3]):
-		# y = x + (Δy - Δx) の1次関数
-		linear_function = [
-			c for c in contour_coordinates 
-			if (c[1] == c[0] + (centroids[1] - centroids[0]))
+
+		# dist_list = []
+		# for _area in area_list:
+		#   # 重心
+		#   _cx, _cy = int(_area[2]), int(_area[3])
+		#   # 2点間距離
+		#   dis = dist((cx,cy), (_cx,_cy))
+		#   # リストに追加
+		#   dist_list.append(dis)
+
+		# 距離がピクセル距離の閾値以下の領域を全て抽出
+		idx_list = [
+			idx for idx, d in enumerate(dist_list) 
+			# if ((d > 5) and (d <= 10))
+			# if ((d <= 10))
+			# if ((d > 5) and (d <= 15))
+			if ((d > 20) and (d <= 25))
+
+			# if ((d > 6) and (d <= 15))
+			# if ((d > 8) and (d <= 15))
+			# if ((d > 5) and (d <= 30))
+			# if (d <= 30)
 		]
-		# 注目領域内でx座標の最も大きい座標を取得
-		return max(linear_function, key=lambda x:x[1])
-	elif (direction == DIRECTION[4]):
-		return (np.max([c[1] for c in contour_coordinates]), centroids[1])
-	elif (direction == DIRECTION[5]):
-		# y = -x + (Δy + Δx) の1次関数
-		linear_function = [
-			c for c in contour_coordinates 
-			if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
-		]
-		# 注目領域内でy座標の最も大きい座標を取得
-		return max(linear_function, key=lambda x:x[0])
-	elif (direction == DIRECTION[6]):
-		return (centroids[0], np.min([c[0] for c in contour_coordinates]))
-	elif (direction == DIRECTION[7]):
-		# y = x + (Δy - Δx) の1次関数
-		linear_function = [
-			c for c in contour_coordinates 
-			if (c[1] == c[0] + (centroids[1] - centroids[0]))
-		]
-		# 注目領域内でy座標の最も小さい座標を取得
-		return min(linear_function, key=lambda x:x[0])
+
+		# リストに追加
+		neighbor_idx_list.append(idx_list)
+
+	return neighbor_idx_list
 
 
 @tool.stop_watch
@@ -779,7 +748,38 @@ def extract_direction(self):
 	"""
 	傾斜方向が上流から下流の領域の組を全て抽出
 	"""
-	pass
+	# NOTE: 傾斜方向データでやりたい
+	# 領域の重心標高を算出
+	ave_elevation_list = []
+	for i, area in enumerate(self.region):
+
+		# 重心の標高値を算出
+		cx, cy = int(area["cx"]), int(area["cy"])
+		# FIXME: DEMかDSMかは要検討
+		centroid_elevation = self.dem[cy, cx]
+
+		# リストに追加
+		# ave_elevation_list.append(centroid_elevation[0])
+		ave_elevation_list.append(centroid_elevation)
+
+	# 重心標高値より下流の領域を保持する
+	downstream_idx_list = []
+	for i, area in enumerate(self.region):
+		# 平均標高が小さい領域のインデックスを全て抽出
+		# downstream = [idx for idx, r in enumerate(ave_elevation_list) if (ave_elevation_list[i] > r)]
+
+		# 注目画素の標高
+		target_elevation = ave_elevation_list[i]
+
+		downstream = [
+			idx for idx, ave in enumerate(ave_elevation_list) 
+			if (target_elevation > ave)
+		]
+
+		# リストに追加
+		downstream_idx_list.append(downstream)
+
+	return downstream_idx_list
 
 
 @tool.stop_watch
@@ -787,15 +787,117 @@ def extract_sub(self):
 	"""
 	侵食と堆積の領域の組を全て抽出
 	"""
-	pass
+	# 領域の最短距離を算出
+	sub_idx_list = []
+	for area in self.region:
+		# 注目領域の重心
+		cx, cy = int(area["cx"]), int(area["cy"])
+
+		# 注目領域の重心の標高変化
+		# sub_elevation = self.dsm_sub[cy, cx][0]
+		sub_elevation = self.dsm_sub[cy, cx]
+
+		# 堆積・侵食の組み合わせを算出
+		idx_list = [
+			idx for idx, sub in enumerate(self.region)
+			# if ((sub_elevation > self.dsm_sub[int(sub[3]), int(sub[2])][0]))
+			if ((sub_elevation > self.dsm_sub[int(sub["cy"]), int(sub["cx"])]))
+		]
+
+		# リストに追加
+		sub_idx_list.append(idx_list)
+
+
+	# # 領域の最短距離を算出
+	# sub_idx_list = []
+	# for area in area_list:
+	#   # 注目領域の重心
+	#   cx, cy = int(area[2]), int(area[3])
+
+	#   # 注目領域の重心の標高変化
+	#   sub_elevation = dsm_sub[cy, cx][0]
+
+	#   # 堆積・侵食の組み合わせを算出
+	#   idx_list = [
+	#     idx for idx, sub in enumerate(area_list)
+	#     if ((sub_elevation * dsm_sub[int(sub[3]), int(sub[2])][0]) < 0)
+	#   ]
+
+		# # リストに追加
+		# sub_idx_list.append(idx_list)
+
+	return sub_idx_list
 
 
 def estimate_flow(self):
 	"""
 	流出方向の予測
 	"""
-	pass
+	## 斜面崩壊領域を処理対象としてforを回す
+	flow_idx_list = []
+	for area in self.region:
+		## 注目画素から傾斜方向 + 隣接2方向の画素の標高値を調べる（傾斜方向はQgisの出力を近傍8画素に割り当て,　多分↑が0°になってるので上方向は 337.5° ~ 360° & 0° - 22.5°みたいな？）
 
+		# 注目領域の重心標高
+		cx, cy = int(area["cx"]), int(area["cy"])
+		pix = self.dsm_uav[cy, cx]
+
+		## 標高値が注目画素よりも小さければそこも斜面崩壊領域としてもう一回ⅱをやるを繰り返してたと思う。（もとは傾斜とか条件つけてたけど全然領域が広がらなかったので標高の大小だけにした気がする）
+		## 領域内での→を付けたい！！
+		## 下端まで〜
+
+		# 始点
+		x, y = cx, cy
+
+		# 傾斜方向の標高
+		# NOTE: しきい値変えれる
+		idx_list = []
+
+		# for i in range(0, 30):
+		for i in range(0, 10):
+			# 注目領域の重心標高から傾斜方向を探査
+			dx, dy = detect_flow(self.degree[cy, cx])
+			# 終点
+			x, y = x + dx, y + dy
+
+			# nanだった場合
+			if (math.isnan(dx)):
+				break
+			# 標高が上がった場合
+			try:
+				if ((self.dsm_uav[y, x]) > pix):
+					break
+			except:
+				print("err")
+				if ((self.dsm_uav[y - 1, x - 1]) > pix):
+					break
+
+		# NOTE: ここにもう色々条件書いていっちゃう！！！
+		# NOTE: 処理ごとに分けない
+
+		try:
+			# 矢印の距離が短すぎる領域は除去
+			# NOTE: しきい値変えれる
+			if (i > 7):
+				idx_list.append([])
+				# # 矢印の描画
+				# cv2.arrowedLine(
+				# 	img=self.ortho,     # 画像
+				# 	pt1=(cx, cy),       # 始点
+				# 	pt2=(x, y),         # 終点
+				# 	color=(20,20,180),  # 色
+				# 	thickness=3,        # 太さ
+				# 	tipLength=0.3       # 矢先の長さ
+				# )
+		except:
+			pass
+
+		flow_idx_list.append(idx_list)
+	
+	
+	return flow_idx_list
+	
+	# cv2.imwrite("test_map.png", img)
 
 
 @staticmethod
@@ -806,23 +908,139 @@ def detect_flow(deg):
 	deg: 角度
 	"""
 	# 注目画素からの移動画素
+	dx, dy = 0, 0
 	if   (math.isnan(deg)):
 		return np.nan, np.nan
 	elif (deg > 337.5) or  (deg <= 22.5):
-		return DIRECTION[0]
+		dx, dy = 0, -1
 	elif (deg > 22.5)  and (deg <= 67.5):
-		return DIRECTION[1]
+		dx, dy = 1, -1
 	elif (deg > 67.5)  and (deg <= 112.5):
-		return DIRECTION[2]
+		dx, dy = 1, 0
 	elif (deg > 112.5) and (deg <= 157.5):
-		return DIRECTION[3]
+		dx, dy = 1, 1
 	elif (deg > 157.5) and (deg <= 202.5):
-		return DIRECTION[4]
+		dx, dy = 0, 1
 	elif (deg > 202.5) and (deg <= 247.5):
-		return DIRECTION[5]
+		dx, dy = -1, 1
 	elif (deg > 247.5) and (deg <= 292.5):
-		return DIRECTION[6]
+		dx, dy = -1, 0
 	elif (deg > 292.5) and (deg <= 337.5):
-		return DIRECTION[7]
+		dx, dy = -1, -1
+
+	return dx, dy
 
 
+@tool.stop_watch
+def make_map_v2(self):
+	"""
+	土砂移動図の作成
+	"""
+	# 各注目領域に対して処理を行う
+	for area in self.region:
+		# 注目領域の重心
+		cx, cy = int(area["cx"]), int(area["cy"])
+
+		## 隣接領域かどうかを判別
+		if (is_neighbor()):
+
+
+			## 傾斜方向が上から下の領域を抽出
+			if (is_direction()):
+
+
+				## 侵食と堆積の組み合わせを抽出
+				if (is_sediment()):
+				
+
+					## 災害？前？後？地形より土砂移動推定
+					# NOTE: 災害前後の地形のどちらを使用するか要検討
+
+					# 矢印の描画
+					tool.draw_vector(self, (cy, cx))
+
+					# 注目領域の重心標高値
+					elevation_value = self.dsm_uav[cy, cx]
+
+
+	# NOTE:::
+	# detect_flowのように10方向で精度評価＋できればベクトル量（流出距離も）
+	# ラベル画像の領域単位で，そこからどこに流れてそうか正解画像（矢印図）を作成
+
+	# NOTE:::
+	# できればオプティカルフローやPIV解析，3D-GIV解析，特徴量追跡等も追加する
+
+
+	# 土砂移動図の作成
+
+
+@tool.stop_watch
+def make_map(self, move_list):
+	"""
+	土砂移動図の作成
+
+	list: 土砂移動推定箇所のリスト
+	"""
+	# 解像度（cm）
+	resolution = 7.5
+
+	# 水平方向の土砂移動図を作成
+	# TODO: 関数にしたい
+	for i, move in enumerate(move_list):
+		if (move != []):
+			# 注目領域の重心座標
+			cx, cy = int(self.region[i]["cx"]), int(self.region[i]["cy"])
+
+			# 土砂の流出方向へ矢印を描画
+			for m in move:
+				# 流出先の重心座標
+				_cx, _cy = int(self.region[m]["cx"]), int(self.region[m]["cy"])
+				cv2.arrowedLine(
+					img=self.ortho,     # 画像
+					pt1=(cx, cy),       # 始点
+					pt2=(_cx, _cy),     # 終点
+					color=(20,20,180),  # 色
+					thickness=2,        # 太さ
+					tipLength=0.4       # 矢先の長さ
+				)
+
+				# # 水平距離
+				# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)
+				# # 水平方向の土砂移動を描画
+				# cv2.putText(
+				#   img=ortho,                        # 画像
+				#   text="hor:"+str(dis)+"cm",        # テキスト
+				#   org=(_cx+2, _cy+2),               # 位置
+				#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+				#   fontScale=1,                      # フォントサイズ
+				#   color=(0, 255, 0),                # 色
+				#   thickness=1,                      # 太さ
+				#   lineType=cv2.LINE_AA              # タイプ
+				# )
+
+				# # 垂直距離
+				# # TODO: DSMで良いか検討
+				# dis = int(dsm[cy, cx][0] - dsm[_cy, _cx][0] * 100)
+				# # 垂直方向の土砂変化標高
+				# cv2.putText(
+				#   img=ortho,                        # 画像
+				#   text="ver:"+str(dis)+"cm",        # テキスト
+				#   org=(_cx+2, _cy+14),              # 位置
+				#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+				#   fontScale=1,                      # フォントサイズ
+				#   color=(255, 0, 0),                # 色
+				#   thickness=1,                      # 太さ
+				#   lineType=cv2.LINE_AA              # タイプ
+				# )
+
+	# # 標高差分の堆積・侵食を着色
+	# idx = np.where(cv2.split(dsm_sub)[0] >= 0)
+	# ortho = tool.draw_color(ortho, idx, (100, 70, 230))
+	# idx = np.where(cv2.split(dsm_sub)[0] <  0)
+	# # ortho = tool.draw_color(ortho, idx, (200, 135, 125))
+	# ortho = tool.draw_color(ortho, idx, (0, 0, 0))
+
+	# 土砂移動図の保存
+	tool.save_resize_image("map.png", self.ortho, self.size_2d)
+
+	return

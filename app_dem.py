@@ -116,7 +116,7 @@ def main():
 	# # 標高座標の最適化
 	# # TODO: 実装する,論文手法
 	# print("# 標高座標の最適化")
-	# image_op.norm_cord()
+	# image_op.norm_coord()
 
 	# 建物領域の検出
 	print("# 建物領域を検出する")
