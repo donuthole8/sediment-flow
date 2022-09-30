@@ -5,22 +5,23 @@ import scipy.ndimage as ndimage
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from math import dist
+from sqlalchemy import null
 from tqdm import trange
 
 from modules import tif
 from modules import tool
 
 
-# 方向への移動座標(Δx, Δy)
+# 方向への移動座標(Δy, Δx)
 # FIXME: xとy逆の方が良いかも
 DIRECTION = [
-	( 0, -1),		# 北
-	( 1, -1),		# 北東
-	( 1,  0),		# 東
-	( 1,  1),		# 南東
-	( 0,  1),		# 南
-	(-1,  1),		# 南西
-	(-1,  0),		# 西
+	(-1, 0),		# 北
+	(-1, 1),		# 北東
+	(0,  1),		# 東
+	(1,  1),		# 南東
+	(1,  0),		# 南
+	(1,  -1),		# 南西
+	(0,  -1),		# 西
 	(-1, -1),		# 北西
 ]
 
@@ -733,7 +734,11 @@ def get_neighbor_coordinate(direction, contour_coordinates, centroids):
 	"""
 	# 注目方向によって処理を変更
 	if   (direction == DIRECTION[0]):
-		return (np.min([c[1] for c in contour_coordinates]), centroids[1])
+		return (
+			np.min([c[0] for c in contour_coordinates]) + DIRECTION[0][0], 
+			centroids[1] + DIRECTION[0][1]
+		)
+
 	elif (direction == DIRECTION[1]):
 		# y = -x + (Δy + Δx) の1次関数
 		linear_function = [
@@ -741,9 +746,16 @@ def get_neighbor_coordinate(direction, contour_coordinates, centroids):
 			if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
 		]
 		# 注目領域内でx座標の最も大きい座標を取得
-		return max(linear_function, key=lambda x:x[1])
+		coord = max(linear_function, key=lambda x:x[1])
+
+		return (coord[0] + DIRECTION[1][0], coord[1] + DIRECTION[1][1])
+
 	elif (direction == DIRECTION[2]):
-		return (centroids[0], np.max([c[0] for c in contour_coordinates]))
+		return (
+			centroids[0] + DIRECTION[2][0], 
+			np.max([c[1] for c in contour_coordinates]) + DIRECTION[2][1]
+		)
+
 	elif (direction == DIRECTION[3]):
 		# y = x + (Δy - Δx) の1次関数
 		linear_function = [
@@ -751,9 +763,16 @@ def get_neighbor_coordinate(direction, contour_coordinates, centroids):
 			if (c[1] == c[0] + (centroids[1] - centroids[0]))
 		]
 		# 注目領域内でx座標の最も大きい座標を取得
-		return max(linear_function, key=lambda x:x[1])
+		coord = max(linear_function, key=lambda x:x[1])
+
+		return (coord[0] + DIRECTION[3][0], coord[1] + DIRECTION[3][1])
+
 	elif (direction == DIRECTION[4]):
-		return (np.max([c[1] for c in contour_coordinates]), centroids[1])
+		return (
+			np.max([c[0] for c in contour_coordinates]) + DIRECTION[4][0], 
+			centroids[1] + DIRECTION[4][1]
+		)
+
 	elif (direction == DIRECTION[5]):
 		# y = -x + (Δy + Δx) の1次関数
 		linear_function = [
@@ -761,9 +780,16 @@ def get_neighbor_coordinate(direction, contour_coordinates, centroids):
 			if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
 		]
 		# 注目領域内でy座標の最も大きい座標を取得
-		return max(linear_function, key=lambda x:x[0])
+		coord = max(linear_function, key=lambda x:x[0])
+
+		return (coord[0] + DIRECTION[5][0], coord[1] + DIRECTION[5][1])
+
 	elif (direction == DIRECTION[6]):
-		return (centroids[0], np.min([c[0] for c in contour_coordinates]))
+		return (
+			centroids[0] + DIRECTION[6][0], 
+			np.min([c[1] for c in contour_coordinates]) + DIRECTION[6][1]
+		)
+
 	elif (direction == DIRECTION[7]):
 		# y = x + (Δy - Δx) の1次関数
 		linear_function = [
@@ -771,7 +797,9 @@ def get_neighbor_coordinate(direction, contour_coordinates, centroids):
 			if (c[1] == c[0] + (centroids[1] - centroids[0]))
 		]
 		# 注目領域内でy座標の最も小さい座標を取得
-		return min(linear_function, key=lambda x:x[0])
+		coord = min(linear_function, key=lambda x:x[0])
+		
+		return (coord[0] + DIRECTION[7][0], coord[1] + DIRECTION[7][1])
 
 
 @tool.stop_watch
