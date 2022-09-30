@@ -471,6 +471,19 @@ def decode_area(region):
 	return label, coords, area
 
 
+def is_index(self, coordinate):
+	"""
+	タプル型座標が画像領域内に収まっているかを判定
+
+	coordinate: タプル型座標
+	"""
+	if (	((coordinate[0] >= 0) and (coordinate[0] <= self.size_2d[0])) 
+		and ((coordinate[1] >= 0) and (coordinate[1] <= self.size_2d[1]))):
+			return True
+	else:
+		return False
+
+
 def draw_vector(self, centroids):
 	"""
 	土砂移動の矢印を描画

@@ -685,7 +685,6 @@ def binarize_2area(self):
 	return dsm_bin
 
 
-@tool.stop_watch
 def extract_neighbor(self, region):
 	"""
 	8方向で隣接している領域の組を全て抽出
@@ -697,31 +696,27 @@ def extract_neighbor(self, region):
 	contour_coordinates = tool.coordinates2contours(self, coordinates)
 
 	# 8方向それぞれの隣接領域を取得
-	neighbor_regions = []
+	neighbor_region_labels = []
 	for i in range(0, 8):
-		print("i:", i, ", dir:", DIRECTION[i], "cent:", (region["cy"], region["cx"]))
-
-		# 1方向ずつ1画素ずつ走査 or 輪郭の一番端座標からDIRECTION[i]の方向に走査して座標を取得
-		# 輪郭データ使ってるから輪郭データ抽出した方が処理軽いかも？？
+		# 輪郭の一番端座標からDIRECTION[i]の方向の座標を取得
 		neighbor_coordinate = get_neighbor_coordinate(
 			DIRECTION[i], 
 			contour_coordinates, 
 			(region["cy"], region["cx"])
 		)
-		print("coord: ", neighbor_coordinate)
 
+		# 取得した隣接座標が画像領域内に存在するか
+		if (tool.is_index(self, neighbor_coordinate)):
+			# その座標を座標群から取得してラベルIDを取得
+			label = get_label_from_coordinates(self, neighbor_coordinate)
 
-		# その座標を座標群から取得してラベルID，重心座標等を取得
-		
+			if (label != None):
+				# ラベルIDを保存
+				neighbor_region_labels.append(label)
 
-
-
-		# ラベルID等を配列に入れる
-		# とりあえずラベルIDだけ入れとけば良い気もする
-		# neighbor_regions.append(label)
-
-
-	return neighbor_regions
+	# 重複を削除
+	# FIXME: Noneがある場合があるので削除
+	return list(set(neighbor_region_labels))
 
 
 def get_neighbor_coordinate(direction, contour_coordinates, centroids):
@@ -732,74 +727,97 @@ def get_neighbor_coordinate(direction, contour_coordinates, centroids):
 	contour_coordinates: 注目領域の輪郭座標群
 	centroids: 注目座標の重心座標
 	"""
-	# 注目方向によって処理を変更
-	if   (direction == DIRECTION[0]):
-		return (
-			np.min([c[0] for c in contour_coordinates]) + DIRECTION[0][0], 
-			centroids[1] + DIRECTION[0][1]
-		)
+	try:
+		# 注目方向によって処理を変更
+		if   (direction == DIRECTION[0]):		# 北
+			return (
+				np.min([c[0] for c in contour_coordinates]) + DIRECTION[0][0], 
+				centroids[1] + DIRECTION[0][1]
+			)
 
-	elif (direction == DIRECTION[1]):
-		# y = -x + (Δy + Δx) の1次関数
-		linear_function = [
-			c for c in contour_coordinates 
-			if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
-		]
-		# 注目領域内でx座標の最も大きい座標を取得
-		coord = max(linear_function, key=lambda x:x[1])
+		elif (direction == DIRECTION[1]):		# 北東
+			# y = -x + (Δy + Δx) の1次関数
+			linear_function = [
+				c for c in contour_coordinates 
+				if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+			]
+			# 注目領域内でx座標の最も大きい座標を取得
+			coord = max(linear_function, key=lambda x:x[1])
 
-		return (coord[0] + DIRECTION[1][0], coord[1] + DIRECTION[1][1])
+			return (coord[0] + DIRECTION[1][0], coord[1] + DIRECTION[1][1])
 
-	elif (direction == DIRECTION[2]):
-		return (
-			centroids[0] + DIRECTION[2][0], 
-			np.max([c[1] for c in contour_coordinates]) + DIRECTION[2][1]
-		)
+		elif (direction == DIRECTION[2]):		# 東
+			return (
+				centroids[0] + DIRECTION[2][0], 
+				np.max([c[1] for c in contour_coordinates]) + DIRECTION[2][1]
+			)
 
-	elif (direction == DIRECTION[3]):
-		# y = x + (Δy - Δx) の1次関数
-		linear_function = [
-			c for c in contour_coordinates 
-			if (c[1] == c[0] + (centroids[1] - centroids[0]))
-		]
-		# 注目領域内でx座標の最も大きい座標を取得
-		coord = max(linear_function, key=lambda x:x[1])
+		elif (direction == DIRECTION[3]):		# 南東
+			# y = x + (Δy - Δx) の1次関数
+			linear_function = [
+				c for c in contour_coordinates 
+				if (c[1] == c[0] + (centroids[1] - centroids[0]))
+			]
+			# 注目領域内でx座標の最も大きい座標を取得
+			coord = max(linear_function, key=lambda x:x[1])
 
-		return (coord[0] + DIRECTION[3][0], coord[1] + DIRECTION[3][1])
+			return (coord[0] + DIRECTION[3][0], coord[1] + DIRECTION[3][1])
 
-	elif (direction == DIRECTION[4]):
-		return (
-			np.max([c[0] for c in contour_coordinates]) + DIRECTION[4][0], 
-			centroids[1] + DIRECTION[4][1]
-		)
+		elif (direction == DIRECTION[4]):		# 南
+			return (
+				np.max([c[0] for c in contour_coordinates]) + DIRECTION[4][0], 
+				centroids[1] + DIRECTION[4][1]
+			)
 
-	elif (direction == DIRECTION[5]):
-		# y = -x + (Δy + Δx) の1次関数
-		linear_function = [
-			c for c in contour_coordinates 
-			if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
-		]
-		# 注目領域内でy座標の最も大きい座標を取得
-		coord = max(linear_function, key=lambda x:x[0])
+		elif (direction == DIRECTION[5]):		# 南西
+			# y = -x + (Δy + Δx) の1次関数
+			linear_function = [
+				c for c in contour_coordinates 
+				if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+			]
+			# 注目領域内でy座標の最も大きい座標を取得
+			coord = max(linear_function, key=lambda x:x[0])
 
-		return (coord[0] + DIRECTION[5][0], coord[1] + DIRECTION[5][1])
+			return (coord[0] + DIRECTION[5][0], coord[1] + DIRECTION[5][1])
 
-	elif (direction == DIRECTION[6]):
-		return (
-			centroids[0] + DIRECTION[6][0], 
-			np.min([c[1] for c in contour_coordinates]) + DIRECTION[6][1]
-		)
+		elif (direction == DIRECTION[6]):		# 西
+			return (
+				centroids[0] + DIRECTION[6][0], 
+				np.min([c[1] for c in contour_coordinates]) + DIRECTION[6][1]
+			)
 
-	elif (direction == DIRECTION[7]):
-		# y = x + (Δy - Δx) の1次関数
-		linear_function = [
-			c for c in contour_coordinates 
-			if (c[1] == c[0] + (centroids[1] - centroids[0]))
-		]
-		# 注目領域内でy座標の最も小さい座標を取得
-		coord = min(linear_function, key=lambda x:x[0])
-		
-		return (coord[0] + DIRECTION[7][0], coord[1] + DIRECTION[7][1])
+		elif (direction == DIRECTION[7]):		# 北西
+			# y = x + (Δy - Δx) の1次関数
+			linear_function = [
+				c for c in contour_coordinates 
+				if (c[1] == c[0] + (centroids[1] - centroids[0]))
+			]
+			# 注目領域内でy座標の最も小さい座標を取得
+			coord = min(linear_function, key=lambda x:x[0])
+
+			return (coord[0] + DIRECTION[7][0], coord[1] + DIRECTION[7][1])
+	except:
+		# 領域内に１次関数が存在しない場合
+		return (-1, -1)
+
+
+def get_label_from_coordinates(self, coordinate):
+	"""
+	任意の座標からその領域のラベルIDを取得
+	FIXME: 注目していた領域のデータ等使用して処理負荷軽減
+
+	coordinate: 座標
+	"""
+	# 座標の属する領域のラベルIDを走査c
+	for region in self.pms_coords:
+		# 領域データを取得
+		label, coordinates, _ = tool.decode_area(region)
+
+		# 座標が属していればラベルIDを返却
+		if (coordinate in coordinates):
+			return label
+
+	return None
 
 
 @tool.stop_watch

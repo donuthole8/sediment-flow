@@ -48,9 +48,9 @@ class ImageOp():
 
 		# 領域データ
 		self.pms_coords = []
-		self.pms_pix   = []
-		self.region    = []
-		self.building  = []
+		self.pms_pix    = []
+		self.region     = []
+		self.building   = []
 
 
 	def dem2gradient(self, mesh_size):
@@ -380,11 +380,9 @@ class ImageOp():
 			## 隣接領域かどうかを判別
 			# 8方向に絞って隣接を判別
 			# 8方向の隣接領域データを取得
-			if (process.extract_neighbor(self, region)):
-
-			# 
-				return
-			return
+			# if (process.extract_neighbor(self, region)):
+			neighbor_labels = process.extract_neighbor(self, region)
+			# print(neighbor_labels)
 
 
 				# ## 傾斜方向が上から下の領域を抽出
