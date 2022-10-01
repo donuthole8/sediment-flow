@@ -237,6 +237,27 @@ def masking(self, img, mask):
 	return masked_img
 
 
+def create_label_table(self):
+	"""
+	ラベリングテーブルを作成
+	"""
+	# 空画像を作成
+	label_table = np.zeros((self.size_2d[1], self.size_2d[0])).astype(np.uint8)
+
+	for region in self.pms_coords:
+		# 注目領域のラベルID,座標を取得
+		label, coords, _ = tool.decode_area(region)
+
+		# ラベルを付与
+		for coord in coords:
+			label_table[coord] = label
+
+	# ラベルテーブルの保存
+	self.label_table = label_table
+
+	return
+
+
 def get_pms_contours(self):
 	"""
 	各領域をキャンパスに描画し1つずつ領域データを抽出
@@ -707,12 +728,10 @@ def extract_neighbor(self, region):
 
 		# 取得した隣接座標が画像領域内に存在するか
 		if (tool.is_index(self, neighbor_coordinate)):
-			# その座標を座標群から取得してラベルIDを取得
-			label = get_label_from_coordinates(self, neighbor_coordinate)
-
-			if (label != None):
-				# ラベルIDを保存
-				neighbor_region_labels.append(label)
+			# ラベルIDを保存
+			neighbor_region_labels.append(
+				self.label_table[neighbor_coordinate]
+			)
 
 	# 重複を削除
 	# FIXME: Noneがある場合があるので削除
@@ -801,14 +820,14 @@ def get_neighbor_coordinate(direction, contour_coordinates, centroids):
 		return (-1, -1)
 
 
-def get_label_from_coordinates(self, coordinate):
+def get_label_from_coordinate(self, coordinate):
 	"""
 	任意の座標からその領域のラベルIDを取得
 	FIXME: 注目していた領域のデータ等使用して処理負荷軽減
 
 	coordinate: 座標
 	"""
-	# 座標の属する領域のラベルIDを走査c
+	# 座標の属する領域のラベルIDを走査
 	for region in self.pms_coords:
 		# 領域データを取得
 		label, coordinates, _ = tool.decode_area(region)

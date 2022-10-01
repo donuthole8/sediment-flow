@@ -35,6 +35,7 @@ class ImageOp():
 		self.masked_ortho  = None
 		self.gradient      = None
 		self.div_img       = None
+		self.label_table   = None
 		self.dissimilarity = None
 		self.edge          = None
 		self.bld_mask      = None
@@ -218,6 +219,9 @@ class ImageOp():
 		# 領域データの保存
 		tool.csv2self(self)
 
+		# ラベリングテーブルの作成
+		process.create_label_table(self)
+
 		# 各領域をキャンパスに描画し1つずつ領域データを抽出
 		process.get_pms_contours(self)
 
@@ -364,6 +368,7 @@ class ImageOp():
 		return
 
 
+	@tool.stop_watch
 	def calc_movement(self):
 		"""
 		土砂移動の推定
@@ -377,17 +382,21 @@ class ImageOp():
 			# label = region["label"]
 			# print("label:", label)
 
-			## 隣接領域かどうかを判別
-			# 8方向に絞って隣接を判別
-			# 8方向の隣接領域データを取得
-			# if (process.extract_neighbor(self, region)):
-			neighbor_labels = process.extract_neighbor(self, region)
-			# print(neighbor_labels)
+			# TODO: 順番を考えることによって処理を減らせそう
+			# TODO: 最初に4つの処理で共通に必要なデータを取得することでメモリ使用等を減らせそう
+
+			# ## 8方向に対して隣接領域の座標1点ずつを取得
+			# neighbor_coordinates = process.extract_neighbor(self, region)
+			# ## 傾斜方向が上から下の領域を抽出
+			# direction_region = process.extract_direction(self, region)
 
 
-				# ## 傾斜方向が上から下の領域を抽出
-				# if (process.is_direction()):
+			## 8方向に対して隣接領域の座標1点ずつを取得
+			neighbor_label = process.extract_neighbor(self, region)
+			## 傾斜方向が上から下の領域を抽出
+			# direction_region = process.extract_direction(self, region, neighbor_label)
 
+			# return
 
 				# 	## 侵食と堆積の組み合わせを抽出
 				# 	if (process.is_sediment()):
@@ -408,7 +417,7 @@ class ImageOp():
 		# ラベル画像の領域単位で，そこからどこに流れてそうか正解画像（矢印図）を作成
 
 		# NOTE:::
-		# できればオプティカルフローやPIV解析，3D-GIV解析，特徴量追跡等も追加する
+		# できればオプティカルフローやPIV解析,3D-GIV解析，特徴量追跡等も追加する
 
 
 		# 土砂移動図の作成

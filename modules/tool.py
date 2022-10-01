@@ -79,11 +79,11 @@ def csv2self(self):
 	"""
 	# 領域データ読み込み
 	coords_list = load_csv("./area_data/pms_coords.csv")
-	# pix_list   = load_csv("./area_data/pms_pix.csv")
+	# pix_list    = load_csv("./area_data/pms_pix.csv")
 
 	# selfに格納
 	self.pms_coords = coords_list
-	# self.pms_pix   = pix_list
+	# self.pms_pix    = pix_list
 
 	return
 
@@ -477,8 +477,9 @@ def is_index(self, coordinate):
 
 	coordinate: タプル型座標
 	"""
-	if (	((coordinate[0] >= 0) and (coordinate[0] <= self.size_2d[0])) 
-		and ((coordinate[1] >= 0) and (coordinate[1] <= self.size_2d[1]))):
+	# (0 <= x < width) & (0 <= y < height)
+	if (	((coordinate[0] >= 0) and (coordinate[0] < self.size_3d[0])) 
+		and ((coordinate[1] >= 0) and (coordinate[1] < self.size_3d[1]))):
 			return True
 	else:
 		return False
