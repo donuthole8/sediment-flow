@@ -8,7 +8,7 @@ from modules import process
 
 
 class ImageOp():
-	def __init__(self, path_list):
+	def __init__(self, path_list: list[str]) -> None:
 		"""
 		初期化メソッド
 
@@ -54,7 +54,7 @@ class ImageOp():
 		self.building   = []
 
 
-	def dem2gradient(self, mesh_size):
+	def dem2gradient(self, mesh_size: int) -> None:
 		"""
 		DEMを勾配データへ変換
 
@@ -72,7 +72,7 @@ class ImageOp():
 		return
 
 
-	def norm_degree(self):
+	def norm_degree(self) -> None:
 		"""
 		入力された傾斜方位（0-255）を実際の角度（0-360）に正規化
 		"""
@@ -82,7 +82,7 @@ class ImageOp():
 		return
 
 
-	def norm_degree_v2(self):
+	def norm_degree_v2(self) -> None:
 		"""
 		入力された傾斜方位（負値含む）を実際の角度（0-360）に正規化
 		"""
@@ -96,7 +96,7 @@ class ImageOp():
 		return
 
 
-	def resampling_dsm(self):
+	def resampling_dsm(self) -> None:
 		"""
 		UAVのNoData部分を航空画像DSM・DEMから切り取り・解像度のリサンプリング
 		"""
@@ -139,7 +139,7 @@ class ImageOp():
 
 
 	@tool.stop_watch
-	def norm_mask(self, area_th, scale):
+	def norm_mask(self, area_th: int, scale: int) -> None:
 		"""
 		マスク画像の前処理
 
@@ -164,7 +164,7 @@ class ImageOp():
 		return
 
 
-	def extract_sediment(self):
+	def extract_sediment(self) -> None:
 		"""
 		土砂領域のみを抽出
 		"""
@@ -175,7 +175,12 @@ class ImageOp():
 
 
 	@tool.stop_watch
-	def divide_area(self, spatial_radius, range_radius, min_density):
+	def divide_area(
+		self, 
+		spatial_radius: float, 
+		range_radius: float, 
+		min_density: float
+	) -> None:
 		"""
 		オルソ画像の領域分割を行う
 
@@ -212,7 +217,7 @@ class ImageOp():
 
 
 	@tool.stop_watch
-	def calc_contours(self):
+	def calc_contours(self) -> None:
 		"""
 		csvに保存された領域の座標データより領域データを算出
 		"""
@@ -229,7 +234,7 @@ class ImageOp():
 
 
 	@tool.stop_watch
-	def texture_analysis(self):
+	def texture_analysis(self) -> None:
 		"""
 		テクスチャ解析
 		"""
@@ -240,7 +245,7 @@ class ImageOp():
 		return
 
 
-	def edge_detection(self):
+	def edge_detection(self) -> None:
 		"""
 		エッジ抽出
 		"""
@@ -251,7 +256,7 @@ class ImageOp():
 
 
 	@tool.stop_watch
-	def extract_building(self):
+	def extract_building(self) -> None:
 		"""
 		円形度より建物領域を抽出する
 		"""
@@ -261,7 +266,7 @@ class ImageOp():
 		return
 
 
-	def norm_building(self):
+	def norm_building(self) -> None:
 		"""
 		建物領域の標高値を地表面と同等に補正する
 		"""
@@ -271,7 +276,7 @@ class ImageOp():
 		return
 
 
-	def norm_elevation_0to1(self):
+	def norm_elevation_0to1(self) -> None:
 		"""
 		DSM標高値を0から1に正規化する
 		"""
@@ -290,7 +295,7 @@ class ImageOp():
 		return
 
 
-	def norm_elevation_sd(self):
+	def norm_elevation_sd(self) -> None:
 		"""
 		DSM標高値を標準偏差によってに正規化する
 		"""
@@ -314,7 +319,7 @@ class ImageOp():
 		return
 
 
-	def norm_elevation_meter(self):
+	def norm_elevation_meter(self) -> None:
 		"""
 		DEMの標高をDSMにマッチングさせ標高値をm単位で対応付ける
 		"""
@@ -346,7 +351,7 @@ class ImageOp():
 		return
 
 
-	def calc_sedimentation(self):
+	def calc_sedimentation(self) -> None:
 		"""
 		災害前後での標高差分を算出
 		DEMの標高をDSMにマッチングさせ標高値を対応付ける
@@ -369,7 +374,7 @@ class ImageOp():
 
 
 	@tool.stop_watch
-	def calc_movement(self):
+	def calc_movement(self) -> None:
 		"""
 		土砂移動の推定
 		"""
@@ -385,16 +390,16 @@ class ImageOp():
 			# TODO: 順番を考えることによって処理を減らせそう
 			# TODO: 最初に4つの処理で共通に必要なデータを取得することでメモリ使用等を減らせそう
 
-			# ## 8方向に対して隣接領域の座標1点ずつを取得
-			# neighbor_coordinates = process.extract_neighbor(self, region)
-			# ## 傾斜方向が上から下の領域を抽出
-			# direction_region = process.extract_direction(self, region)
-
 
 			## 8方向に対して隣接領域の座標1点ずつを取得
 			neighbor_label = process.extract_neighbor(self, region)
+
 			## 傾斜方向が上から下の領域を抽出
-			# direction_region = process.extract_direction(self, region, neighbor_label)
+			direction_label = process.extract_direction(self, region, neighbor_label)
+
+			print("neighbor :", neighbor_label)
+			print("direction:", direction_label)
+
 
 			# return
 

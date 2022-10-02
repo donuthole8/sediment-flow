@@ -1,3 +1,4 @@
+from tkinter.messagebox import NO
 import cv2
 import math
 import numpy as np
@@ -5,7 +6,6 @@ import scipy.ndimage as ndimage
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from math import dist
-from sqlalchemy import null
 from tqdm import trange
 
 from modules import tif
@@ -26,7 +26,11 @@ DIRECTION = [
 ]
 
 
-def binarize(src_img, thresh, mode):
+def binarize(
+	src_img: np.ndarray, 
+	thresh: int, 
+	mode: str
+) -> np.ndarray:
 	"""
 	二値化
 	"""
@@ -37,7 +41,7 @@ def binarize(src_img, thresh, mode):
 
 
 @tool.stop_watch
-def calc_gradient(self, mesh_size):
+def calc_gradient(self, mesh_size: int) -> np.ndarray:
 	"""
 	勾配データの算出
 
@@ -65,7 +69,7 @@ def calc_gradient(self, mesh_size):
 	return grad
 
 
-def dem2gradient(self, size_mesh):
+def dem2gradient(self, size_mesh: int) -> None:
 	"""
 	傾斜度を算出する
 	
@@ -104,7 +108,11 @@ def dem2gradient(self, size_mesh):
 	return
 	
 
-def morphology(self, ksize, exe_num):
+def morphology(
+	self, 
+	ksize: int, 
+	exe_num: int
+) -> None:
 	"""
 	モルフォロジー処理
 
@@ -136,7 +144,11 @@ def morphology(self, ksize, exe_num):
 	return
 
 
-def get_norm_contours(self, scale, ksize):
+def get_norm_contours(
+	self, 
+	scale: int, 
+	ksize: int
+) -> list[list]:
 	"""
 	輪郭をぼやけさせて抽出
 
@@ -172,7 +184,12 @@ def get_norm_contours(self, scale, ksize):
 	return contours
 
 
-def remove_small_area(self, contours, area_th, scale):
+def remove_small_area(
+	self, 
+	contours: list[list], 
+	area_th: int, 
+	scale: int
+) -> None:
 	"""
 	面積が閾値以下の領域を除去
 
@@ -207,7 +224,11 @@ def remove_small_area(self, contours, area_th, scale):
 	return
 
 
-def masking(self, img, mask):
+def masking(
+	self, 
+	img: np.ndarray, 
+	mask: np.ndarray
+) -> np.ndarray:
 	"""
 	マスク処理にて不要領域を除去
 
@@ -237,7 +258,7 @@ def masking(self, img, mask):
 	return masked_img
 
 
-def create_label_table(self):
+def create_label_table(self) -> None:
 	"""
 	ラベリングテーブルを作成
 	"""
@@ -258,7 +279,7 @@ def create_label_table(self):
 	return
 
 
-def get_pms_contours(self):
+def get_pms_contours(self) -> None:
 	"""
 	各領域をキャンパスに描画し1つずつ領域データを抽出
 	領域分割結果からラベリング画像を作成
@@ -320,7 +341,7 @@ def get_pms_contours(self):
 	return
 
 
-def texture_analysis(self):
+def texture_analysis(self) -> None:
 	"""
 	オルソ画像に対しテクスチャ解析
 	"""
@@ -394,7 +415,11 @@ def texture_analysis(self):
 	return
 
 
-def edge_detection(self, threshold1, threshold2):
+def edge_detection(
+	self, 
+	threshold1: int, 
+	threshold2: int
+) -> None:
 	"""
 	エッジ抽出
 	"""
@@ -407,8 +432,10 @@ def edge_detection(self, threshold1, threshold2):
 	# 画像保存
 	cv2.imwrite("./outputs/edge.png", img_canny)
 
+	return
 
-def extract_building(self):
+
+def extract_building(self) -> None:
 	"""
 	建物領域を抽出
 
@@ -457,7 +484,11 @@ def extract_building(self):
 	return
 
 
-def is_building(self, circularity, centroids):
+def is_building(
+	self, 
+	circularity: float, 
+	centroids: tuple[int, int]
+) -> bool:
 	"""
 	建物領域かどうかを判別
 
@@ -478,7 +509,7 @@ def is_building(self, circularity, centroids):
 		return True
 
 
-def is_sediment_or_vegetation(self, centroids):
+def is_sediment_or_vegetation(self, centroids: tuple[int, int]) -> bool:
 	"""
 	土砂・植生領域かどうかを判別
 
@@ -501,7 +532,7 @@ def is_sediment_or_vegetation(self, centroids):
 		return False
 
 
-def norm_building(self):
+def norm_building(self) -> None:
 	"""
 	建物領域の標高値を地表面と同等に補正する
 	"""
@@ -543,35 +574,12 @@ def norm_building(self):
 	return
 
 
-def get_neighbor_region(self, coords):
+def get_neighbor_region(self, coords: tuple[int, int]) -> list[int]:
 	"""
 	建物領域でない隣接領域の標高値を取得
+	TODO: 新しく作成した隣接領域検出を使えないか検討
 
-	使えるデータ
-	- オブジェクトの外接矩形の左上のx座標、y座標、高さ、幅
-	- 重心（x,y座標）,円周,面積
-	- 領域座標,輪郭座標
-
-	実装案
-	1. 重心から四方向へ走査
-	2. 隣接領域まで走査したところで建物領域か判別
-	3. 建物領域でないなら標高値を取得
-
-	1. 輪郭座標を何点か取得
-	2. 少しずらして走査
-	3. 建物領域でないなら標高値を取得
-
-	1. 左上の座標を取得
-	2. さらに左上の標高値を取得
-
-	1. 重心・円周から重心からの半径を計算
-	2. 半径分の距離の座標を走査
-	3. 建物領域でないなら標高値を取得
-
-	1. 建物マスクを作成
-	2. 注目領域の輪郭座標・重心座標から外周方向を取得
-	3. 外周方向に座標を走査する（建物マスクに当てはまらない領域）
-	4. 
+	coords: 注目領域の座標群
 	"""
 	# キャンパス描画
 	campus = np.zeros((self.size_2d[1], self.size_2d[0]))
@@ -693,7 +701,7 @@ def get_neighbor_region(self, coords):
 	return self.dsm_uav[(cy, cx)]
 
 
-def binarize_2area(self):
+def binarize_2area(self) -> np.ndarray:
 	"""
 	堆積領域と侵食領域で二値化
 	"""
@@ -706,9 +714,11 @@ def binarize_2area(self):
 	return dsm_bin
 
 
-def extract_neighbor(self, region):
+def extract_neighbor(self, region: tuple) -> list[int]:
 	"""
 	8方向で隣接している領域の組を全て抽出
+
+	region: 注目領域の領域データ
 	"""
 	# 領域座標データを取得
 	_, coordinates, _ = tool.decode_area(self.pms_coords[region["label"]])
@@ -738,7 +748,11 @@ def extract_neighbor(self, region):
 	return list(set(neighbor_region_labels))
 
 
-def get_neighbor_coordinate(direction, contour_coordinates, centroids):
+def get_neighbor_coordinate(
+	direction: tuple[int, int], 
+	contour_coordinates: list[tuple], 
+	centroids: tuple[int, int]
+) -> tuple[int, int]:
 	"""
 	注目座標の輪郭に隣接した領域の座標を1点取得
 
@@ -820,31 +834,19 @@ def get_neighbor_coordinate(direction, contour_coordinates, centroids):
 		return (-1, -1)
 
 
-def get_label_from_coordinate(self, coordinate):
-	"""
-	任意の座標からその領域のラベルIDを取得
-	FIXME: 注目していた領域のデータ等使用して処理負荷軽減
-
-	coordinate: 座標
-	"""
-	# 座標の属する領域のラベルIDを走査
-	for region in self.pms_coords:
-		# 領域データを取得
-		label, coordinates, _ = tool.decode_area(region)
-
-		# 座標が属していればラベルIDを返却
-		if (coordinate in coordinates):
-			return label
-
-	return None
-
-
 @tool.stop_watch
-def extract_direction(self):
+def extract_direction(
+	self, 
+	region: tuple, 
+	neighbor_labels: list[int]
+) -> list[int]:
 	"""
-	傾斜方向が上流から下流の領域の組を全て抽出
+	隣接領域のうち傾斜方向が上流から下流の領域の組を全て抽出
+
+	region: 注目領域の領域データ
+	neighbor_labels: 隣接領域のラベルID
 	"""
-	pass
+	
 
 
 @tool.stop_watch
@@ -864,7 +866,7 @@ def estimate_flow(self):
 
 
 @staticmethod
-def detect_flow(deg):
+def detect_flow(deg: float) -> tuple[int, int]:
 	"""
 	傾斜方向を画素インデックスに変換
 

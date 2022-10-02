@@ -53,7 +53,7 @@ path_list = [path1, path2, path3, path4, path5, path6]
 
 
 @tool.stop_watch
-def main():
+def main() -> None:
 	"""
 	メイン関数
 	"""

@@ -1,9 +1,10 @@
 import cv2
+import numpy as np
 # from osgeo import gdal
 # from osgeo import osr
 
 
-def load_tif(path):
+def load_tif(path: str) -> np.ndarray:
   """
   tifファイルの読み込み
 
@@ -80,11 +81,19 @@ def load_tif(path):
 #   output.FlushCache()
 
 
-def save_tif(data, load_path, save_path):
+def save_tif(
+  data: np.ndarray, 
+  load_path: str, 
+  save_path: str
+) -> None:
   cv2.imwrite(save_path, data)
 
 
-def _save_tif(data, load_path, save_path):
+def _save_tif(
+  data: np.ndarray, 
+  load_path: str, 
+  save_path: str
+) -> None:
   """
   tifファイルの書き込み
 
@@ -131,7 +140,7 @@ def _save_tif(data, load_path, save_path):
   output.FlushCache()
 
 
-def get_band4(path):
+def get_band4(path: str) -> np.ndarray:
   """
   第4バンドデータを取得
 

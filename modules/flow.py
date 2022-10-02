@@ -23,7 +23,7 @@ path3 = './inputs_trim/manual_mask.png'
 path4 = './inputs_trim/uav_img.tif'
 
 
-def detect_flow(deg):
+def detect_flow(deg: float) -> tuple(int, int):
 	"""
 	傾斜方向を画素インデックスに変換
 
@@ -54,7 +54,7 @@ def detect_flow(deg):
 	return dx, dy
 
 
-def estimate_flow(dsm, deg, img):
+def estimate_flow(dsm: np.ndarray, deg:np.ndarray, img:np.ndarray) -> None:
 	"""
 	流出方向の予測
 
@@ -125,9 +125,11 @@ def estimate_flow(dsm, deg, img):
 	
 	cv2.imwrite("estimate_map.png", img)
 
+	return
+
 
 @tool.stop_watch
-def main():
+def main() -> None:
 	"""
 	Flow-R・中山さん手法による土砂流出予想
 
