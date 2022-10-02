@@ -8,8 +8,7 @@ from functools import wraps
 # from modules.operation import ImageOp
 
 
-# def stop_watch(func: callable) -> callable:
-def stop_watch(func):
+def stop_watch(func: callable) -> callable:
 	"""
 	関数の実行時間測定
 	"""
@@ -304,54 +303,60 @@ def is_index(self, coordinate: tuple[int, int]) -> bool:
 		return False
 
 
-def draw_vector(self, centroids: tuple[int, int]) -> None:
+def draw_vector(
+	self, 
+	region: tuple, 
+	labels: list[int]
+) -> None:
 	"""
 	土砂移動の矢印を描画
+
+	region: 注目領域の領域データ
+	labels: 流出先の領域ラベルID
 	"""
-	# 流出先の重心座標
-	_cx, _cy = int(self.region[m]["cx"]), int(self.region[m]["cy"])
-	cv2.arrowedLine(
-		img=self.ortho,     # 画像
-		pt1=(cx, cy),       # 始点
-		pt2=(_cx, _cy),     # 終点
-		color=(20,20,180),  # 色
-		thickness=2,        # 太さ
-		tipLength=0.4       # 矢先の長さ
-	)
+	# 各ラベルに対して
+	for label in labels:
+		# 流出元の重心座標
+		cy, cx   = region["cy"], region["cx"]
 
-	# # 水平距離
-	# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)
-	# # 水平方向の土砂移動を描画
-	# cv2.putText(
-	#   img=ortho,                        # 画像
-	#   text="hor:"+str(dis)+"cm",        # テキスト
-	#   org=(_cx+2, _cy+2),               # 位置
-	#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
-	#   fontScale=1,                      # フォントサイズ
-	#   color=(0, 255, 0),                # 色
-	#   thickness=1,                      # 太さ
-	#   lineType=cv2.LINE_AA              # タイプ
-	# )
+		# 流出先の重心座標
+		_cy, _cx = self.region[label]["cy"], self.region[label]["cx"]
+		
+		# 矢印を描画
+		cv2.arrowedLine(
+			img=self.ortho,     # 画像
+			pt1=(cx, cy),       # 始点
+			pt2=(_cx, _cy),     # 終点
+			color=(20,20,180),  # 色
+			thickness=2,        # 太さ
+			tipLength=0.4       # 矢先の長さ
+		)
 
-	# # 垂直距離
-	# # TODO: DSMで良いか検討
-	# dis = int(dsm[cy, cx][0] - dsm[_cy, _cx][0] * 100)
-	# # 垂直方向の土砂変化標高
-	# cv2.putText(
-	#   img=ortho,                        # 画像
-	#   text="ver:"+str(dis)+"cm",        # テキスト
-	#   org=(_cx+2, _cy+14),              # 位置
-	#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
-	#   fontScale=1,                      # フォントサイズ
-	#   color=(255, 0, 0),                # 色
-	#   thickness=1,                      # 太さ
-	#   lineType=cv2.LINE_AA              # タイプ
-	# )
+		# # 水平距離
+		# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)
+		# # 水平方向の土砂移動を描画
+		# cv2.putText(
+		#   img=ortho,                        # 画像
+		#   text="hor:"+str(dis)+"cm",        # テキスト
+		#   org=(_cx+2, _cy+2),               # 位置
+		#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+		#   fontScale=1,                      # フォントサイズ
+		#   color=(0, 255, 0),                # 色
+		#   thickness=1,                      # 太さ
+		#   lineType=cv2.LINE_AA              # タイプ
+		# )
 
-
-# テスト用メイン関数
-if __name__ == "__main__":
-	l1 = [[1,2],[0],[]]
-	l2 = [[2],  [], []]
-	l3 = [[2],  [2],[]]
-	l = and_operation(l1, l2, l3)
+		# # 垂直距離
+		# # TODO: DSMで良いか検討
+		# dis = int(dsm[cy, cx][0] - dsm[_cy, _cx][0] * 100)
+		# # 垂直方向の土砂変化標高
+		# cv2.putText(
+		#   img=ortho,                        # 画像
+		#   text="ver:"+str(dis)+"cm",        # テキスト
+		#   org=(_cx+2, _cy+14),              # 位置
+		#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+		#   fontScale=1,                      # フォントサイズ
+		#   color=(255, 0, 0),                # 色
+		#   thickness=1,                      # 太さ
+		#   lineType=cv2.LINE_AA              # タイプ
+		# )

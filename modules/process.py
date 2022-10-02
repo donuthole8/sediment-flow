@@ -407,7 +407,7 @@ def texture_analysis(self) -> None:
 		glcm_entropy]
 	titles = ['original','mean','std','contrast','dissimilarity','homogeneity','ASM','energy','max','entropy']
 	for i in range(10):
-		plt.imsave('./outputs/texture/' + titles[i] + '.png', outs[i])
+		cv2.imwrite("./outputs/texture/" + titles[i] + '.tif', outs[i])
 
 	# GLCM dissimilarity（不均一性）
 	# - [0.0 - 3.8399997]
@@ -892,13 +892,10 @@ def extract_sediment(
 		# FIXME: 平均値にしたい
 		downstream_centroid_elevation_sub = self.dsm_sub[downstream_centroids]
 
-		print("sub, next-sub", centroid_elevation_sub, downstream_centroid_elevation_sub)
-
 		# 隣接下流領域が堆積領域の場合,配列に追加
 		# FIXME: ３チャンネルだったような気がする
-		if ((centroid_elevation_sub * downstream_centroid_elevation_sub) < -1):
+		if ((centroid_elevation_sub * downstream_centroid_elevation_sub) < 0):
 			sediment_region_labels.append(downstream_label)
-			print("appende!!!")
 	
 	# 重複ラベルは削除済み
 	return sediment_region_labels

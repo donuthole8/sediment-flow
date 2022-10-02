@@ -27,6 +27,7 @@ path4 = './inputs_trim/degree.tif'
 path5 = './inputs_trim/normed_mask.png'
 path6 = './inputs_trim/uav_img.tif'
 path7 = './inputs_trim/heli_img.tif'
+path8 = './outputs/texture/dissimilarity.tif'
 
 
 # # リサイズしたテスト用画像
@@ -85,8 +86,8 @@ def main() -> None:
 	# 土砂マスクの前処理
 	# TODO: 精度向上させる
 	print("# マスク画像の前処理")
-	image_op.norm_mask(16666, 3)	# 面積の閾値, 拡大倍率
-	# image_op.mask = cv2.imread("./outputs/normed_mask.png")
+	# image_op.norm_mask(16666, 3)	# 面積の閾値, 拡大倍率
+	image_op.mask = cv2.imread("./outputs/normed_mask.png")
 
 	# 土砂マスク
 	print("# 土砂マスクによる土砂領域抽出")
@@ -110,29 +111,30 @@ def main() -> None:
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
-	# image_op.norm_elevation_0to1()
-	image_op.norm_elevation_meter()
+	image_op.norm_elevation_0to1()
+	# image_op.norm_elevation_meter()
 
 	# # 標高座標の最適化
 	# # TODO: 論文手法を実装する
 	# print("# 標高座標の最適化")
 	# image_op.norm_coord()
 
-	# テクスチャ解析
-	print("# テクスチャ解析")
-	image_op.texture_analysis()
+	# # テクスチャ解析
+	# print("# テクスチャ解析")
+	# image_op.texture_analysis()
+	image_op.dissimilarity = cv2.imread(path8, cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
-	# エッジ抽出
-	print("# エッジ抽出")
-	image_op.edge_detection()
+	# # エッジ抽出
+	# print("# エッジ抽出")
+	# image_op.edge_detection()
 
-	# # 建物領域の検出
-	# print("# 建物領域を検出する")
-	# image_op.extract_building()
+	# 建物領域の検出
+	print("# 建物領域を検出する")
+	image_op.extract_building()
 
-	# # TODO: 建物領域の標高値を地表面と同じ標高値にする
-	# print("# 建物領域の標高値を地表面標高値に補正")
-	# image_op.norm_building()
+	# TODO: 建物領域の標高値を地表面と同じ標高値にする
+	print("# 建物領域の標高値を地表面標高値に補正")
+	image_op.norm_building()
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")

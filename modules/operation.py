@@ -359,9 +359,6 @@ class ImageOp():
 		# 標高差分を算出
 		self.dsm_sub = self.dsm_uav - self.dsm_heli
 
-		print("self.mask", self.mask.shape)
-		print("self.mask", self.dsm_sub.shape)
-
 		# 土砂領域以外を除外
 		idx_mask = np.where(self.mask[0] == 255)
 		self.dsm_sub[idx_mask] = np.nan
@@ -402,22 +399,21 @@ class ImageOp():
 			# 侵食と堆積の組み合わせの領域を抽出
 			sediment_labels = process.extract_sediment(self, region, downstream_labels)
 
-
-			# print("neighbor  :", neighbor_labels)
-			# print("downstream:", downstream_labels)
-			print("sediment  :", sediment_labels)
-
-			# return
-					
 			# 災害？前？後？地形より土砂移動推定
 			# NOTE: 災害前後の地形のどちらを使用するか要検討
 			# if (process.estimate_flow()):
 
 			# 矢印の描画
-			# tool.draw_vector(self, (cy, cx))
+			tool.draw_vector(self, region, sediment_labels)
 
-							# # 注目領域の重心標高値
-							# elevation_value = self.dsm_uav[cy, cx]
+			print("--------")
+			cv2.imwrite("./outputs/map_v2.png", self.ortho)
+
+
+			# # 注目領域の重心標高値
+			# elevation_value = self.dsm_uav[cy, cx]
+
+			return
 
 
 		# NOTE:::
@@ -427,9 +423,7 @@ class ImageOp():
 		# NOTE:::
 		# できればオプティカルフローやPIV解析,3D-GIV解析，特徴量追跡等も追加する
 
-
 		# 土砂移動図の作成
+		cv2.imwrite("./outputs/map_v2.png", self.ortho)
 
 		return
-		
-
