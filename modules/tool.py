@@ -322,6 +322,12 @@ def draw_vector(
 		# 流出先の重心座標
 		_cy, _cx = self.region[label]["cy"], self.region[label]["cx"]
 
+		# # 始点
+		# cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
+
+		# # 終点
+		# cv2.circle(self.ortho, (_cx, _cy), 3, (0, 255, 0), thickness=5, lineType=cv2.LINE_8, shift=0)
+
 		# 矢印を描画
 		cv2.arrowedLine(
 			img=self.ortho,     	# 画像
@@ -329,8 +335,9 @@ def draw_vector(
 			pt2=(_cx, _cy),     	# 終点
 			color=(20, 20, 180),  # 色
 			thickness=2,        	# 太さ
-			tipLength=10	       	# 矢先の長さ
+			tipLength=0.5		      # 矢先の長さ
 		)
+
 
 		# # 水平距離
 		# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)

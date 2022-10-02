@@ -90,9 +90,9 @@ def main() -> None:
 	# image_op.norm_mask(16666, 3)	# 面積の閾値, 拡大倍率
 	image_op.mask = cv2.imread("./outputs/normed_mask.png")
 
-	# 土砂マスク
-	print("# 土砂マスクによる土砂領域抽出")
-	image_op.apply_mask()
+	# # 土砂マスク
+	# print("# 土砂マスクによる土砂領域抽出")
+	# image_op.apply_mask()
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
@@ -129,14 +129,14 @@ def main() -> None:
 	# print("# エッジ抽出")
 	# image_op.edge_detection()
 
-	# 建物領域の検出
-	print("# 建物領域を検出する")
-	# image_op.extract_building()
-	image_op.bld_mask = cv2.imread(path9)
+	# # 建物領域の検出
+	# print("# 建物領域を検出する")
+	# # image_op.extract_building()
+	# image_op.bld_mask = cv2.imread(path9)
 
-	# TODO: 建物領域の標高値を地表面と同じ標高値にする
-	print("# 建物領域の標高値を地表面標高値に補正")
-	image_op.norm_building()
+	# # TODO: 建物領域の標高値を地表面と同じ標高値にする
+	# print("# 建物領域の標高値を地表面標高値に補正")
+	# image_op.norm_building()
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")

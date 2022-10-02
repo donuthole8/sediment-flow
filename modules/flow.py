@@ -164,8 +164,8 @@ def main() -> None:
 
 	# 土砂領域以外の除去
 	# print("# 植生領域の除去")
-	# img = process.remove_vegitation(img)
-	# img = process.remove_black_pix(org_img, "./outputs/vegitation.png")
+	# img = process.remove_vegetation(img)
+	# img = process.remove_black_pix(org_img, "./outputs/vegetation.png")
 
 	# 土砂マスク
 	print("# 土砂マスクによる土砂領域抽出")
@@ -185,9 +185,6 @@ def main() -> None:
 	# # driver.labeling_color_v1(mask, img)
 	# driver.labeling_bin(mask, img)
 	# # driver.extract_region(img, regions_num)
-
-
-
 
 	# 流出推定
 	estimate_flow(dsm, deg, org_img)

@@ -1,3 +1,4 @@
+from operator import ne
 import cv2
 import numpy as np
 import pymeanshift as pms
@@ -122,10 +123,6 @@ class ImageOp():
 		self.mask[idx]     = 0
 		self.ortho[idx]    = 0
 
-		# 画像の保存
-		cv2.imwrite("dem_powerpo.tif", self.dem)
-		cv2.imwrite("dem_powerpo.png", self.dem)
-
 		# tool.save_resize_image("resamp_heli.png",  self.dsm_heli, self.s_size_2d)
 		# tool.save_resize_image("resamp_dem.png",   self.dem,      self.s_size_2d)
 		# tool.save_resize_image("resamp_deg.png",   self.degree,   self.s_size_2d)
@@ -170,6 +167,8 @@ class ImageOp():
 		"""
 		# 土砂マスクを用いて土砂領域以外を除去
 		self.masked_ortho = process.masking(self, self.ortho, self.mask)
+
+		
 
 		return
 
@@ -337,6 +336,7 @@ class ImageOp():
 		# veg_height = 10
 
 		# 正規化処理
+		# TODO: 修正・改善
 		self.dsm_uav  = (self.dsm_uav - min_uav) / (max_uav - min_uav) * (max_dem + veg_height)
 		# self.dsm_heli = (self.dsm_heli - min_heli) / (max_heli - min_heli) * (max_dem + veg_height)
 
@@ -345,8 +345,8 @@ class ImageOp():
 		tool.save_resize_image("normed_heli.png", self.dsm_heli, self.s_size_2d)
 
 		# 画像の保存
-		cv2.imwrite("meterd_uav_dsm.tif", self.dsm_uav)
-		cv2.imwrite("meterd_uav_heli.tif", self.dsm_heli)
+		cv2.imwrite("./output/meterd_uav_dsm.tif", self.dsm_uav)
+		cv2.imwrite("./output/meterd_uav_heli.tif", self.dsm_heli)
 
 		return
 
@@ -367,7 +367,7 @@ class ImageOp():
 		dsm_bin = process.binarize_2area(self)
 
 		# 画像の保存
-		tif.save_tif(self.dsm_sub, "dsm_uav.tif", "dsm_sub.tif")
+		tif.save_tif(self.dsm_sub, "dsm_uav.tif", "./output/dsm_sub.tif")
 		tool.save_resize_image("dsm_bin.png", dsm_bin, self.s_size_2d)
 
 		return
@@ -379,11 +379,15 @@ class ImageOp():
 		土砂移動の推定
 		"""
 		# 各注目領域に対して処理を行う
-		for region in self.region:
+		for i, region in enumerate(self.region):
 			# TODO: 順番を考えることによって処理を減らせそう
 			# TODO: 最初に4つの処理で共通に必要なデータを取得することでメモリ使用等を減らせそう
 			# NOTE: detect_flowのように10方向で精度評価＋できればベクトル量（流出距離も）ラベル画像の領域単位で，そこからどこに流れてそうか正解画像（矢印図）を作成
 			# NOTE: できればオプティカルフローやPIV解析,3D-GIV解析，特徴量追跡等も追加する
+
+			# cy, cx   = region["cy"], region["cx"]
+			# # 始点
+			# cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
 
 
 			# 傾斜方向と隣接2方向の3方向に対しての隣接領域を取得
@@ -399,9 +403,11 @@ class ImageOp():
 			# 矢印の描画
 			tool.draw_vector(self, region, sediment_labels)
 
-			# cv2.imwrite("./outputs/map_v2.png", self.ortho)
+			# if (i > 100):
+			# 	cv2.imwrite("./outputs/map_v2.png", self.ortho)
+			# 	return
 
 		# 土砂移動図の作成
-		cv2.imwrite("./outputs/map_v2.png", self.ortho)
+		cv2.imwrite("./outputs/map_v2_point.png", self.ortho)
 
 		return

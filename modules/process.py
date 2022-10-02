@@ -803,7 +803,8 @@ def get_neighbor_coordinate(
 			# y = -x + (Δy + Δx) の1次関数
 			linear_function = [
 				c for c in contour_coordinates 
-				if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+				# if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+				if (c[0] == (-1 * c[1]) + (centroids[0] + centroids[1]))
 			]
 			# 注目領域内でx座標の最も大きい座標を取得
 			coord = max(linear_function, key=lambda x:x[1])
@@ -820,7 +821,8 @@ def get_neighbor_coordinate(
 			# y = x + (Δy - Δx) の1次関数
 			linear_function = [
 				c for c in contour_coordinates 
-				if (c[1] == c[0] + (centroids[1] - centroids[0]))
+				# if (c[1] == c[0] + (centroids[1] - centroids[0]))
+				if (c[0] == c[1] + (centroids[0] - centroids[1]))
 			]
 			# 注目領域内でx座標の最も大きい座標を取得
 			coord = max(linear_function, key=lambda x:x[1])
@@ -837,7 +839,8 @@ def get_neighbor_coordinate(
 			# y = -x + (Δy + Δx) の1次関数
 			linear_function = [
 				c for c in contour_coordinates 
-				if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+				# if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+				if (c[0] == (-1 * c[1]) + (centroids[0] + centroids[1]))
 			]
 			# 注目領域内でy座標の最も大きい座標を取得
 			coord = max(linear_function, key=lambda x:x[0])
@@ -854,7 +857,8 @@ def get_neighbor_coordinate(
 			# y = x + (Δy - Δx) の1次関数
 			linear_function = [
 				c for c in contour_coordinates 
-				if (c[1] == c[0] + (centroids[1] - centroids[0]))
+				# if (c[1] == c[0] + (centroids[1] - centroids[0]))
+				if (c[0] == c[1] + (centroids[0] - centroids[1]))
 			]
 			# 注目領域内でy座標の最も小さい座標を取得
 			coord = min(linear_function, key=lambda x:x[0])
@@ -936,42 +940,3 @@ def extract_sediment(
 	
 	# 重複ラベルは削除済み
 	return sediment_region_labels
-
-
-def estimate_flow(
-	self, 
-	region: tuple, 
-	sediment_labels: list[int]
-) -> list[int]:
-	"""
-	流出方向を推定し傾斜方向に沿った領域を抽出
-
-	region: 注目領域の領域データ
-	sediment_labels: 隣接下流堆積領域のラベルID
-	"""
-	# 注目領域の重心座標を取得
-	# TODO: 領域の平均値等使用して領域の傾斜方向を推定したい
-	cy, cx = region["cy"], region["cx"]
-
-	# 注目領域の重心
-
-	# 各隣接下流堆積領域が傾斜方向かどうか判別する
-	direction_region_labels = []
-	for label in sediment_labels:
-		# 
-		pass
-
-
-
-	# # 注目領域の重心標高値を取得
-	# centroid_elevation = self.dsm_uav[cy, cx]
-
-	# # 傾斜方向の標高値を取得
-
-	# # とりあえずな３０，Maxで３０回繰り返すということだと思われる
-	# for i in range(30):
-	# 	# 重心の傾斜方向を取得
-	# 	coordinate = detect_flow(self.degree[cy, cx])
-		
-
-	# 	# 注目領域の重心標高から傾斜方向を走査
