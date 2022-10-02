@@ -220,7 +220,7 @@ def remove_small_area(
 	self.mask = cv2.resize(normed_mask, (int(w/scale), int(h/scale)))
 
 	# 画像の保存
-	cv2.imwrite("./outputs/normed_mask.png", normed_mask)
+	cv2.imwrite("./outputs/normed_mask.png", self.mask)
 
 	return
 

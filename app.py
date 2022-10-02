@@ -126,13 +126,13 @@ def main() -> None:
 	print("# エッジ抽出")
 	image_op.edge_detection()
 
-	# 建物領域の検出
-	print("# 建物領域を検出する")
-	image_op.extract_building()
+	# # 建物領域の検出
+	# print("# 建物領域を検出する")
+	# image_op.extract_building()
 
-	# TODO: 建物領域の標高値を地表面と同じ標高値にする
-	print("# 建物領域の標高値を地表面標高値に補正")
-	image_op.norm_building()
+	# # TODO: 建物領域の標高値を地表面と同じ標高値にする
+	# print("# 建物領域の標高値を地表面標高値に補正")
+	# image_op.norm_building()
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")

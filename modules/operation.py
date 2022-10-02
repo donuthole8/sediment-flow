@@ -393,38 +393,31 @@ class ImageOp():
 			# TODO: 順番を考えることによって処理を減らせそう
 			# TODO: 最初に4つの処理で共通に必要なデータを取得することでメモリ使用等を減らせそう
 
-
-			## 8方向に対しての隣接領域を取得
+			# 8方向に対しての隣接領域を取得
 			neighbor_labels = process.extract_neighbor(self, region)
 
-			## 傾斜方向が上から下の領域を抽出
+			# 傾斜方向が上から下の領域を抽出
 			downstream_labels = process.extract_downstream(self, region, neighbor_labels)
 
-			## 侵食と堆積の組み合わせの領域を抽出
+			# 侵食と堆積の組み合わせの領域を抽出
 			sediment_labels = process.extract_sediment(self, region, downstream_labels)
+
 
 			# print("neighbor  :", neighbor_labels)
 			# print("downstream:", downstream_labels)
 			print("sediment  :", sediment_labels)
-			# print("")
 
 			# return
-
-
-			# return
-
-				# 	## 侵食と堆積の組み合わせを抽出
-				# 	if (process.is_sediment()):
 					
-				# 		## 災害？前？後？地形より土砂移動推定
-				# 		# NOTE: 災害前後の地形のどちらを使用するか要検討
-				# 		if (process.estimate_flow()):
+			# 災害？前？後？地形より土砂移動推定
+			# NOTE: 災害前後の地形のどちらを使用するか要検討
+			# if (process.estimate_flow()):
 
-				# 			# 矢印の描画
-				# 			tool.draw_vector(self, (cy, cx))
+			# 矢印の描画
+			# tool.draw_vector(self, (cy, cx))
 
-				# 			# 注目領域の重心標高値
-				# 			elevation_value = self.dsm_uav[cy, cx]
+							# # 注目領域の重心標高値
+							# elevation_value = self.dsm_uav[cy, cx]
 
 
 		# NOTE:::
