@@ -411,3 +411,10 @@ class ImageOp():
 		cv2.imwrite("./outputs/map_v2_point.png", self.ortho)
 
 		return
+
+
+	def accuracy_evaluation(self):
+		"""
+		精度評価
+		"""
+		pass

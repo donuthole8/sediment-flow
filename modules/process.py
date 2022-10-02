@@ -477,7 +477,7 @@ def extract_building(self) -> None:
 
 	# 画像を保存
 	tool.save_resize_image("circularity.png", cir_img, self.s_size_2d)
-	tool.save_resize_image("building.png", bld_img, self.s_size_2d)
+	tool.save_resize_image("building.png",    bld_img, self.s_size_2d)
 	cv2.imwrite("./outputs/building_mask.png", bld_mask)
 
 	self.bld_mask = bld_mask

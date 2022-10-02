@@ -96,10 +96,9 @@ def main() -> None:
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
-	print("# オルソ画像の領域分割")	# 空間半径,範囲半径,最小密度
+	print("# オルソ画像の領域分割")
 	# image_op.divide_area(15, 4.5, 300)
-	# これ使ってた
-	# image_op.divide_area(3, 4.5, 100)
+	# image_op.divide_area(3, 4.5, 100)	# これ使ってた
 	# image_op.divide_area(2, 2, 20)
 	image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
@@ -145,6 +144,10 @@ def main() -> None:
 	# 土砂移動推定
 	print("# 土砂移動推定")
 	image_op.calc_movement()
+
+	# 精度評価
+	print("# 精度評価")
+	image_op.accuracy_valuation()
 
 
 # メイン関数
