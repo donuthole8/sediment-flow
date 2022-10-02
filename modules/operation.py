@@ -164,9 +164,9 @@ class ImageOp():
 		return
 
 
-	def extract_sediment(self) -> None:
+	def apply_mask(self) -> None:
 		"""
-		土砂領域のみを抽出
+		マスク画像を適用し土砂領域のみを抽出
 		"""
 		# 土砂マスクを用いて土砂領域以外を除去
 		self.masked_ortho = process.masking(self, self.ortho, self.mask)
@@ -392,13 +392,20 @@ class ImageOp():
 
 
 			## 8方向に対して隣接領域の座標1点ずつを取得
-			neighbor_label = process.extract_neighbor(self, region)
+			neighbor_labels = process.extract_neighbor(self, region)
 
 			## 傾斜方向が上から下の領域を抽出
-			direction_label = process.extract_direction(self, region, neighbor_label)
+			direction_labels = process.extract_direction(self, region, neighbor_labels)
 
-			print("neighbor :", neighbor_label)
-			print("direction:", direction_label)
+			## 侵食と堆積の組み合わせを抽出
+			sediment_labels = process.extract_sediment(self, region, direction_labels)
+
+
+			print("neighbor :", neighbor_labels)
+			print("direction:", direction_labels)
+
+
+			return
 
 
 			# return

@@ -6,6 +6,7 @@ import scipy.ndimage as ndimage
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from math import dist
+from torch import ne
 from tqdm import trange
 
 from modules import tif
@@ -846,7 +847,33 @@ def extract_direction(
 	region: 注目領域の領域データ
 	neighbor_labels: 隣接領域のラベルID
 	"""
+	# 重心標高値を取得
+	# FIXME: 平均値にしたい
+	centroid_elevation = self.dem[(region["cy"], region["cx"])]
+
+	# 各隣接領域が下流かどうかを判別する
+	downstream_region_labels = []
+	for neighbor_label in neighbor_labels:
+
+		# 隣接領域の重心座標を取得
+		neighbor_centroids = (self.region[neighbor_label]["cy"], self.region[neighbor_label]["cx"])
+
+		# 隣接領域の重心標高値を取得
+		# FIXME: 平均値にしたい
+		neighbor_centroid_elevation = self.dsm_uav[neighbor_centroids]
+
+		# FIXME: ３チャンネルだったような気がする
+		if (centroid_elevation > neighbor_centroid_elevation):
+			downstream_region_labels.append(neighbor_label)
 	
+	# 重複ラベルは削除済み
+	return downstream_region_labels
+
+
+
+
+
+
 
 
 @tool.stop_watch

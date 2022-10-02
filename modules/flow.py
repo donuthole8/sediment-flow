@@ -169,7 +169,7 @@ def main() -> None:
 
 	# 土砂マスク
 	print("# 土砂マスクによる土砂領域抽出")
-	img = process.extract_sediment(org_img, mask)
+	img = operation.apply_mask(org_img, mask)
 
 	# カラー画像の領域分割
 	print("# 土砂領域の領域分割")

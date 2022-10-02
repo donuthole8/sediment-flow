@@ -90,7 +90,7 @@ def main() -> None:
 
 	# 土砂マスク
 	print("# 土砂マスクによる土砂領域抽出")
-	image_op.extract_sediment()
+	image_op.apply_mask()
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
