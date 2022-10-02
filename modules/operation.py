@@ -394,13 +394,13 @@ class ImageOp():
 			# TODO: 最初に4つの処理で共通に必要なデータを取得することでメモリ使用等を減らせそう
 
 
-			## 8方向に対して隣接領域の座標1点ずつを取得
+			## 8方向に対しての隣接領域を取得
 			neighbor_labels = process.extract_neighbor(self, region)
 
 			## 傾斜方向が上から下の領域を抽出
 			downstream_labels = process.extract_downstream(self, region, neighbor_labels)
 
-			## 侵食と堆積の組み合わせを抽出
+			## 侵食と堆積の組み合わせの領域を抽出
 			sediment_labels = process.extract_sediment(self, region, downstream_labels)
 
 			# print("neighbor  :", neighbor_labels)
