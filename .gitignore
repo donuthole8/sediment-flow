@@ -21,7 +21,12 @@ openpiv-python
 
 # test-code
 modules/temp.py
+app_test.py
+app_dem.py
 test.py
+
+# unfinished
+Makefile
 
 # .vscode
 .vscode

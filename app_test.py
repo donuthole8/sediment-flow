@@ -66,7 +66,8 @@ def main() -> None:
 	# 土砂マスクの前処理
 	# TODO: 精度向上させる
 	print("# マスク画像の前処理")
-	image_op.mask = cv2.imread("./outputs/normed_mask.png")
+	image_op.norm_mask(16666, 3)	# 面積の閾値, 拡大倍率
+	# image_op.mask = cv2.imread("./outputs/normed_mask.png")
 
 	# 領域分割
 	print("# オルソ画像の領域分割")	# 空間半径,範囲半径,最小密度
@@ -81,9 +82,9 @@ def main() -> None:
 	print("# 標高値の正規化")
 	image_op.norm_elevation_meter()
 
-	# # 土砂マスクを利用し堆積差分算出
-	# print("# 堆積差分算出")
-	# image_op.calc_sedimentation()
+	# 土砂マスクを利用し堆積差分算出
+	print("# 堆積差分算出")
+	image_op.calc_sedimentation()
 
 	# 土砂移動推定
 	print("# 土砂移動推定")

@@ -835,8 +835,7 @@ def get_neighbor_coordinate(
 		return (-1, -1)
 
 
-@tool.stop_watch
-def extract_direction(
+def extract_downstream(
 	self, 
 	region: tuple, 
 	neighbor_labels: list[int]
@@ -847,21 +846,23 @@ def extract_direction(
 	region: 注目領域の領域データ
 	neighbor_labels: 隣接領域のラベルID
 	"""
-	# 重心標高値を取得
+	# 注目領域の重心標高値を取得
 	# FIXME: 平均値にしたい
-	centroid_elevation = self.dem[(region["cy"], region["cx"])]
+	# FIXME: 傾斜方向データでも可
+	centroid_elevation = self.dsm_uav[(region["cy"], region["cx"])]
 
 	# 各隣接領域が下流かどうかを判別する
 	downstream_region_labels = []
 	for neighbor_label in neighbor_labels:
-
 		# 隣接領域の重心座標を取得
 		neighbor_centroids = (self.region[neighbor_label]["cy"], self.region[neighbor_label]["cx"])
 
 		# 隣接領域の重心標高値を取得
 		# FIXME: 平均値にしたい
+		# FIXME: 傾斜方向データでも可
 		neighbor_centroid_elevation = self.dsm_uav[neighbor_centroids]
 
+		# 隣接領域が下流領域の場合,配列に追加
 		# FIXME: ３チャンネルだったような気がする
 		if (centroid_elevation > neighbor_centroid_elevation):
 			downstream_region_labels.append(neighbor_label)
@@ -870,18 +871,38 @@ def extract_direction(
 	return downstream_region_labels
 
 
-
-
-
-
-
-
-@tool.stop_watch
-def extract_sub(self):
+def extract_sediment(
+	self, 
+	region: tuple, 
+	downstream_labels: list[int]
+) -> list[int]:
 	"""
 	侵食と堆積の領域の組を全て抽出
 	"""
-	pass
+	# 注目領域の重心標高変化値を取得
+	centroid_elevation_sub = self.dsm_sub[(region["cy"], region["cx"])]
+
+	# 各隣接領域が堆積領域かどうかを判別する
+	sediment_region_labels = []
+	for downstream_label in downstream_labels:
+		# 隣接下流領域の重心座標を取得
+		downstream_centroids = (self.region[downstream_label]["cy"], self.region[downstream_label]["cx"])
+
+		# 隣接下流領域の重心標高変化値を取得
+		# FIXME: 平均値にしたい
+		downstream_centroid_elevation_sub = self.dsm_sub[downstream_centroids]
+
+		print("sub, next-sub", centroid_elevation_sub, downstream_centroid_elevation_sub)
+
+		# 隣接下流領域が堆積領域の場合,配列に追加
+		# FIXME: ３チャンネルだったような気がする
+		if ((centroid_elevation_sub * downstream_centroid_elevation_sub) < -1):
+			sediment_region_labels.append(downstream_label)
+			print("appende!!!")
+	
+	# 重複ラベルは削除済み
+	return sediment_region_labels
+
 
 
 def estimate_flow(self):

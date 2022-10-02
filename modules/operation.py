@@ -359,8 +359,11 @@ class ImageOp():
 		# 標高差分を算出
 		self.dsm_sub = self.dsm_uav - self.dsm_heli
 
+		print("self.mask", self.mask.shape)
+		print("self.mask", self.dsm_sub.shape)
+
 		# 土砂領域以外を除外
-		idx_mask = np.where(self.mask == 255)
+		idx_mask = np.where(self.mask[0] == 255)
 		self.dsm_sub[idx_mask] = np.nan
 
 		# 堆積領域と侵食領域で二値化
@@ -395,17 +398,17 @@ class ImageOp():
 			neighbor_labels = process.extract_neighbor(self, region)
 
 			## 傾斜方向が上から下の領域を抽出
-			direction_labels = process.extract_direction(self, region, neighbor_labels)
+			downstream_labels = process.extract_downstream(self, region, neighbor_labels)
 
 			## 侵食と堆積の組み合わせを抽出
-			sediment_labels = process.extract_sediment(self, region, direction_labels)
+			sediment_labels = process.extract_sediment(self, region, downstream_labels)
 
+			# print("neighbor  :", neighbor_labels)
+			# print("downstream:", downstream_labels)
+			print("sediment  :", sediment_labels)
+			# print("")
 
-			print("neighbor :", neighbor_labels)
-			print("direction:", direction_labels)
-
-
-			return
+			# return
 
 
 			# return
