@@ -380,17 +380,14 @@ class ImageOp():
 		"""
 		# 各注目領域に対して処理を行う
 		for region in self.region:
-			# # 注目領域の重心
-			# cx, cy = int(region["cx"]), int(region["cy"])
-
-			# # 注目領域のラベル番号
-			# label = region["label"]
-			# print("label:", label)
-
 			# TODO: 順番を考えることによって処理を減らせそう
 			# TODO: 最初に4つの処理で共通に必要なデータを取得することでメモリ使用等を減らせそう
+			# NOTE: detect_flowのように10方向で精度評価＋できればベクトル量（流出距離も）ラベル画像の領域単位で，そこからどこに流れてそうか正解画像（矢印図）を作成
+			# NOTE: できればオプティカルフローやPIV解析,3D-GIV解析，特徴量追跡等も追加する
 
-			# 8方向に対しての隣接領域を取得
+
+			# 傾斜方向と隣接2方向の3方向に対しての隣接領域を取得
+			# TODO: 距離が小さすぎる矢印を除去する
 			neighbor_labels = process.extract_neighbor(self, region)
 
 			# 傾斜方向が上から下の領域を抽出
@@ -399,29 +396,10 @@ class ImageOp():
 			# 侵食と堆積の組み合わせの領域を抽出
 			sediment_labels = process.extract_sediment(self, region, downstream_labels)
 
-			# 災害？前？後？地形より土砂移動推定
-			# NOTE: 災害前後の地形のどちらを使用するか要検討
-			# if (process.estimate_flow()):
-
 			# 矢印の描画
 			tool.draw_vector(self, region, sediment_labels)
 
-			print("--------")
-			cv2.imwrite("./outputs/map_v2.png", self.ortho)
-
-
-			# # 注目領域の重心標高値
-			# elevation_value = self.dsm_uav[cy, cx]
-
-			return
-
-
-		# NOTE:::
-		# detect_flowのように10方向で精度評価＋できればベクトル量（流出距離も）
-		# ラベル画像の領域単位で，そこからどこに流れてそうか正解画像（矢印図）を作成
-
-		# NOTE:::
-		# できればオプティカルフローやPIV解析,3D-GIV解析，特徴量追跡等も追加する
+			# cv2.imwrite("./outputs/map_v2.png", self.ortho)
 
 		# 土砂移動図の作成
 		cv2.imwrite("./outputs/map_v2.png", self.ortho)

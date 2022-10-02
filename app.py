@@ -28,6 +28,7 @@ path5 = './inputs_trim/normed_mask.png'
 path6 = './inputs_trim/uav_img.tif'
 path7 = './inputs_trim/heli_img.tif'
 path8 = './outputs/texture/dissimilarity.tif'
+path9 = './outputs/building_mask.png'
 
 
 # # リサイズしたテスト用画像
@@ -71,9 +72,9 @@ def main() -> None:
 	# image_op.dem2gradient(10)	# メッシュサイズ
 	# image_op.dem2gradient(5)	# メッシュサイズ
 
-	# # 傾斜方位の正規化（0-255 -> 0-360）
-	# print("# 傾斜方向の正規化")
-	# image_op.norm_degree()
+	# 傾斜方位の正規化（0-255 -> 0-360）
+	print("# 傾斜方向の正規化")
+	image_op.norm_degree()
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
@@ -130,7 +131,8 @@ def main() -> None:
 
 	# 建物領域の検出
 	print("# 建物領域を検出する")
-	image_op.extract_building()
+	# image_op.extract_building()
+	image_op.bld_mask = cv2.imread(path9)
 
 	# TODO: 建物領域の標高値を地表面と同じ標高値にする
 	print("# 建物領域の標高値を地表面標高値に補正")

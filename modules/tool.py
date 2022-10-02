@@ -321,15 +321,15 @@ def draw_vector(
 
 		# 流出先の重心座標
 		_cy, _cx = self.region[label]["cy"], self.region[label]["cx"]
-		
+
 		# 矢印を描画
 		cv2.arrowedLine(
-			img=self.ortho,     # 画像
-			pt1=(cx, cy),       # 始点
-			pt2=(_cx, _cy),     # 終点
-			color=(20,20,180),  # 色
-			thickness=2,        # 太さ
-			tipLength=0.4       # 矢先の長さ
+			img=self.ortho,     	# 画像
+			pt1=(cx, cy),       	# 始点
+			pt2=(_cx, _cy),     	# 終点
+			color=(20, 20, 180),  # 色
+			thickness=2,        	# 太さ
+			tipLength=10	       	# 矢先の長さ
 		)
 
 		# # 水平距離

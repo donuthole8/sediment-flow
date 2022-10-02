@@ -717,7 +717,7 @@ def binarize_2area(self) -> np.ndarray:
 
 def extract_neighbor(self, region: tuple) -> list[int]:
 	"""
-	8方向で隣接している領域の組を全て抽出
+	8方向で隣接している領域の組かつ傾斜方向に沿った3領域を全て抽出
 
 	region: 注目領域の領域データ
 	"""
@@ -727,12 +727,15 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 	# 座標データから輪郭データを取得
 	contour_coordinates = tool.coordinates2contours(self, coordinates)
 
-	# 8方向それぞれの隣接領域を取得
+	# 重心の傾斜方向データを取得
+	directions = get_directions(self.degree[region["cy"], region["cx"]])
+
+	# 傾斜方向と隣接2方向の隣接領域を取得
 	neighbor_region_labels = []
-	for i in range(0, 8):
+	for direction in directions:
 		# 輪郭の一番端座標からDIRECTION[i]の方向の座標を取得
 		neighbor_coordinate = get_neighbor_coordinate(
-			DIRECTION[i], 
+			direction, 
 			contour_coordinates, 
 			(region["cy"], region["cx"])
 		)
@@ -747,6 +750,33 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 	# 重複を削除
 	# FIXME: Noneがある場合があるので削除
 	return list(set(neighbor_region_labels))
+
+
+def get_directions(deg: float) -> tuple[tuple]:
+	"""
+	傾斜方向を画素インデックスに変換し傾斜方向と隣接2方向を取得
+
+	deg: 角度
+	"""
+	# 注目画素からの移動画素
+	if   (math.isnan(deg)):
+		return np.nan, np.nan
+	elif (deg > 337.5) or  (deg <= 22.5):
+		return DIRECTION[7], DIRECTION[0], DIRECTION[1]
+	elif (deg > 22.5)  and (deg <= 67.5):
+		return DIRECTION[0], DIRECTION[1], DIRECTION[2]
+	elif (deg > 67.5)  and (deg <= 112.5):
+		return DIRECTION[1], DIRECTION[2], DIRECTION[3]
+	elif (deg > 112.5) and (deg <= 157.5):
+		return DIRECTION[2], DIRECTION[3], DIRECTION[4]
+	elif (deg > 157.5) and (deg <= 202.5):
+		return DIRECTION[3], DIRECTION[4], DIRECTION[5]
+	elif (deg > 202.5) and (deg <= 247.5):
+		return DIRECTION[4], DIRECTION[5], DIRECTION[6]
+	elif (deg > 247.5) and (deg <= 292.5):
+		return DIRECTION[5], DIRECTION[6], DIRECTION[7]
+	elif (deg > 292.5) and (deg <= 337.5):
+		return DIRECTION[6], DIRECTION[7], DIRECTION[0]
 
 
 def get_neighbor_coordinate(
@@ -830,6 +860,10 @@ def get_neighbor_coordinate(
 			coord = min(linear_function, key=lambda x:x[0])
 
 			return (coord[0] + DIRECTION[7][0], coord[1] + DIRECTION[7][1])
+
+		else:
+			# FIXME: Noneが返される場合がある
+			return (-1, -1)
 	except:
 		# 領域内に１次関数が存在しない場合
 		return (-1, -1)
@@ -853,9 +887,9 @@ def extract_downstream(
 
 	# 各隣接領域が下流かどうかを判別する
 	downstream_region_labels = []
-	for neighbor_label in neighbor_labels:
+	for label in neighbor_labels:
 		# 隣接領域の重心座標を取得
-		neighbor_centroids = (self.region[neighbor_label]["cy"], self.region[neighbor_label]["cx"])
+		neighbor_centroids = (self.region[label]["cy"], self.region[label]["cx"])
 
 		# 隣接領域の重心標高値を取得
 		# FIXME: 平均値にしたい
@@ -865,7 +899,7 @@ def extract_downstream(
 		# 隣接領域が下流領域の場合,配列に追加
 		# FIXME: ３チャンネルだったような気がする
 		if (centroid_elevation > neighbor_centroid_elevation):
-			downstream_region_labels.append(neighbor_label)
+			downstream_region_labels.append(label)
 	
 	# 重複ラベルは削除済み
 	return downstream_region_labels
@@ -878,15 +912,18 @@ def extract_sediment(
 ) -> list[int]:
 	"""
 	侵食と堆積の領域の組を全て抽出
+
+	region: 注目領域の領域データ
+	downstream_labels: 隣接下流領域のラベルID
 	"""
 	# 注目領域の重心標高変化値を取得
 	centroid_elevation_sub = self.dsm_sub[(region["cy"], region["cx"])]
 
 	# 各隣接領域が堆積領域かどうかを判別する
 	sediment_region_labels = []
-	for downstream_label in downstream_labels:
+	for label in downstream_labels:
 		# 隣接下流領域の重心座標を取得
-		downstream_centroids = (self.region[downstream_label]["cy"], self.region[downstream_label]["cx"])
+		downstream_centroids = (self.region[label]["cy"], self.region[label]["cx"])
 
 		# 隣接下流領域の重心標高変化値を取得
 		# FIXME: 平均値にしたい
@@ -895,46 +932,46 @@ def extract_sediment(
 		# 隣接下流領域が堆積領域の場合,配列に追加
 		# FIXME: ３チャンネルだったような気がする
 		if ((centroid_elevation_sub * downstream_centroid_elevation_sub) < 0):
-			sediment_region_labels.append(downstream_label)
+			sediment_region_labels.append(label)
 	
 	# 重複ラベルは削除済み
 	return sediment_region_labels
 
 
-
-def estimate_flow(self):
+def estimate_flow(
+	self, 
+	region: tuple, 
+	sediment_labels: list[int]
+) -> list[int]:
 	"""
-	流出方向の予測
+	流出方向を推定し傾斜方向に沿った領域を抽出
+
+	region: 注目領域の領域データ
+	sediment_labels: 隣接下流堆積領域のラベルID
 	"""
-	pass
+	# 注目領域の重心座標を取得
+	# TODO: 領域の平均値等使用して領域の傾斜方向を推定したい
+	cy, cx = region["cy"], region["cx"]
+
+	# 注目領域の重心
+
+	# 各隣接下流堆積領域が傾斜方向かどうか判別する
+	direction_region_labels = []
+	for label in sediment_labels:
+		# 
+		pass
 
 
 
-@staticmethod
-def detect_flow(deg: float) -> tuple[int, int]:
-	"""
-	傾斜方向を画素インデックスに変換
+	# # 注目領域の重心標高値を取得
+	# centroid_elevation = self.dsm_uav[cy, cx]
 
-	deg: 角度
-	"""
-	# 注目画素からの移動画素
-	if   (math.isnan(deg)):
-		return np.nan, np.nan
-	elif (deg > 337.5) or  (deg <= 22.5):
-		return DIRECTION[0]
-	elif (deg > 22.5)  and (deg <= 67.5):
-		return DIRECTION[1]
-	elif (deg > 67.5)  and (deg <= 112.5):
-		return DIRECTION[2]
-	elif (deg > 112.5) and (deg <= 157.5):
-		return DIRECTION[3]
-	elif (deg > 157.5) and (deg <= 202.5):
-		return DIRECTION[4]
-	elif (deg > 202.5) and (deg <= 247.5):
-		return DIRECTION[5]
-	elif (deg > 247.5) and (deg <= 292.5):
-		return DIRECTION[6]
-	elif (deg > 292.5) and (deg <= 337.5):
-		return DIRECTION[7]
+	# # 傾斜方向の標高値を取得
 
+	# # とりあえずな３０，Maxで３０回繰り返すということだと思われる
+	# for i in range(30):
+	# 	# 重心の傾斜方向を取得
+	# 	coordinate = detect_flow(self.degree[cy, cx])
+		
 
+	# 	# 注目領域の重心標高から傾斜方向を走査
