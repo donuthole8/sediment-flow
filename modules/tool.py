@@ -322,21 +322,21 @@ def draw_vector(
 		# 流出先の重心座標
 		_cy, _cx = self.region[label]["cy"], self.region[label]["cx"]
 
-		# # 始点
-		# cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
+		# 始点
+		cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
 
-		# # 終点
-		# cv2.circle(self.ortho, (_cx, _cy), 3, (0, 255, 0), thickness=5, lineType=cv2.LINE_8, shift=0)
+		# 終点
+		cv2.circle(self.ortho, (_cx, _cy), 3, (255, 0, 0), thickness=5, lineType=cv2.LINE_8, shift=0)
 
-		# 矢印を描画
-		cv2.arrowedLine(
-			img=self.ortho,     	# 画像
-			pt1=(cx, cy),       	# 始点
-			pt2=(_cx, _cy),     	# 終点
-			color=(20, 20, 180),  # 色
-			thickness=2,        	# 太さ
-			tipLength=0.5		      # 矢先の長さ
-		)
+		# # 矢印を描画
+		# cv2.arrowedLine(
+		# 	img=self.ortho,     	# 画像
+		# 	pt1=(cx, cy),       	# 始点
+		# 	pt2=(_cx, _cy),     	# 終点
+		# 	color=(20, 20, 180),  # 色
+		# 	thickness=2,        	# 太さ
+		# 	tipLength=0.5		      # 矢先の長さ
+		# )
 
 
 		# # 水平距離

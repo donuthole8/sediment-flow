@@ -417,4 +417,5 @@ class ImageOp():
 		"""
 		精度評価
 		"""
+		
 		pass
