@@ -54,6 +54,10 @@ class ImageOp():
 		self.region     = []
 		self.building   = []
 
+		# 精度評価データ
+		self.answer_direction = []
+		self.answer_distance  = []
+
 
 	def dem2gradient(self, mesh_size: int) -> None:
 		"""
@@ -390,22 +394,33 @@ class ImageOp():
 			# cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
 
 
-			# 傾斜方向と隣接2方向の3方向に対しての隣接領域を取得
-			# TODO: 距離が小さすぎる矢印を除去する
-			neighbor_labels = process.extract_neighbor(self, region)
+				# 傾斜方向と隣接2方向の3方向に対しての隣接領域を取得
+				# TODO: 距離が小さすぎる矢印を除去する
+				# FIXME: 座標とかがおかしいので修正
+				# FIXME: 終点が全部上端になってる？？
 
-			# 傾斜方向が上から下の領域を抽出
-			downstream_labels = process.extract_downstream(self, region, neighbor_labels)
+				# if (i>3000) and (i<3020):
 
-			# 侵食と堆積の組み合わせの領域を抽出
-			sediment_labels = process.extract_sediment(self, region, downstream_labels)
+					print()
+					print("------------->", i)
+					labels = process.extract_neighbor(self, region)
 
-			# 矢印の描画
-			tool.draw_vector(self, region, sediment_labels)
+					# 傾斜方向が上から下の領域を抽出
+					labels = process.extract_downstream(self, region, labels)
 
-			# if (i > 100):
-			# 	cv2.imwrite("./outputs/map_v2.png", self.ortho)
-			# 	return
+					# 侵食と堆積の組み合わせの領域を抽出
+					labels = process.extract_sediment(self, region, labels)
+
+					# 矢印の描画
+					# FIXME: 移動ベクトルのやじるしの傘部分の大きさ一定にしたい
+					tool.draw_vector(self, region, labels)
+
+					# # 移動量・移動方向を保存
+					# process.save_vector(self, region, sediment_labels)
+
+					# if (i > 100):
+					# 	cv2.imwrite("./outputs/map_v2.png", self.ortho)
+					# 	return
 
 		# 土砂移動図の作成
 		cv2.imwrite("./outputs/map_v2_point.png", self.ortho)
@@ -417,5 +432,4 @@ class ImageOp():
 		"""
 		精度評価
 		"""
-		
-		pass
+		process.accuracy(self)

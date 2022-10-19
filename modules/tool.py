@@ -3,6 +3,7 @@ import csv
 import time
 import random
 import numpy as np
+from math import dist
 from functools import wraps
 
 # from modules.operation import ImageOp
@@ -295,10 +296,10 @@ def is_index(self, coordinate: tuple[int, int]) -> bool:
 
 	coordinate: タプル型座標
 	"""
-	# (0 <= x < width) & (0 <= y < height)
-	if (	((coordinate[0] >= 0) and (coordinate[0] < self.size_3d[0])) 
-		and ((coordinate[1] >= 0) and (coordinate[1] < self.size_3d[1]))):
-			return True
+	# (0 <= y < height) & (0 <= x < width)
+	if 	(((coordinate[0] >= 0) and (coordinate[0] < self.size_3d[0])) 
+	and  ((coordinate[1] >= 0) and (coordinate[1] < self.size_3d[1]))):
+		return True
 	else:
 		return False
 
@@ -314,6 +315,14 @@ def draw_vector(
 	region: 注目領域の領域データ
 	labels: 流出先の領域ラベルID
 	"""
+	# 精度評価データ
+	answer_direction = []
+	answer_distance  = []
+
+	# 解像度
+	resolution = 7.5
+
+
 	# 各ラベルに対して
 	for label in labels:
 		# 流出元の重心座標
@@ -322,21 +331,25 @@ def draw_vector(
 		# 流出先の重心座標
 		_cy, _cx = self.region[label]["cy"], self.region[label]["cx"]
 
-		# 始点
-		cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
+		# # 始点
+		# cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
 
-		# 終点
-		cv2.circle(self.ortho, (_cx, _cy), 3, (255, 0, 0), thickness=5, lineType=cv2.LINE_8, shift=0)
+		# # 終点
+		# cv2.circle(self.ortho, (_cx, _cy), 3, (255, 0, 0), thickness=5, lineType=cv2.LINE_8, shift=0)
 
-		# # 矢印を描画
-		# cv2.arrowedLine(
-		# 	img=self.ortho,     	# 画像
-		# 	pt1=(cx, cy),       	# 始点
-		# 	pt2=(_cx, _cy),     	# 終点
-		# 	color=(20, 20, 180),  # 色
-		# 	thickness=2,        	# 太さ
-		# 	tipLength=0.5		      # 矢先の長さ
-		# )
+		# # 精度評価データ保存
+		# answer_direction.append()
+		# answer_distance.append(int(dist((cy, cx), (_cy, _cx)) * resolution))
+
+		# 矢印を描画
+		cv2.arrowedLine(
+			img=self.ortho,     	# 画像
+			pt1=(cx, cy),       	# 始点
+			pt2=(_cx, _cy),     	# 終点
+			color=(20, 20, 180),  # 色
+			thickness=2,        	# 太さ
+			tipLength=0.5		      # 矢先の長さ
+		)
 
 
 		# # 水平距離
@@ -367,3 +380,6 @@ def draw_vector(
 		#   thickness=1,                      # 太さ
 		#   lineType=cv2.LINE_AA              # タイプ
 		# )
+
+	# self.answer_direction.append(answer_direction)
+	# self.answer_distance.append(answer_distance)

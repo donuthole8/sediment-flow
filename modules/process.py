@@ -1,4 +1,3 @@
-from tkinter.messagebox import NO
 import cv2
 import math
 import numpy as np
@@ -6,11 +5,11 @@ import scipy.ndimage as ndimage
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from math import dist
-from torch import ne
 from tqdm import trange
 
 from modules import tif
 from modules import tool
+from modules import constant
 
 
 # 方向への移動座標(Δy, Δx)
@@ -264,7 +263,7 @@ def create_label_table(self) -> None:
 	ラベリングテーブルを作成
 	"""
 	# 空画像を作成
-	label_table = np.zeros((self.size_2d[1], self.size_2d[0])).astype(np.uint8)
+	label_table = np.zeros((self.size_2d[1], self.size_2d[0])).astype(np.uint32)
 
 	for region in self.pms_coords:
 		# 注目領域のラベルID,座標を取得
@@ -721,6 +720,10 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 
 	region: 注目領域の領域データ
 	"""
+	print("center area:", region["label"], (region["cy"], region["cx"]))
+
+
+
 	# 領域座標データを取得
 	_, coordinates, _ = tool.decode_area(self.pms_coords[region["label"]])
 
@@ -729,6 +732,7 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 
 	# 重心の傾斜方向データを取得
 	directions = get_directions(self.degree[region["cy"], region["cx"]])
+	# print("dir:", directions)
 
 	# 傾斜方向と隣接2方向の隣接領域を取得
 	neighbor_region_labels = []
@@ -739,13 +743,24 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 			contour_coordinates, 
 			(region["cy"], region["cx"])
 		)
+		print("n coord:::", neighbor_coordinate)
 
 		# 取得した隣接座標が画像領域内に存在するか
 		if (tool.is_index(self, neighbor_coordinate)):
 			# ラベルIDを保存
+			# ラベルIDがおかしい ｏｒ is_indexがおかしい
 			neighbor_region_labels.append(
 				self.label_table[neighbor_coordinate]
 			)
+
+		# try:
+		# 		neighbor_region_labels.append(
+		# 		self.label_table[neighbor_coordinate]
+		# 	)
+		# except:
+		# 	print("err")
+
+	print("n labels:::", neighbor_region_labels)
 
 	# 重複を削除
 	# FIXME: Noneがある場合があるので削除
@@ -940,3 +955,69 @@ def extract_sediment(
 	
 	# 重複ラベルは削除済み
 	return sediment_region_labels
+
+
+# def save_vector(
+# 	self, 
+# 	region: tuple, 
+# 	labels: list[int]
+# ) -> None:
+# 	"""
+# 	土砂移動量
+
+# 	region: 注目領域の領域データ
+# 	labels: 流出先の領域ラベルID
+# 	"""
+# 	# 各ラベルに対して
+# 	for label in labels:
+# 		# 流出元の重心座標
+# 		cy, cx   = region["cy"], region["cx"]
+
+# 		# 流出先の重心座標
+# 		_cy, _cx = self.region[label]["cy"], self.region[label]["cx"]
+
+# 		# 始点
+# 		cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
+
+# 		# 終点
+# 		cv2.circle(self.ortho, (_cx, _cy), 3, (255, 0, 0), thickness=5, lineType=cv2.LINE_8, shift=0)
+
+# 		# # 矢印を描画
+
+
+def accuracy(self):
+	"""
+	目視作成をした正解データを元に精度評価を行う
+
+
+	"""
+
+	# 傾斜方向
+	for dir in self.answer_direction:
+		print(dir)
+
+		max_fail = 180
+		idx = dir
+
+		ans = constant.CORRECT_DATA_TRIM[idx]
+
+		# 適合率
+		pre = abs(ans["direction"] - dir) / max_fail
+
+		print(pre)
+
+
+
+	# 水平移動量
+	for dis in self.answer_distance:
+		print(dis)
+		max_fail = 7
+		idx = dis
+
+		ans = constant.CORRECT_DATA_TRIM[idx]
+
+		# 適合率
+		pre = abs(ans["distance"] - dis) / max_fail
+
+		print(pre)
+

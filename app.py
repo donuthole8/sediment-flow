@@ -145,9 +145,9 @@ def main() -> None:
 	print("# 土砂移動推定")
 	image_op.calc_movement()
 
-	# 精度評価
-	print("# 精度評価")
-	image_op.accuracy_valuation()
+	# # 精度評価
+	# print("# 精度評価")
+	# image_op.accuracy_valuation()
 
 
 # メイン関数
