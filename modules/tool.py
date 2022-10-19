@@ -348,7 +348,6 @@ def draw_vector(
 			pt2=(_cx, _cy),     	# 終点
 			color=(20, 20, 180),  # 色
 			thickness=2,        	# 太さ
-			tipLength=0.5		      # 矢先の長さ
 		)
 
 
