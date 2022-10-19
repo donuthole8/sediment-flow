@@ -170,9 +170,10 @@ class ImageOp():
 		マスク画像を適用し土砂領域のみを抽出
 		"""
 		# 土砂マスクを用いて土砂領域以外を除去
-		self.masked_ortho = process.masking(self, self.ortho, self.mask)
+		# self.masked_ortho = process.masking(self, self.ortho, self.mask)
 
-		
+		self.dsm_uav  = process.masking(self, self.dsm_uav,  self.mask)
+		self.dsm_heli = process.masking(self, self.dsm_heli, self.mask)
 
 		return
 

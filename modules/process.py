@@ -238,6 +238,10 @@ def masking(
 	# 画像のコピー
 	masked_img = img.copy()
 
+	# マスク画像の次元を対象画像と同じにする
+	if (len(masked_img.shape) != 3):
+		mask = cv2.split(mask)[0]
+
 	# マスク領域以外を除去
 	idx = np.where(mask != 0)
 	try:
