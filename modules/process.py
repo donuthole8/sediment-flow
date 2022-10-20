@@ -521,7 +521,9 @@ def is_sediment_or_vegetation(self, centroids: tuple[int, int]) -> bool:
 	"""
 	# Lab表色系に変換
 	Lp, ap, bp = cv2.split(
-		cv2.cvtColor(self.div_img.astype(np.uint8), cv2.COLOR_BGR2Lab)
+		cv2.cvtColor(
+			self.div_img.astype(np.uint8), 
+			cv2.COLOR_BGR2Lab)
 	)
 	Lp, ap, bp = Lp * 255, ap * 255, bp * 255
 

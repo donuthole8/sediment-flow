@@ -3,6 +3,7 @@ import numpy as np
 
 from modules import tool
 from modules import operation
+from modules import calc_movement_mesh
 
 
 # # 本番用画像
@@ -104,9 +105,9 @@ def main() -> None:
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
 
-	# 輪郭・重心データ抽出・ラベル画像作成
-	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
-	image_op.calc_contours()
+	# # 輪郭・重心データ抽出・ラベル画像作成
+	# print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
+	# image_op.calc_contours()
 
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
@@ -140,17 +141,22 @@ def main() -> None:
 	# 土砂マスクを利用し土砂領域
 	# TODO: 隣接領域抽出のコスト削減のためにこれを行う
 
-	# 土砂マスクを利用し堆積差分算出
-	print("# 堆積差分算出")
-	image_op.calc_sedimentation()
+	# # 土砂マスクを利用し堆積差分算出
+	# print("# 堆積差分算出")
+	# image_op.calc_sedimentation()
 
-	# 土砂移動推定
-	print("# 土砂移動推定")
-	image_op.calc_movement()
+	# # 土砂移動推定
+	# print("# 土砂移動推定")
+	# image_op.calc_movement()
 
 	# # 8方向での土砂移動推定
 	# print("# 8方向での土砂移動推定")
 	# image_op.calc_movement_8dir()
+
+	# メッシュベースでの土砂移動推定
+	print("# メッシュベースでの土砂移動推定")
+	CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100)
+	CalcMovementMesh.main(image_op)
 
 	# # 精度評価
 	# print("# 精度評価")

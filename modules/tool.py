@@ -575,3 +575,37 @@ def draw_vector_8dir(
 
 	# self.answer_direction.append(answer_direction)
 	# self.answer_distance.append(answer_distance)
+
+
+def draw_mesh(
+	self,
+	mesh_size: int,
+	mesh_height: int, 
+	mesh_width: int
+) -> None:
+	"""
+	メッシュの格子線を描画
+
+	mesh_size: メッシュサイズ
+	mesh_height: メッシュの高さ
+	mesh_width: メッシュの幅
+	"""
+	# x軸に平行な格子線を描画
+	for y in range(mesh_height):
+		cv2.line(
+			img=self.ortho,     									# 画像
+			pt1=(0, mesh_size * y),       				# 始点
+			pt2=(self.size_2d[0], mesh_size * y),	# 終点
+			color=(255, 255, 255),  								# 色
+			thickness=2,        									# 太さ
+		)
+
+	# y軸に並行な格子線を描画
+	for x in range(mesh_width):
+		cv2.line(
+			img=self.ortho,     									# 画像
+			pt1=(mesh_size * x, 0),       				# 始点
+			pt2=(mesh_size * x, self.size_2d[1]),	# 終点
+			color=(255, 255, 255),  								# 色
+			thickness=2,        									# 太さ
+		)
