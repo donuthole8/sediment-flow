@@ -741,7 +741,6 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 
 	# 傾斜方向と隣接2方向の隣接領域を取得
 	neighbor_region_labels = []
-	n_c = []
 
 	for direction in directions:
 		# 輪郭の一番端座標からDIRECTION[i]の方向の座標を取得
@@ -754,14 +753,13 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 		# print("n labels::", self.label_table[neighbor_coordinate])
 		# print()
 
-		# # 取得した隣接座標が画像領域内に存在するか
-		# if (tool.is_index(self, neighbor_coordinate)):
-		# 	# ラベルIDを保存
-		# 	# ラベルIDがおかしい ｏｒ is_indexがおかしい
-		# 	neighbor_region_labels.append(
-		# 		self.label_table[neighbor_coordinate]
-		# 	)
-		n_c.append(neighbor_coordinate)
+		# 取得した隣接座標が画像領域内に存在するか
+		if (tool.is_index(self, neighbor_coordinate)):
+			# ラベルIDを保存
+			# ラベルIDがおかしい ｏｒ is_indexがおかしい
+			neighbor_region_labels.append(
+				self.label_table[neighbor_coordinate]
+			)
 
 		# try:
 		# 		neighbor_region_labels.append(
@@ -775,8 +773,7 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 
 	# 重複を削除
 	# FIXME: Noneがある場合があるので削除（順序を保持）
-	# return list(dict.fromkeys(neighbor_region_labels))
-	return n_c
+	return list(dict.fromkeys(neighbor_region_labels))
 
 
 def get_directions(deg: float) -> tuple[tuple]:
@@ -987,6 +984,36 @@ def extract_sediment(
 	
 	# 重複ラベルは削除済み
 	return sediment_region_labels
+
+
+def extract_neighbor_8dir(self, region: tuple) -> list[int]:
+	"""
+	8方向で隣接している領域の組かつ傾斜方向に沿った3領域を全て抽出
+
+	region: 注目領域の領域データ
+	"""
+	# 領域座標データを取得
+	_, coordinates, _ = tool.decode_area(self.pms_coords[region["label"]])
+
+	# 座標データから輪郭データを取得
+	contour_coordinates = tool.coordinates2contours(self, coordinates)
+
+	# 重心の傾斜方向データを取得
+	directions = get_directions(self.degree[region["cy"], region["cx"]])
+
+	# 傾斜方向と隣接2方向の隣接領域を取得
+	neighbor_region_coords = []
+
+	for direction in directions:
+		# 輪郭の一番端座標からDIRECTION[i]の方向の座標を取得
+		neighbor_coordinate = get_neighbor_coordinate(
+			direction, 
+			contour_coordinates, 
+			(region["cy"], region["cx"])
+		)
+		neighbor_region_coords.append(neighbor_coordinate)
+
+	return neighbor_region_coords
 
 
 def extract_downstream_8dir(

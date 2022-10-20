@@ -144,13 +144,13 @@ def main() -> None:
 	print("# 堆積差分算出")
 	image_op.calc_sedimentation()
 
-	# # 土砂移動推定
-	# print("# 土砂移動推定")
-	# image_op.calc_movement()
+	# 土砂移動推定
+	print("# 土砂移動推定")
+	image_op.calc_movement()
 
-	# 8方向での土砂移動推定
-	print("# 8方向での土砂移動推定")
-	image_op.calc_movement_8dir()
+	# # 8方向での土砂移動推定
+	# print("# 8方向での土砂移動推定")
+	# image_op.calc_movement_8dir()
 
 	# # 精度評価
 	# print("# 精度評価")

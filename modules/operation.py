@@ -381,6 +381,7 @@ class ImageOp():
 		"""
 		土砂移動の推定
 		"""
+		# FIXME: 隣接領域取得で8方向でなく領域重心への方向になっている
 		# 各注目領域に対して処理を行う
 		for i, region in enumerate(self.region):
 			# TODO: 順番を考えることによって処理を減らせそう
@@ -398,33 +399,25 @@ class ImageOp():
 				# FIXME: 座標とかがおかしいので修正
 				# FIXME: 終点が全部上端になってる？？
 
-				# if (i>3000) and (i<3020):
-				# if i == 3002:
+				labels = process.extract_neighbor(self, region)
 
-					print()
-					print("------------->", i)
-					# labels = process.extract_neighbor(self, region)
-					coords = process.extract_neighbor(self, region)
+				# 傾斜方向が上から下の領域を抽出
+				labels = process.extract_downstream(self, region, labels)
 
-					# print("labels", labels)
+				# 侵食と堆積の組み合わせの領域を抽出
+				labels = process.extract_sediment(self, region, labels)
 
-					# # 傾斜方向が上から下の領域を抽出
-					# labels = process.extract_downstream(self, region, labels)
+				# 矢印の描画
+				# FIXME: 移動ベクトルのやじるしの傘部分の大きさ一定にしたい
+				# tool.draw_vector(self, region, labels)
+				tool.draw_vector(self, region, labels)
 
-					# # 侵食と堆積の組み合わせの領域を抽出
-					# labels = process.extract_sediment(self, region, labels)
+				# # 移動量・移動方向を保存
+				# process.save_vector(self, region, sediment_labels)
 
-					# 矢印の描画
-					# FIXME: 移動ベクトルのやじるしの傘部分の大きさ一定にしたい
-					# tool.draw_vector(self, region, labels)
-					tool.draw_vector(self, region, coords)
-
-					# # 移動量・移動方向を保存
-					# process.save_vector(self, region, sediment_labels)
-
-					# if (i > 100):
-					# 	cv2.imwrite("./outputs/map_v2.png", self.ortho)
-					# 	return
+				# if (i > 100):
+				# 	cv2.imwrite("./outputs/map_v2.png", self.ortho)
+				# 	return
 
 		# 土砂移動図の作成
 		cv2.imwrite("./outputs/map_v2_point.png", self.ortho)
@@ -440,7 +433,7 @@ class ImageOp():
 		# 各注目領域に対して処理を行う
 		for region in self.region:
 				# 傾斜方向と隣接2方向の3方向に対しての隣接領域を取得
-				coords = process.extract_neighbor(self, region)
+				coords = process.extract_neighbor_8dir(self, region)
 
 				# 傾斜方向が上から下の領域を抽出
 				coords = process.extract_downstream_8dir(self, region, coords)
@@ -451,7 +444,7 @@ class ImageOp():
 				# 矢印の描画
 				# FIXME: 移動ベクトルのやじるしの傘部分の大きさ一定にしたい
 				# tool.draw_vector(self, region, labels)
-				tool.draw_vector(self, region, coords)
+				tool.draw_vector_8dir(self, region, coords)
 
 				# # 移動量・移動方向を保存
 				# process.save_vector(self, region, sediment_labels)
