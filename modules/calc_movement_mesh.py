@@ -85,7 +85,6 @@ class CalcMovementMesh():
 		cv2.imwrite("dir.png", image_data.ortho)
 
 
-
 	def is_sedimentation(
 		self, 
 		image_data: operation.ImageOp, 
@@ -191,19 +190,22 @@ class CalcMovementMesh():
 
 		# # 注目メッシュの平均傾斜方向を取得
 		average_direction = 0.0
-		for coord in coords:
-			average_direction += image_data.degree[coord]
-		average_direction = average_direction / len(coords)
+		# for coord in coords:
+		# 	average_direction += image_data.degree[coord]
+		# average_direction = average_direction / len(coords)
 
-		# average_direction = image_data.degree[center]
+		average_direction = image_data.degree[center]
 
 		# print("dir", average_direction, len(coords))
+
+		# 傾斜方向の角度データを三角関数用の表記に変更
+		average_direction = 360 - average_direction
 
 		# 傾斜方向の座標取得
 		# FIXME: 違うかも
 		# https://qiita.com/FumioNonaka/items/c146420c3aeab27fc736
 		try:
-			y_coord= -1 * int((self.mesh_size // 2) * math.sin(math.radians(average_direction))) + center[0]
+			y_coord= int((self.mesh_size // 2) * math.sin(math.radians(average_direction))) + center[0]
 			x_coord= int((self.mesh_size // 2) * math.cos(math.radians(average_direction))) + center[1]
 
 			# 矢印を描画
