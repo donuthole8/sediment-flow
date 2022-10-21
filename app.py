@@ -1,4 +1,5 @@
 import cv2
+from matplotlib import image
 import numpy as np
 
 from modules import tool
@@ -155,7 +156,7 @@ def main() -> None:
 
 	# メッシュベースでの土砂移動推定
 	print("# メッシュベースでの土砂移動推定")
-	CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100)
+	CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100, image_op.size_2d)
 	CalcMovementMesh.main(image_op)
 
 	# # 精度評価

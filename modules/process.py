@@ -2,9 +2,7 @@ import cv2
 import math
 import numpy as np
 import scipy.ndimage as ndimage
-import matplotlib.pyplot as plt
 import matplotlib as mpl
-from math import dist
 from tqdm import trange
 
 from modules import tif
@@ -756,7 +754,7 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 		# print()
 
 		# 取得した隣接座標が画像領域内に存在するか
-		if (tool.is_index(self, neighbor_coordinate)):
+		if (tool.is_index(self.size_3d, neighbor_coordinate)):
 			# ラベルIDを保存
 			# ラベルIDがおかしい ｏｒ is_indexがおかしい
 			neighbor_region_labels.append(

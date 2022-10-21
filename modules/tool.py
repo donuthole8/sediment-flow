@@ -290,15 +290,16 @@ def decode_area(region: tuple) -> tuple:
 	return label, coords, area
 
 
-def is_index(self, coordinate: tuple[int, int]) -> bool:
+def is_index(size: tuple[int, int, int], coordinate: tuple[int, int]) -> bool:
 	"""
 	タプル型座標が画像領域内に収まっているかを判定
 
+	size: 画像サイズ
 	coordinate: タプル型座標
 	"""
 	# (0 <= y < height) & (0 <= x < width)
-	if 	(((coordinate[0] >= 0) and (coordinate[0] < self.size_3d[0])) 
-	and  ((coordinate[1] >= 0) and (coordinate[1] < self.size_3d[1]))):
+	if 	(((coordinate[0] >= 0) and (coordinate[0] < size[0])) 
+	and  ((coordinate[1] >= 0) and (coordinate[1] < size[1]))):
 		return True
 	else:
 		return False
@@ -539,7 +540,6 @@ def draw_vector_8dir(
 			pt2=(label[1], label[0]),     	# 終点
 			# color=(20, 20, 180),  # 色
 			color=color,  # 色
-			
 			thickness=2,        	# 太さ
 		)
 
@@ -579,33 +579,35 @@ def draw_vector_8dir(
 
 def draw_mesh(
 	self,
-	mesh_size: int,
-	mesh_height: int, 
-	mesh_width: int
+	image_data
 ) -> None:
 	"""
 	メッシュの格子線を描画
 
-	mesh_size: メッシュサイズ
-	mesh_height: メッシュの高さ
-	mesh_width: メッシュの幅
+	image_data: 画像等データ
 	"""
 	# x軸に平行な格子線を描画
-	for y in range(mesh_height):
+	for y in range(self.mesh_height):
 		cv2.line(
-			img=self.ortho,     									# 画像
-			pt1=(0, mesh_size * y),       				# 始点
-			pt2=(self.size_2d[0], mesh_size * y),	# 終点
-			color=(255, 255, 255),  								# 色
-			thickness=2,        									# 太さ
+			img=image_data.ortho,   			# 画像
+			pt1=(0, self.mesh_size * y),  # 始点
+			pt2=(
+				image_data.size_2d[0], 
+				self.mesh_size * y
+			),														# 終点
+			color=(255, 255, 255),  			# 色
+			thickness=2,        					# 太さ
 		)
 
 	# y軸に並行な格子線を描画
-	for x in range(mesh_width):
+	for x in range(self.mesh_width):
 		cv2.line(
-			img=self.ortho,     									# 画像
-			pt1=(mesh_size * x, 0),       				# 始点
-			pt2=(mesh_size * x, self.size_2d[1]),	# 終点
-			color=(255, 255, 255),  								# 色
-			thickness=2,        									# 太さ
+			img=image_data.ortho,     		# 画像
+			pt1=(self.mesh_size * x, 0),  # 始点
+			pt2=(
+				self.mesh_size * x, 
+				image_data.size_2d[1]
+			),														# 終点
+			color=(255, 255, 255),  			# 色
+			thickness=2,        					# 太さ
 		)
