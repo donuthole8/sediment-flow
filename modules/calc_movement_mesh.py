@@ -193,92 +193,99 @@ class CalcMovementMesh():
 		# TODO: ここを中山さんの手法に修正(flow.py)
 		# NOTE: 画素単位で3方向に土砂追跡するか,領域単位でとりあえず3領域取得するか
 		# NOTE: 3画素分岐するとしても最終的には1点からは１本ベクトルにしたい
+		pass
+
+		# 注目メッシュの平均傾斜方向を取得
+		sediment_pix_num = 0
+		mask = cv2.split(image_data.mask)[0]
+		average_direction = 0.0
+		for coord in coords:
+			if (mask[coord] == 0):
+				average_direction += image_data.degree[coord]
+				sediment_pix_num += 1
+			else:
+				image_data.ortho[coord] = [0,0,0]
+
+		average_direction = average_direction / sediment_pix_num
+
+		# # 中心座標の傾斜方向
+		# average_direction = image_data.degree[center]
+
+		# 傾斜方向の角度データを三角関数用の表記に変更
+		average_direction = 360 - average_direction
+
+		# 傾斜方向の座標取得
+		# FIXME: 違うかも
+		# https://qiita.com/FumioNonaka/items/c146420c3aeab27fc736
+		try:
+			y_coord= int((self.mesh_size // 2) * math.sin(math.radians(average_direction))) + center[0]
+			x_coord= int((self.mesh_size // 2) * math.cos(math.radians(average_direction))) + center[1]
+
+			# 矢印を描画
+			cv2.arrowedLine(
+				img=image_data.ortho,     	# 画像
+				pt1=(center[1], center[0]), # 始点
+				pt2=(x_coord, y_coord),			# 終点
+				color=(0, 0, 255),  				# 色			
+				thickness=2,        				# 太さ
+			)
+		except:
+			print("err", average_direction)
 
 
 
-		# # 注目メッシュの平均傾斜方向を取得
-		# average_direction = 0.0
-		# for coord in coords:
-		# 	average_direction += image_data.degree[coord]
-		# average_direction = average_direction / len(coords)
-		# # # 中心座標の傾斜方向
-		# # average_direction = image_data.degree[center]
+		# # 土砂候補画素の座標
+		# y_coord, x_coord = center
+		# sediment_coords = []
 
-		# # 傾斜方向の角度データを三角関数用の表記に変更
-		# average_direction = 360 - average_direction
+		# # 作業用配列の座標
+		# temp_coords = [(y_coord, x_coord)]
 
-		# # 傾斜方向の座標取得
-		# # FIXME: 違うかも
-		# # https://qiita.com/FumioNonaka/items/c146420c3aeab27fc736
-		# try:
-		# 	y_coord= int((self.mesh_size // 2) * math.sin(math.radians(average_direction))) + center[0]
-		# 	x_coord= int((self.mesh_size // 2) * math.cos(math.radians(average_direction))) + center[1]
+		# while (len(temp_coords)) > 0:
+		# 	# 注目画素の座標を取得
+		# 	# NOTE: ここの座標が違うかも
+		# 	y_coord, x_coord = temp_coords[0]
+		# 	print("target coords", (y_coord, x_coord))
 
-		# 	# 矢印を描画
-		# 	cv2.arrowedLine(
-		# 		img=image_data.ortho,     	# 画像
-		# 		pt1=(center[1], center[0]), # 始点
-		# 		pt2=(x_coord, y_coord),			# 終点
-		# 		color=(0, 0, 255),  				# 色			
-		# 		thickness=2,        				# 太さ
-		# 	)
-		# except:
-		# 	print("err", average_direction)
+		# 	# 一時配列から注目座標を削除
+		# 	temp_coords.pop(0)
 
+		# 	# 座標群に入っていなかったら処理を行わない
+		# 	if ((y_coord, x_coord) in coords) and (not ((y_coord, x_coord) in sediment_coords)):
 
+		# 		# 土砂座標を追加
+		# 		sediment_coords.append((
+		# 			y_coord, 
+		# 			x_coord
+		# 		))
 
-			# 土砂候補画素の座標
-			y_coord, x_coord = center
-			sediment_coords = []
+		# 		# 注目画素の標高値を取得
+		# 		target_height = image_data.dsm_uav[(y_coord, x_coord)]
 
-			# 作業用配列の座標
-			temp_coords = [(y_coord, x_coord)]
+		# 		# 注目画素の傾斜方向の画素と隣接2画素の傾斜方向を取得
+		# 		directions = self.get_directions(image_data.degree[center])
 
-			while (len(temp_coords)) > 0:
-				# 注目画素の座標を取得
-				# NOTE: ここの座標が違うかも
-				y_coord, x_coord = temp_coords[0]
-				print("target coords", (y_coord, x_coord))
+		# 		# 注目画素の傾斜方向の画素と隣接2画素の標高値を取得
+		# 		heights = self.get_heights(image_data, directions, center)
 
-				# 一時配列から注目座標を削除
-				temp_coords.pop(0)
+		# 		# 注目画素の標高値と傾斜方向の画素値を比較
+		# 		for direction, height in zip(directions, heights):					
+		# 			# 注目標高値より低ければ処理を継続・土砂座標にすでに追加済みでなければ
+		# 			# if ((height <= target_height) and (not (y_coord, x_coord) in sediment_coords)):
+		# 			if ((height <= target_height)):
+						
+		# 				# 座標を保存
+		# 				temp_coords.append((
+		# 					y_coord + direction[0], 
+		# 					x_coord + direction[1]
+		# 				))
 
-				# 座標群に入っていなかったら処理を行わない
-				if ((y_coord, x_coord) in coords) and (not ((y_coord, x_coord) in sediment_coords)):
+		# 				# image_data.ortho[(
+		# 				# 	y_coord + direction[0], 
+		# 				# 	x_coord + direction[1]
+		# 				# )] = [0, 255, 0]
 
-					# 土砂座標を追加
-					sediment_coords.append((
-						y_coord, 
-						x_coord
-					))
-
-					# 注目画素の標高値を取得
-					target_height = image_data.dsm_uav[(y_coord, x_coord)]
-
-					# 注目画素の傾斜方向の画素と隣接2画素の傾斜方向を取得
-					directions = self.get_directions(image_data.degree[center])
-
-					# 注目画素の傾斜方向の画素と隣接2画素の標高値を取得
-					heights = self.get_heights(image_data, directions, center)
-
-					# 注目画素の標高値と傾斜方向の画素値を比較
-					for direction, height in zip(directions, heights):					
-						# 注目標高値より低ければ処理を継続・土砂座標にすでに追加済みでなければ
-						# if ((height <= target_height) and (not (y_coord, x_coord) in sediment_coords)):
-						if ((height <= target_height)):
-							
-							# 座標を保存
-							temp_coords.append((
-								y_coord + direction[0], 
-								x_coord + direction[1]
-							))
-
-							# image_data.ortho[(
-							# 	y_coord + direction[0], 
-							# 	x_coord + direction[1]
-							# )] = [0, 255, 0]
-
-			image_data.ortho[sediment_coords] = [0, 0, 255]
+		# image_data.ortho[sediment_coords] = [0, 0, 255]
 
 
 	def get_directions(self, deg: float) -> tuple[tuple]:
@@ -287,6 +294,7 @@ class CalcMovementMesh():
 
 		deg: 角度
 		"""
+		# FIXME: 傾斜方向が限定的になっている
 		# 注目画素からの移動画素
 		if   (math.isnan(deg)):
 			# NOTE: 返り値違うかも
