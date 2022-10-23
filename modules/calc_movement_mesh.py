@@ -27,7 +27,11 @@ class CalcMovementMesh():
 		self.mesh_height = (size[1] // self.mesh_size) + 1
 		self.mesh_width  = (size[0] // self.mesh_size) + 1
 
+		# 精度評価用の土砂移動推定結果データ
+		self.calc_movement_result = []
+
 		return
+
 
 	def main(
 		self, 
@@ -59,7 +63,10 @@ class CalcMovementMesh():
 				# 注目メッシュの中心座標が土砂領域か判別
 				# TODO: 土砂マスクを利用しない場合座標群(mesh_coords)を利用
 				# if not (self.is_sedimentation(image_data, center_coord)):
-				print(center_coord)
+
+				# print(center_coord)
+
+
 				if (self.is_sedimentation_mask(image_data, center_coord)):
 					# 点を描画
 					cv2.circle(
@@ -78,12 +85,17 @@ class CalcMovementMesh():
 
 					# # 侵食と堆積の組み合わせの領域を抽出
 					# coords = self.extract_sediment(self, region, labels)
+				else: 
+					self.calc_movement_result.append({"direction": np.nan, "center": np.nan})
+					
 
 
 		# メッシュ画像を保存
 		cv2.imwrite("./outputs/mesh.png", image_data.ortho)
 		# 隣接領域抽出での土砂流れ方向検知結果
 		cv2.imwrite("mesh_line.png", image_data.ortho)
+
+		return self.calc_movement_result
 
 
 	def is_sedimentation(
@@ -205,6 +217,9 @@ class CalcMovementMesh():
 
 		# # 中心座標の傾斜方向
 		# average_direction = image_data.degree[center]
+
+		# 精度評価用のデータを保存
+		self.calc_movement_result.append({"direction": average_direction, "center": center})
 
 		# 傾斜方向の角度データを三角関数用の表記に変更
 		average_direction = 360 - average_direction

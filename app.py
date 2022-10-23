@@ -5,6 +5,7 @@ import numpy as np
 from modules import tool
 from modules import operation
 from modules import calc_movement_mesh
+from modules import accuracy_valuation
 
 
 # # 本番用画像
@@ -156,13 +157,14 @@ def main() -> None:
 
 	# メッシュベースでの土砂移動推定
 	print("# メッシュベースでの土砂移動推定")
-	# CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100, image_op.size_2d)
-	CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(50, image_op.size_2d)
-	CalcMovementMesh.main(image_op)
+	CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100, image_op.size_2d)
+	# CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(50, image_op.size_2d)
+	calc_movement_result = CalcMovementMesh.main(image_op)
 
-	# # 精度評価
-	# print("# 精度評価")
-	# image_op.accuracy_valuation()
+	# 精度評価
+	print("# 精度評価")
+	AccuracyValuation = accuracy_valuation.AccuracyValuation(calc_movement_result)
+	AccuracyValuation.main()
 
 
 # メイン関数
