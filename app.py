@@ -156,6 +156,7 @@ def main() -> None:
 
 	# メッシュベースでの土砂移動推定
 	print("# メッシュベースでの土砂移動推定")
+	# CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100, image_op.size_2d)
 	CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100, image_op.size_2d)
 	CalcMovementMesh.main(image_op)
 
