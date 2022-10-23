@@ -59,25 +59,19 @@ class CalcMovementMesh():
 				# 注目メッシュの中心座標が土砂領域か判別
 				# TODO: 土砂マスクを利用しない場合座標群(mesh_coords)を利用
 				# if not (self.is_sedimentation(image_data, center_coord)):
+				print(center_coord)
 				if (self.is_sedimentation_mask(image_data, center_coord)):
 					# 点を描画
 					cv2.circle(
 						img=image_data.ortho,                       # 画像
 						center=(center_coord[1], center_coord[0]),  # 中心
-						radius=5,                                   # 半径
+						radius=3,                                   # 半径
 						color=(0, 0, 255),                          # 色
-						thickness=5,                                # 太さ
+						thickness=self.mesh_size // 20,                                # 太さ
 					)
 
 					# 傾斜方向のと隣接2方向の3方向に対しての隣接領域を取得
 					coords = self.extract_neighbor(image_data, center_coord, mesh_coords)
-
-					# # メッシュ画像を保存
-					# cv2.imwrite("./outputs/mesh.png", image_data.ortho)
-					# # 隣接領域抽出での土砂流れ方向検知結果
-					# cv2.imwrite("dir.png", image_data.ortho)
-					# return
-
 
 					# # 傾斜方向が上から下の領域を抽出
 					# coords = self.extract_downstream(self, region, labels)
@@ -89,7 +83,7 @@ class CalcMovementMesh():
 		# メッシュ画像を保存
 		cv2.imwrite("./outputs/mesh.png", image_data.ortho)
 		# 隣接領域抽出での土砂流れ方向検知結果
-		cv2.imwrite("dir.png", image_data.ortho)
+		cv2.imwrite("mesh_line.png", image_data.ortho)
 
 
 	def is_sedimentation(
@@ -130,9 +124,12 @@ class CalcMovementMesh():
 		center: 該当領域の中心座標
 		"""
 		# マスク画像より土砂の判別
-		if (image_data.mask[center][0] == 0):
-			return True
-		else:
+		try:
+			if (image_data.mask[center][0] == 0):
+				return True
+			else:
+				return False
+		except:
 			return False
 
 
@@ -203,8 +200,6 @@ class CalcMovementMesh():
 			if (mask[coord] == 0):
 				average_direction += image_data.degree[coord]
 				sediment_pix_num += 1
-			else:
-				image_data.ortho[coord] = [0,0,0]
 
 		average_direction = average_direction / sediment_pix_num
 
