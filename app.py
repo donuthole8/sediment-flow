@@ -1,8 +1,11 @@
 import cv2
+from matplotlib import image
 import numpy as np
 
 from modules import tool
 from modules import operation
+from modules import calc_movement_mesh
+from modules import accuracy_valuation
 
 
 # # 本番用画像
@@ -90,9 +93,9 @@ def main() -> None:
 	# image_op.norm_mask(16666, 3)	# 面積の閾値, 拡大倍率
 	image_op.mask = cv2.imread("./outputs/normed_mask.png")
 
-	# # 土砂マスク
-	# print("# 土砂マスクによる土砂領域抽出")
-	# image_op.apply_mask()
+	# 土砂マスク
+	print("# 土砂マスクによる土砂領域抽出")
+	image_op.apply_mask()
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
@@ -104,9 +107,9 @@ def main() -> None:
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
 
-	# 輪郭・重心データ抽出・ラベル画像作成
-	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
-	image_op.calc_contours()
+	# # 輪郭・重心データ抽出・ラベル画像作成
+	# print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
+	# image_op.calc_contours()
 
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
@@ -137,17 +140,31 @@ def main() -> None:
 	# print("# 建物領域の標高値を地表面標高値に補正")
 	# image_op.norm_building()
 
-	# 土砂マスクを利用し堆積差分算出
-	print("# 堆積差分算出")
-	image_op.calc_sedimentation()
+	# 土砂マスクを利用し土砂領域
+	# TODO: 隣接領域抽出のコスト削減のためにこれを行う
 
-	# 土砂移動推定
-	print("# 土砂移動推定")
-	image_op.calc_movement()
+	# # 土砂マスクを利用し堆積差分算出
+	# print("# 堆積差分算出")
+	# image_op.calc_sedimentation()
 
-	# # 精度評価
-	# print("# 精度評価")
-	# image_op.accuracy_valuation()
+	# # 土砂移動推定
+	# print("# 土砂移動推定")
+	# image_op.calc_movement()
+
+	# # 8方向での土砂移動推定
+	# print("# 8方向での土砂移動推定")
+	# image_op.calc_movement_8dir()
+
+	# メッシュベースでの土砂移動推定
+	print("# メッシュベースでの土砂移動推定")
+	CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100, image_op.size_2d)
+	# CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(50, image_op.size_2d)
+	calc_movement_result = CalcMovementMesh.main(image_op)
+
+	# 精度評価
+	print("# 精度評価")
+	AccuracyValuation = accuracy_valuation.AccuracyValuation(calc_movement_result)
+	AccuracyValuation.main()
 
 
 # メイン関数

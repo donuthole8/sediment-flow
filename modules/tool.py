@@ -290,15 +290,16 @@ def decode_area(region: tuple) -> tuple:
 	return label, coords, area
 
 
-def is_index(self, coordinate: tuple[int, int]) -> bool:
+def is_index(size: tuple[int, int, int], coordinate: tuple[int, int]) -> bool:
 	"""
 	タプル型座標が画像領域内に収まっているかを判定
 
+	size: 画像サイズ
 	coordinate: タプル型座標
 	"""
 	# (0 <= y < height) & (0 <= x < width)
-	if 	(((coordinate[0] >= 0) and (coordinate[0] < self.size_3d[0])) 
-	and  ((coordinate[1] >= 0) and (coordinate[1] < self.size_3d[1]))):
+	if 	(((coordinate[0] >= 0) and (coordinate[0] < size[0])) 
+	and  ((coordinate[1] >= 0) and (coordinate[1] < size[1]))):
 		return True
 	else:
 		return False
@@ -324,7 +325,7 @@ def draw_vector(
 
 
 	# 各ラベルに対して
-	for label in labels:
+	for i, label in enumerate(labels):
 		# 流出元の重心座標
 		cy, cx   = region["cy"], region["cx"]
 
@@ -341,14 +342,25 @@ def draw_vector(
 		# answer_direction.append()
 		# answer_distance.append(int(dist((cy, cx), (_cy, _cx)) * resolution))
 
+
+		if (i == 0):
+			color = (255,0,0)
+		elif (i == 1):
+			color = (0,255,0)
+		elif (i == 2):
+			color = (0,0,255)
+
+		print(i, label, labels, color)
+
 		# 矢印を描画
 		cv2.arrowedLine(
 			img=self.ortho,     	# 画像
 			pt1=(cx, cy),       	# 始点
 			pt2=(_cx, _cy),     	# 終点
-			color=(20, 20, 180),  # 色
+			# color=(20, 20, 180),  # 色
+			color=color,  # 色
+			
 			thickness=2,        	# 太さ
-			tipLength=0.5		      # 矢先の長さ
 		)
 
 
@@ -383,3 +395,219 @@ def draw_vector(
 
 	# self.answer_direction.append(answer_direction)
 	# self.answer_distance.append(answer_distance)
+
+
+
+def draw_vector(
+	self, 
+	region: tuple, 
+	labels: list[int]
+) -> None:
+	"""
+	土砂移動の矢印を描画
+
+	region: 注目領域の領域データ
+	labels: 流出先の領域ラベルID
+	"""
+	# 精度評価データ
+	answer_direction = []
+	answer_distance  = []
+
+	# 解像度
+	resolution = 7.5
+
+
+	# 各ラベルに対して
+	for i, label in enumerate(labels):
+		# 流出元の重心座標
+		cy, cx   = region["cy"], region["cx"]
+
+		# 流出先の重心座標
+		_cy, _cx = self.region[label]["cy"], self.region[label]["cx"]
+
+		# # 始点
+		# cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
+
+		# # 終点
+		# cv2.circle(self.ortho, (_cx, _cy), 3, (255, 0, 0), thickness=5, lineType=cv2.LINE_8, shift=0)
+
+		# # 精度評価データ保存
+		# answer_direction.append()
+		# answer_distance.append(int(dist((cy, cx), (_cy, _cx)) * resolution))
+
+		# 矢印の色を決定
+		if (i == 0):
+			color = (255,100,100)
+		elif (i == 1):
+			color = (0,0,255)
+		elif (i == 2):
+			color = (100,255,155)
+
+		print(i, label, labels, color)
+
+		# 矢印を描画
+		cv2.arrowedLine(
+			img=self.ortho,     	# 画像
+			pt1=(cx, cy),       	# 始点
+			pt2=(_cx, _cy),     	# 終点
+			# color=(20, 20, 180),  # 色
+			color=color,  # 色
+			
+			thickness=2,        	# 太さ
+		)
+
+
+		# # 水平距離
+		# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)
+		# # 水平方向の土砂移動を描画
+		# cv2.putText(
+		#   img=ortho,                        # 画像
+		#   text="hor:"+str(dis)+"cm",        # テキスト
+		#   org=(_cx+2, _cy+2),               # 位置
+		#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+		#   fontScale=1,                      # フォントサイズ
+		#   color=(0, 255, 0),                # 色
+		#   thickness=1,                      # 太さ
+		#   lineType=cv2.LINE_AA              # タイプ
+		# )
+
+		# # 垂直距離
+		# # TODO: DSMで良いか検討
+		# dis = int(dsm[cy, cx][0] - dsm[_cy, _cx][0] * 100)
+		# # 垂直方向の土砂変化標高
+		# cv2.putText(
+		#   img=ortho,                        # 画像
+		#   text="ver:"+str(dis)+"cm",        # テキスト
+		#   org=(_cx+2, _cy+14),              # 位置
+		#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+		#   fontScale=1,                      # フォントサイズ
+		#   color=(255, 0, 0),                # 色
+		#   thickness=1,                      # 太さ
+		#   lineType=cv2.LINE_AA              # タイプ
+		# )
+
+	# self.answer_direction.append(answer_direction)
+	# self.answer_distance.append(answer_distance)
+
+
+def draw_vector_8dir(
+	self, 
+	region: tuple, 
+	coords: list[int]
+) -> None:
+	"""
+	土砂移動の矢印を描画
+
+	region: 注目領域の領域データ
+	coords: 流出先の座標
+	"""
+	# 精度評価データ
+	answer_direction = []
+	answer_distance  = []
+
+	# 解像度
+	resolution = 7.5
+
+	# 各ラベルに対して
+	for i, label in enumerate(coords):
+		# 流出元の重心座標
+		cy, cx   = region["cy"], region["cx"]
+
+		# # 始点
+		# cv2.circle(self.ortho, (cx, cy), 3, (0, 0, 255), thickness=5, lineType=cv2.LINE_8, shift=0)
+
+		# # 終点
+		# cv2.circle(self.ortho, (_cx, _cy), 3, (255, 0, 0), thickness=5, lineType=cv2.LINE_8, shift=0)
+
+		# # 精度評価データ保存
+		# answer_direction.append()
+		# answer_distance.append(int(dist((cy, cx), (_cy, _cx)) * resolution))
+
+		# 矢印の色を決定
+		if (i == 0):
+			color = (255,100,100)
+		elif (i == 1):
+			color = (0,0,255)
+		elif (i == 2):
+			color = (100,255,155)
+			
+		print(i, label, coords, color)
+
+		# 矢印を描画
+		cv2.arrowedLine(
+			img=self.ortho,     	# 画像
+			pt1=(cx, cy),       	# 始点
+			pt2=(label[1], label[0]),     	# 終点
+			# color=(20, 20, 180),  # 色
+			color=color,  # 色
+			thickness=2,        	# 太さ
+		)
+
+
+		# # 水平距離
+		# dis = int(dist((cy, cx), (_cy, _cx)) * resolution)
+		# # 水平方向の土砂移動を描画
+		# cv2.putText(
+		#   img=ortho,                        # 画像
+		#   text="hor:"+str(dis)+"cm",        # テキスト
+		#   org=(_cx+2, _cy+2),               # 位置
+		#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+		#   fontScale=1,                      # フォントサイズ
+		#   color=(0, 255, 0),                # 色
+		#   thickness=1,                      # 太さ
+		#   lineType=cv2.LINE_AA              # タイプ
+		# )
+
+		# # 垂直距離
+		# # TODO: DSMで良いか検討
+		# dis = int(dsm[cy, cx][0] - dsm[_cy, _cx][0] * 100)
+		# # 垂直方向の土砂変化標高
+		# cv2.putText(
+		#   img=ortho,                        # 画像
+		#   text="ver:"+str(dis)+"cm",        # テキスト
+		#   org=(_cx+2, _cy+14),              # 位置
+		#   fontFace=cv2.FONT_HERSHEY_PLAIN,  # フォント
+		#   fontScale=1,                      # フォントサイズ
+		#   color=(255, 0, 0),                # 色
+		#   thickness=1,                      # 太さ
+		#   lineType=cv2.LINE_AA              # タイプ
+		# )
+
+	# self.answer_direction.append(answer_direction)
+	# self.answer_distance.append(answer_distance)
+
+
+def draw_mesh(
+	self,
+	image_data
+) -> None:
+	"""
+	メッシュの格子線を描画
+
+	image_data: 画像等データ
+	"""
+	# x軸に平行な格子線を描画
+	for y in range(self.mesh_height):
+		cv2.line(
+			img=image_data.ortho,   			# 画像
+			pt1=(0, self.mesh_size * y),  # 始点
+			pt2=(
+				image_data.size_2d[0], 
+				self.mesh_size * y
+			),														# 終点
+			color=(255, 255, 255),  			# 色
+			thickness=2,        					# 太さ
+		)
+
+	# y軸に並行な格子線を描画
+	for x in range(self.mesh_width):
+		cv2.line(
+			img=image_data.ortho,     		# 画像
+			pt1=(self.mesh_size * x, 0),  # 始点
+			pt2=(
+				self.mesh_size * x, 
+				image_data.size_2d[1]
+			),														# 終点
+			color=(255, 255, 255),  			# 色
+			thickness=2,        					# 太さ
+		)

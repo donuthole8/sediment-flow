@@ -2,9 +2,7 @@ import cv2
 import math
 import numpy as np
 import scipy.ndimage as ndimage
-import matplotlib.pyplot as plt
 import matplotlib as mpl
-from math import dist
 from tqdm import trange
 
 from modules import tif
@@ -237,6 +235,10 @@ def masking(
 	"""
 	# 画像のコピー
 	masked_img = img.copy()
+
+	# マスク画像の次元を対象画像と同じにする
+	if (len(masked_img.shape) != 3):
+		mask = cv2.split(mask)[0]
 
 	# マスク領域以外を除去
 	idx = np.where(mask != 0)
@@ -517,7 +519,9 @@ def is_sediment_or_vegetation(self, centroids: tuple[int, int]) -> bool:
 	"""
 	# Lab表色系に変換
 	Lp, ap, bp = cv2.split(
-		cv2.cvtColor(self.div_img.astype(np.uint8), cv2.COLOR_BGR2Lab)
+		cv2.cvtColor(
+			self.div_img.astype(np.uint8), 
+			cv2.COLOR_BGR2Lab)
 	)
 	Lp, ap, bp = Lp * 255, ap * 255, bp * 255
 
@@ -732,10 +736,12 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 
 	# 重心の傾斜方向データを取得
 	directions = get_directions(self.degree[region["cy"], region["cx"]])
-	# print("dir:", directions)
+	print("dir-->>>>:", directions)
+	print()
 
 	# 傾斜方向と隣接2方向の隣接領域を取得
 	neighbor_region_labels = []
+
 	for direction in directions:
 		# 輪郭の一番端座標からDIRECTION[i]の方向の座標を取得
 		neighbor_coordinate = get_neighbor_coordinate(
@@ -743,10 +749,12 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 			contour_coordinates, 
 			(region["cy"], region["cx"])
 		)
-		print("n coord:::", neighbor_coordinate)
+		# print("n coord:::", neighbor_coordinate)
+		# print("n labels::", self.label_table[neighbor_coordinate])
+		# print()
 
 		# 取得した隣接座標が画像領域内に存在するか
-		if (tool.is_index(self, neighbor_coordinate)):
+		if (tool.is_index(self.size_3d, neighbor_coordinate)):
 			# ラベルIDを保存
 			# ラベルIDがおかしい ｏｒ is_indexがおかしい
 			neighbor_region_labels.append(
@@ -760,11 +768,12 @@ def extract_neighbor(self, region: tuple) -> list[int]:
 		# except:
 		# 	print("err")
 
+	print()
 	print("n labels:::", neighbor_region_labels)
 
 	# 重複を削除
-	# FIXME: Noneがある場合があるので削除
-	return list(set(neighbor_region_labels))
+	# FIXME: Noneがある場合があるので削除（順序を保持）
+	return list(dict.fromkeys(neighbor_region_labels))
 
 
 def get_directions(deg: float) -> tuple[tuple]:
@@ -858,11 +867,27 @@ def get_neighbor_coordinate(
 				if (c[0] == (-1 * c[1]) + (centroids[0] + centroids[1]))
 			]
 			# 注目領域内でy座標の最も大きい座標を取得
-			coord = max(linear_function, key=lambda x:x[0])
+			# # coord = max(linear_function, key=lambda x:x[0])
+			# coord = min(linear_function, key=lambda x:x[0])
+			coord = min(linear_function, key=lambda x:x[1])
+			# coord = max(linear_function, key=lambda x:x[1])
+
+			# # 注目領域内でx座標の最も大きい座標を取得
+			# coord = max(linear_function, key=lambda x:x[1])
+
+			print("dir 南西", direction)
+			print("coord 南西", (coord[0] + DIRECTION[5][0], coord[1] + DIRECTION[5][1]))
+
 
 			return (coord[0] + DIRECTION[5][0], coord[1] + DIRECTION[5][1])
 
 		elif (direction == DIRECTION[6]):		# 西
+			print("dir 西", direction)
+			print("coord 西", (
+				centroids[0] + DIRECTION[6][0], 
+				np.min([c[1] for c in contour_coordinates]) + DIRECTION[6][1]
+			))
+
 			return (
 				centroids[0] + DIRECTION[6][0], 
 				np.min([c[1] for c in contour_coordinates]) + DIRECTION[6][1]
@@ -877,6 +902,10 @@ def get_neighbor_coordinate(
 			]
 			# 注目領域内でy座標の最も小さい座標を取得
 			coord = min(linear_function, key=lambda x:x[0])
+
+
+			print("dir 北西", direction)
+			print("coord 北西", (coord[0] + DIRECTION[7][0], coord[1] + DIRECTION[7][1]))
 
 			return (coord[0] + DIRECTION[7][0], coord[1] + DIRECTION[7][1])
 
@@ -955,6 +984,100 @@ def extract_sediment(
 	
 	# 重複ラベルは削除済み
 	return sediment_region_labels
+
+
+def extract_neighbor_8dir(self, region: tuple) -> list[int]:
+	"""
+	8方向で隣接している領域の組かつ傾斜方向に沿った3領域を全て抽出
+
+	region: 注目領域の領域データ
+	"""
+	# 領域座標データを取得
+	_, coordinates, _ = tool.decode_area(self.pms_coords[region["label"]])
+
+	# 座標データから輪郭データを取得
+	contour_coordinates = tool.coordinates2contours(self, coordinates)
+
+	# 重心の傾斜方向データを取得
+	directions = get_directions(self.degree[region["cy"], region["cx"]])
+
+	# 傾斜方向と隣接2方向の隣接領域を取得
+	neighbor_region_coords = []
+
+	for direction in directions:
+		# 輪郭の一番端座標からDIRECTION[i]の方向の座標を取得
+		neighbor_coordinate = get_neighbor_coordinate(
+			direction, 
+			contour_coordinates, 
+			(region["cy"], region["cx"])
+		)
+		neighbor_region_coords.append(neighbor_coordinate)
+
+	return neighbor_region_coords
+
+
+def extract_downstream_8dir(
+	self, 
+	region: tuple, 
+	coords: list[int]
+) -> list[int]:
+	"""
+	隣接領域のうち傾斜方向が上流から下流の領域の組を全て抽出
+
+	region: 注目領域の領域データ
+	coords: 隣接領域の座標
+	"""
+	# 注目領域の重心標高値を取得
+	centroid_elevation = self.dsm_uav[(region["cy"], region["cx"])]
+
+	# 各隣接領域が下流かどうかを判別する
+	downstream_region_coords = []
+	for coord in coords:
+		# 隣接領域の重心標高値を取得
+		# FIXME: 平均値にしたい
+		# FIXME: 傾斜方向データでも可
+		try:
+			neighbor_centroid_elevation = self.dsm_uav[coord]
+
+			# 隣接領域が下流領域の場合,配列に追加
+			# FIXME: ３チャンネルだったような気がする
+			if (centroid_elevation > neighbor_centroid_elevation):
+				downstream_region_coords.append(coord)
+		except:
+			print("err", coord)
+	
+	# 重複ラベルは削除済み
+	return downstream_region_coords
+
+
+def extract_sediment_8dir(
+	self, 
+	region: tuple, 
+	coords: list[int]
+) -> list[int]:
+	"""
+	侵食と堆積の領域の組を全て抽出
+
+	region: 注目領域の領域データ
+	coords: 隣接下流領域の座標
+	"""
+	# 注目領域の重心標高変化値を取得
+	centroid_elevation_sub = self.dsm_sub[(region["cy"], region["cx"])]
+
+	# 各隣接領域が堆積領域かどうかを判別する
+	sediment_region_coords = []
+	for coord in coords:
+		# 隣接下流領域の重心標高変化値を取得
+		# FIXME: 平均値にしたい
+		downstream_centroid_elevation_sub = self.dsm_sub[coord]
+
+		# 隣接下流領域が堆積領域の場合,配列に追加
+		# FIXME: ３チャンネルだったような気がする
+		if ((centroid_elevation_sub * downstream_centroid_elevation_sub) < 0):
+			sediment_region_coords.append(coord)
+	
+	# 重複ラベルは削除済み
+	return sediment_region_coords
 
 
 # def save_vector(
