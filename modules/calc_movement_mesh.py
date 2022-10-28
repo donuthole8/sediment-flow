@@ -42,9 +42,6 @@ class CalcMovementMesh():
 
 		image_data: 画像等のデータ
 		"""
-		print("image_op", image_data)
-		print("(h, w)", self.mesh_height, self.mesh_width)
-
 		# メッシュの格子線を描画
 		tool.draw_mesh(self, image_data)
 		
@@ -239,8 +236,8 @@ class CalcMovementMesh():
 				color=(0, 0, 255),  				# 色			
 				thickness=2,        				# 太さ
 			)
-		except:
-			print("err", average_direction)
+		except Exception as e:
+			print(e, "average_direction: ", average_direction)
 
 
 

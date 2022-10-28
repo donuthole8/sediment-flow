@@ -21,30 +21,29 @@ class AccuracyValuation():
 		"""
 		メッシュベースでの精度評価
 		"""
+		mesh_num = 0
 		accuracies = []
-
 		for i, answer in enumerate(self.answer):
-			# print("answer:::::::", i, answer)
-			# print("result:::::::", self.calc_movement_result[i])
-			# print()
-
-			# 結果データの角度
-			result_direction = self.calc_movement_result[i]["direction"]
-
 			# FIXME: 100サイズメッシュの場合限定
-			for j in range(12):
+			for j in range(len(answer)):
+				# 結果データの角度
+				result_direction = self.calc_movement_result[i * len(answer) + j]["direction"]
+
 				# 正解データの角度
 				answer_direction = answer[j]["direction"]
 
-				# 正解データと結果データの絶対値を360°で除算（誤差の割合）
-				error = abs(result_direction - answer_direction) / 360
-				print("res, ans, err", i, j, result_direction, answer_direction, error)
+				if (answer_direction is not np.nan) and (result_direction is not np.nan):
+					# 正解データと結果データの絶対値を360°で除算（誤差の割合）
+					error = abs(result_direction - answer_direction) / 180
 
-				# 精度を算出
-				accuracies.append(1 - error)
+					# 精度を算出
+					accuracies.append(1 - error)
 
-				print("精度 メッシュ中心座標(y,x):", 1 - error, self.calc_movement_result[i]["center"])
-				print()
+					# メッシュ番号
+					mesh_num += 1
+
+					print(" -", mesh_num, self.calc_movement_result[i * len(answer) + j]["center"], ":", 1 - error)
 
 		# 各メッシュの精度平均
 		print("各メッシュの精度平均:", np.nanmean(accuracies))
+
