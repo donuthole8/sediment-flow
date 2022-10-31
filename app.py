@@ -1,11 +1,15 @@
 import cv2
-from matplotlib import image
-import numpy as np
 
 from modules import tool
-from modules import operation
-from modules import calc_movement_mesh
-from modules import accuracy_valuation
+from modules.image_data import ImageData
+from modules.calc_geo_data import CalcGeoData
+from modules.resampling import Resampling
+from modules.mask_processing import MaskProcessing
+from modules.region_processing import RegionProcessing
+from modules.analyze_image import AnalyzeImage
+from modules.calc_sedimentation import CalcSedimentation
+from modules.calc_movement_mesh import CalcMovementMesh
+from modules.accuracy_valuation import AccuracyValuation
 
 
 # # 本番用画像
@@ -67,85 +71,84 @@ def main() -> None:
 	# TODO: 土砂マスク画像の作成に中山さんの手法を適用する・海領域の除去・影領域の対処・前後差分の検討
 	# FIXME: 画素値が0-255に正規化されている
 	# クラス初期化
-	image_op = operation.ImageOp(path_list)
+	image = ImageData(path_list)
 
 	# # DEMより傾斜データを抽出
 	# # NOTE: リサンプリング後に行った方が良いかも
 	# print("# DEMより傾斜データを抽出")
-	# image_op.dem2gradient(10)	# メッシュサイズ
-	# image_op.dem2gradient(5)	# メッシュサイズ
+	# CalcGeoData().dem2gradient(image, 5)
 
 	# 傾斜方位の正規化（0-255 -> 0-360）
 	print("# 傾斜方向の正規化")
-	image_op.norm_degree()
+	CalcGeoData().norm_degree(image)
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
-	image_op.resampling_dsm()
+	Resampling(image)
 
 	# 画像サイズの確認
 	print("# 入力画像のサイズ確認")
-	tool.show_image_size(image_op)
-
-	# 土砂マスクの前処理
-	# TODO: 精度向上させる
-	print("# マスク画像の前処理")
-	# image_op.norm_mask(16666, 3)	# 面積の閾値, 拡大倍率
-	image_op.mask = cv2.imread("./outputs/normed_mask.png")
-
-	# 土砂マスク
-	print("# 土砂マスクによる土砂領域抽出")
-	image_op.apply_mask()
+	tool.show_image_size(image)
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")
-	# image_op.divide_area(15, 4.5, 300)
-	# image_op.divide_area(3, 4.5, 100)	# これ使ってた
-	# image_op.divide_area(2, 2, 20)
-	image_op.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
+	RegionProcessing().area_division(image, 3, 4.5, 100)
+	# image.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
 
 	# # 輪郭・重心データ抽出・ラベル画像作成
+	# NOTE: 処理が重い
 	# print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
-	# image_op.calc_contours()
+	RegionProcessing().get_region_data(image)
 
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
-	image_op.norm_elevation_0to1()
-	# image_op.norm_elevation_meter()
+	CalcGeoData().norm_elevation_meter(image)
+	CalcGeoData().norm_elevation_sd(image)
+	CalcGeoData().norm_elevation_0to1(image)
 
 	# # 標高座標の最適化
 	# # TODO: 論文手法を実装する
 	# print("# 標高座標の最適化")
-	# image_op.norm_coord()
+	# CalcGeoData().norm_coord(image)
 
-	# # テクスチャ解析
+	# テクスチャ解析
 	# print("# テクスチャ解析")
-	# image_op.texture_analysis()
-	image_op.dissimilarity = cv2.imread(path8, cv2.IMREAD_ANYDEPTH).astype(np.float32)
+	AnalyzeImage().texture_analysis(image)
+	# image.dissimilarity = cv2.imread(path8, cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
 	# # エッジ抽出
 	# print("# エッジ抽出")
-	# image_op.edge_detection()
+	# AnalyzeImage().edge_analysis(image)
+	
+	# 建物領域の検出
+	print("# 建物領域を検出する")
+	RegionProcessing().extract_building(image)
+	image.bld_mask = cv2.imread(path9)
 
-	# # 建物領域の検出
-	# print("# 建物領域を検出する")
-	# # image_op.extract_building()
-	# image_op.bld_mask = cv2.imread(path9)
+	print("# 建物領域の標高値を地表面標高値に補正")
+	# TODO: 建物領域の標高値を地表面と同じ標高値にする
+	RegionProcessing().norm_building(image)
 
-	# # TODO: 建物領域の標高値を地表面と同じ標高値にする
-	# print("# 建物領域の標高値を地表面標高値に補正")
-	# image_op.norm_building()
+	# 土砂マスクの前処理
+	# TODO: 精度向上させる
+	print("# マスク画像の前処理")
+	MaskProcessing().norm_mask(image, 16666, 3)
+	# image.mask = cv2.imread("./outputs/normed_mask.png")
+
+	# 土砂マスク
+	print("# 土砂マスクによる土砂領域抽出")
+	MaskProcessing().apply_mask(image)
 
 	# 土砂マスクを利用し土砂領域
 	# TODO: 隣接領域抽出のコスト削減のためにこれを行う
 
-	# # 土砂マスクを利用し堆積差分算出
-	# print("# 堆積差分算出")
-	# image_op.calc_sedimentation()
+	# 土砂マスクを利用し堆積差分算出
+	print("# 堆積差分算出")
+	CalcSedimentation()
 
 	# # 土砂移動推定
 	# print("# 土砂移動推定")
@@ -157,14 +160,11 @@ def main() -> None:
 
 	# メッシュベースでの土砂移動推定
 	print("# メッシュベースでの土砂移動推定")
-	CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(100, image_op.size_2d)
-	# CalcMovementMesh = calc_movement_mesh.CalcMovementMesh(50, image_op.size_2d)
-	calc_movement_result = CalcMovementMesh.main(image_op)
+	calc_movement_result = CalcMovementMesh(100, image.size_2d).main(image)
 
 	# 精度評価
 	print("# 精度評価")
-	AccuracyValuation = accuracy_valuation.AccuracyValuation(calc_movement_result)
-	AccuracyValuation.main()
+	AccuracyValuation(calc_movement_result)
 
 
 # メイン関数
