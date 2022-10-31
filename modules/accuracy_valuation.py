@@ -1,9 +1,7 @@
-import cv2
-import math
 import numpy as np
 
-from modules import operation
 from modules import constant
+from modules.image_data import ImageData
 
 
 class AccuracyValuation():
