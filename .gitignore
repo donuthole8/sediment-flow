@@ -21,6 +21,7 @@ openpiv-python
 
 # test-code
 modules/temp.py
+modules/delete/*
 app_test.py
 app_dem.py
 test.py
