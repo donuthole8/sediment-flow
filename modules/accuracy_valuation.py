@@ -43,5 +43,6 @@ class AccuracyValuation():
 					print(" -", mesh_num, self.calc_movement_result[i * len(answer) + j]["center"], ":", 1 - error)
 
 		# 各メッシュの精度平均
-		print("各メッシュの精度平均:", np.nanmean(accuracies))
+		print("- 各メッシュの精度平均:", np.nanmean(accuracies))
 
+		return

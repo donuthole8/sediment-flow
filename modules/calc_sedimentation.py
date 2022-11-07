@@ -7,11 +7,11 @@ from modules.image_data import ImageData
 
 class CalcSedimentation():
 	def __init__(self, image: ImageData) -> None:
-		"""
-		災害前後での標高差分を算出
-		DEMの標高をDSMにマッチングさせ標高値を対応付ける
+		""" 災害前後での標高差分を算出
+				DEMの標高をDSMにマッチングさせ標高値を対応付ける
 
-		image: ImageData
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# 標高差分を算出
 		image.dsm_sub = image.dsm_uav - image.dsm_heli
@@ -32,8 +32,13 @@ class CalcSedimentation():
 
 	@staticmethod
 	def __binarize_2area(image: ImageData) -> np.ndarray:
-		"""
-		堆積領域と侵食領域で二値化
+		""" 堆積領域と侵食領域で二値化
+
+		Args:
+				image (ImageData): 画像データ
+
+		Returns:
+				np.ndarray: 2値化画像
 		"""
 		dsm_bin = image.dsm_sub.copy()
 		idx = np.where(image.dsm_sub >  0)

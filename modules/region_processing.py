@@ -10,19 +10,19 @@ from modules.image_data import ImageData
 class RegionProcessing():
 	@tool.stop_watch
 	def area_division(
-		self, 
-		image: ImageData, 
-		spatial_radius: float, 
-		range_radius: float, 
-		min_density: float
-	) -> None:
-		"""
-		オルソ画像の領域分割を行う
+			self, 
+			image: ImageData, 
+			spatial_radius: float, 
+			range_radius: float, 
+			min_density: float
+		) -> None:
+		""" オルソ画像の領域分割を行う
 
-    image: 画像データ
-		spatial_radius: 空間半径
-		range_radius: 範囲半径
-		min_density: 最小密度
+		Args:
+				image (ImageData): 画像データ
+				spatial_radius (float): 空間半径
+				range_radius (float): 範囲半径
+				min_density (float): 最小密度
 		"""
 		# Lab表色系に変換
 		# NOTE: RGB表色系のままでも良いかも
@@ -54,10 +54,10 @@ class RegionProcessing():
 
 	@tool.stop_watch
 	def get_region_data(self, image: ImageData) -> None:
-		"""
-		csvに保存された領域の座標データより領域データを算出
+		"""	csvに保存された領域の座標データより領域データを算出
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# 領域データの保存
 		tool.csv2self(image)
@@ -73,10 +73,10 @@ class RegionProcessing():
 
 	@staticmethod
 	def __create_label_table(image: ImageData) -> None:
-		"""
-		ラベリングテーブルを作成
+		"""	ラベリングテーブルを作成
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# 空画像を作成
 		label_table = np.zeros((image.size_2d[1], image.size_2d[0])).astype(np.uint32)
@@ -97,11 +97,11 @@ class RegionProcessing():
 
 	@staticmethod
 	def __get_pms_contours(image: ImageData) -> None:
-		"""
-		各領域をキャンパスに描画し1つずつ領域データを抽出
-		領域分割結果からラベリング画像を作成
+		"""	各領域をキャンパスに描画し1つずつ領域データを抽出
+				領域分割結果からラベリング画像を作成
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# キャンパス描画
 		label_img = np.zeros((image.size_2d[1], image.size_2d[0], 3))
@@ -161,10 +161,10 @@ class RegionProcessing():
 
 
 	def extract_building(self, image: ImageData) -> None:
-		"""
-		円形度より建物領域を抽出する
+		""" 円形度より建物領域を抽出する
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# 建物領域を抽出
 		self.__extract_building(image)
@@ -173,11 +173,12 @@ class RegionProcessing():
 
 
 	def __extract_building(self, image: ImageData) -> None:
-		"""
-		建物領域を抽出
+		"""	建物領域を抽出
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
+		
 		# 建物領域検出用画像
 		bld_img = image.ortho.copy()
 
@@ -221,18 +222,22 @@ class RegionProcessing():
 
 
 	def __is_building(
-		self, 
-		image: ImageData, 
-		circularity: float, 
-		centroids: tuple[int, int]
-	) -> bool:
-		"""
-		建物領域かどうかを判別
+			self, 
+			image: ImageData, 
+			circularity: float, 
+			centroids: tuple[int, int]
+		) -> bool:
+		""" 建物領域かどうかを判別
 
-		image: 画像データ
-		circularity: 円形度
-		centroids: 該当領域の重心座標
+		Args:
+				image (ImageData): 画像データ
+				circularity (float): 円形度
+				centroids (tuple[int, int]): 該当領域の重心座標
+
+		Returns:
+				bool: 建物領域フラグ
 		"""
+
 		# 注目領域の平均異質度を取得
 		dissimilarity = np.mean(image.dissimilarity[centroids])
 
@@ -249,12 +254,16 @@ class RegionProcessing():
 
 	@staticmethod
 	def __is_sediment_or_vegetation(image: ImageData, centroids: tuple[int, int]) -> bool:
-		"""
-		土砂・植生領域かどうかを判別
+		""" 土砂・植生領域かどうかを判別
 
-		image: 画像データ
-		centroids: 該当領域の重心座標
+		Args:
+				image (ImageData): 画像データ
+				centroids (tuple[int, int]): 該当領域の重心座標
+
+		Returns:
+				bool: 土砂・植生領域フラグ
 		"""
+
 		# Lab表色系に変換
 		Lp, ap, bp = cv2.split(
 			cv2.cvtColor(
@@ -275,10 +284,10 @@ class RegionProcessing():
 
 
 	def norm_building(self, image: ImageData) -> None:
-		"""
-		建物領域の標高値を地表面と同等に補正する
+		""" 建物領域の標高値を地表面と同等に補正する
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# 標高データを補正
 		self.__norm_building(image)
@@ -287,10 +296,10 @@ class RegionProcessing():
 
 
 	def __norm_building(self, image: ImageData) -> None:
-		"""
-		建物領域の標高値を地表面と同等に補正する
+		"""	建物領域の標高値を地表面と同等に補正する
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# 正規化後のDSM標高値
 		# image.normed_dsm = self.dsm_uav.copy()
@@ -332,12 +341,15 @@ class RegionProcessing():
 
 	@staticmethod
 	def __get_neighbor_region(image: ImageData, coords: tuple[int, int]) -> list[int]:
-		"""
-		建物領域でない隣接領域の標高値を取得
-		TODO: 新しく作成した隣接領域検出を使えないか検討
+		"""	建物領域でない隣接領域の標高値を取得
+				TODO: 新しく作成した隣接領域検出を使えないか検討
 
-		image: 画像データ
-		coords: 注目領域の座標群
+		Args:
+				image (ImageData): 画像データ
+				coords (tuple[int, int]): 注目領域の座標群
+
+		Returns:
+				list[int]: 隣接領域の標高値
 		"""
 		# キャンパス描画
 		campus = np.zeros((image.size_2d[1], image.size_2d[0]))

@@ -10,11 +10,11 @@ from modules.image_data import ImageData
 
 class CalcGeoData():
 	def dem2gradient(self, image: ImageData, mesh_size: int) -> None:
-		"""
-		DEMを勾配データへ変換
+		""" DEMを勾配データへ変換
 
-		image: 画像データ
-		mesh_size: DEMのメッシュサイズ
+		Args:
+				image (ImageData): 画像データ
+				mesh_size (int): DEMのメッシュサイズ
 		"""
 		# 勾配データの算出
 		grad = self.__dem2gradient(image, mesh_size)
@@ -56,12 +56,14 @@ class CalcGeoData():
 
 	@staticmethod
 	def __dem2gradient(image: ImageData, size_mesh: int) -> None:
+		""" 傾斜データを算出する
+
+		Args:
+				image (ImageData): 画像データ
+				size_mesh (int): DEMのメッシュサイズ
 		"""
-		傾斜データを算出する
-		
-		image: 画像データ
-		size_mesh: DEMのメッシュサイズ
-		"""
+
+
 		max = 0
 		index = [-1,1]
 		height, width = image.dem.shape[:2]
@@ -108,10 +110,10 @@ class CalcGeoData():
 
 	@staticmethod
 	def norm_elevation_sd(image: ImageData) -> None:
-		"""
-		DSM標高値を標準偏差によってに正規化する
+		""" DSM標高値を標準偏差によってに正規化する
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# 平均・標準偏差算出
 		ave_dsm_uav, sd_dsm_uav   = tool.calc_ave_sd(image.dsm_uav)
@@ -135,10 +137,10 @@ class CalcGeoData():
 
 	@staticmethod
 	def norm_elevation_meter(image: ImageData) -> None:
-		"""
-		DEMの標高をDSMにマッチングさせ標高値をm単位で対応付ける
+		""" DEMの標高をDSMにマッチングさせ標高値をm単位で対応付ける
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# 最小値・最大値算出
 		min_uav,  max_uav  = tool.calc_min_max(image.dsm_uav)
@@ -168,3 +170,13 @@ class CalcGeoData():
 		cv2.imwrite("./output/meterd_uav_heli.tif", image.dsm_heli)
 
 		return
+
+
+	def norm_coord(self, image: ImageData):
+		""" 標高座標の最適化
+
+		Args:
+				image (ImageData): 画像データ
+		"""
+		
+		return 

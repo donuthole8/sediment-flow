@@ -5,10 +5,13 @@ import numpy as np
 
 
 def load_tif(path: str) -> np.ndarray:
-  """
-  tifファイルの読み込み
+  """ tifファイルの読み込み
 
-  filePath: tifファイルのファイルパス
+  Args:
+      path (str): tifファイルのファイルパス
+
+  Returns:
+      np.ndarray: tif画像
   """
   src = gdal.Open(path)
 
@@ -81,25 +84,24 @@ def load_tif(path: str) -> np.ndarray:
 #   output.FlushCache()
 
 
-def save_tif(
-  data: np.ndarray, 
-  load_path: str, 
-  save_path: str
-) -> None:
+def save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
+  """ tif画像を保存
+
+  Args:
+      data (np.ndarray): tifデータ
+      load_path (str): 読み込みパス
+      save_path (str): 書き込みパス
+  """
   cv2.imwrite(save_path, data)
 
 
-def _save_tif(
-  data: np.ndarray, 
-  load_path: str, 
-  save_path: str
-) -> None:
-  """
-  tifファイルの書き込み
+def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
+  """ tifファイルの書き込み
 
-  data: 書き込みデータ 
-  load_path: 入力tifファイルのパス
-  save_path: 出力tifファイルのパス
+  Args:
+      data (np.ndarray): 書き込みデータ 
+      load_path (str): 入力tifファイルのパス
+      save_path (str): 出力tifファイルのパス
   """
   # 入出力パス
   load_path = "./inputs/"  + load_path
@@ -141,11 +143,15 @@ def _save_tif(
 
 
 def get_band4(path: str) -> np.ndarray:
-  """
-  第4バンドデータを取得
+  """ 第4バンドデータを取得
 
-  path: tifファイルのパス
+  Args:
+      path (str): tifファイルのパス
+
+  Returns:
+      np.ndarray: 第4バンドデータ
   """
+
   src = gdal.Open(path)
 
   # 第4バンド

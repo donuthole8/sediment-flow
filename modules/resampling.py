@@ -6,9 +6,12 @@ from modules.image_data import ImageData
 class Resampling():
 	@staticmethod
 	def __init__(image: ImageData):
+		""" UAVのNoData部分を航空画像DSM・DEMから切り取り・解像度のリサンプリング
+
+		Args:
+				image (ImageData): 画像データ
 		"""
-		UAVのNoData部分を航空画像DSM・DEMから切り取り・解像度のリサンプリング
-		"""
+		
 		# 3次元に変更
 		image.mask = cv2.merge((image.mask, image.mask, image.mask))
 

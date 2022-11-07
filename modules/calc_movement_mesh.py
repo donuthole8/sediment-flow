@@ -8,7 +8,7 @@ from modules.image_data import ImageData
 
 class CalcMovementMesh():
 	# 傾斜方向への座標(Δy, Δx)
-	DIRECTION = [
+	DIRECTION: list[int] = [
 		(-1, 0),		# 北
 		(-1, 1),		# 北東
 		(0,  1),		# 東
@@ -21,6 +21,12 @@ class CalcMovementMesh():
 
 
 	def __init__(self, mesh_size: int, size: tuple[int, int]) -> None:
+		""" コンストラクタ
+
+		Args:
+				mesh_size (int): メッシュサイズ
+				size (tuple[int, int]): 画像サイズ
+		"""
 		# メッシュサイズ
 		self.mesh_size = mesh_size
 
@@ -34,14 +40,11 @@ class CalcMovementMesh():
 		return
 
 
-	def main(
-		self, 
-		image: ImageData, 
-	) -> None:
-		"""
-		メッシュベースでの土砂移動の推定
+	def main(self, image: ImageData, ) -> None:
+		"""	メッシュベースでの土砂移動の推定
 
-		image: 画像等のデータ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# メッシュの格子線を描画
 		tool.draw_mesh(self, image)
@@ -94,16 +97,15 @@ class CalcMovementMesh():
 		return self.calc_movement_result
 
 
-	def is_sedimentation(
-		self, 
-		image: ImageData, 
-		center: tuple[int, int],
-	) -> bool:
-		"""
-		土砂領域かどうかを判別
+	def is_sedimentation(self, image: ImageData, center: tuple[int, int]) -> bool:
+		""" 土砂領域かどうかを判別
 
-		image: 画像等のデータ
-		center: 該当領域の中心座標
+		Args:
+				image (ImageData): 画像データ
+				center (tuple[int, int]): 該当領域の中心座標
+
+		Returns:
+				bool: 土砂領域フラグ
 		"""
 		# Lab表色系に変換
 		Lp, ap, bp = cv2.split(
@@ -120,17 +122,17 @@ class CalcMovementMesh():
 			return False
 
 
-	def is_sedimentation_mask(
-		self, 
-		image: ImageData, 
-		center: tuple[int, int],
-	) -> bool:
-		"""
-		土砂マスク画像を用いて土砂領域かどうかを判別
+	def is_sedimentation_mask(self, image: ImageData, center: tuple[int, int]) -> bool:
+		""" 土砂マスク画像を用いて土砂領域かどうかを判別
 
-		image: 画像等のデータ
-		center: 該当領域の中心座標
+		Args:
+				image (ImageData): 画像データ
+				center (tuple[int, int]): 該当領域の中心座標
+
+		Returns:
+				bool: 土砂領域フラグ
 		"""
+
 		# マスク画像より土砂の判別
 		try:
 			if (image.mask[center][0] == 0):
@@ -142,11 +144,14 @@ class CalcMovementMesh():
 
 
 	def get_center_coord(self, y: int, x: int) -> tuple[int, int]:
-		"""
-		注目メッシュの中心座標を取得
+		""" 注目メッシュの中心座標を取得
 
-		y: 注目メッシュのy成分
-		x: 注目メッシュのx成分
+		Args:
+				y (int): 注目メッシュのy成分
+				x (int): 注目メッシュのx成分
+
+		Returns:
+				tuple[int, int]: 注目メッシュの中心座標
 		"""
 		return (
 			(self.mesh_size // 2) + y * self.mesh_size, 
@@ -155,18 +160,22 @@ class CalcMovementMesh():
 
 
 	def get_mesh_coords(
-		self, 
-		size: tuple[int, int, int], 
-		y: int, 
-		x: int
-	) -> list[tuple]:
-		"""
-		注目メッシュの座標群を取得
+			self, 
+			size: tuple[int, int, int], 
+			y: int, 
+			x: int
+		) -> list[tuple]:
+		""" 注目メッシュの座標群を取得
 
-		size: 画像サイズ
-		y: 注目メッシュのy成分
-		x: 注目メッシュのx成分
+		Args:
+				size (tuple[int, int, int]): 画像サイズ
+				y (int): 注目メッシュのy成分
+				x (int): 注目メッシュのx成分
+
+		Returns:
+				list[tuple]: 注目メッシュの座標群
 		"""
+
 		coords = []
 		for _y in range(self.mesh_size):
 			for _x in range(self.mesh_size):
@@ -183,16 +192,20 @@ class CalcMovementMesh():
 
 
 	def extract_neighbor(
-		self, 
-		image: ImageData, 
-		center: tuple[int, int], 
-		coords: list[tuple]
-	) -> list[int]:
-		"""
-		8方向で隣接している領域の組かつ傾斜方向に沿った3領域を全て抽出
+			self, 
+			image: ImageData, 
+			center: tuple[int, int], 
+			coords: list[tuple]
+		) -> list[int]:
+		""" 8方向で隣接している領域の組かつ傾斜方向に沿った3領域を全て抽出
 
-		center: 注目メッシュの中心座標
-		coords: 注目メッシュの座標群
+		Args:
+				image (ImageData): 画像データ
+				center (tuple[int, int]): 注目メッシュの中心座標
+				coords (list[tuple]): 注目メッシュの座標群
+
+		Returns:
+				list[int]: 隣接領域のラベル
 		"""
 		# 中心の傾斜方向データを取得
 		# TODO: ここを中山さんの手法に修正(flow.py)
@@ -224,8 +237,8 @@ class CalcMovementMesh():
 		# FIXME: 違うかも
 		# https://qiita.com/FumioNonaka/items/c146420c3aeab27fc736
 		try:
-			y_coord= int((self.mesh_size // 2) * math.sin(math.radians(average_direction))) + center[0]
-			x_coord= int((self.mesh_size // 2) * math.cos(math.radians(average_direction))) + center[1]
+			y_coord = int((self.mesh_size // 2) * math.sin(math.radians(average_direction))) + center[0]
+			x_coord = int((self.mesh_size // 2) * math.cos(math.radians(average_direction))) + center[1]
 
 			# 矢印を描画
 			cv2.arrowedLine(
@@ -295,11 +308,15 @@ class CalcMovementMesh():
 
 
 	def get_directions(self, deg: float) -> tuple[tuple]:
-		"""
-		傾斜方向を画素インデックスに変換し傾斜方向と隣接2方向を取得
+		""" 傾斜方向を画素インデックスに変換し傾斜方向と隣接2方向を取得
 
-		deg: 角度
+		Args:
+				deg (float): 角度
+
+		Returns:
+				tuple[tuple]: 傾斜方向と隣接2方向
 		"""
+
 		# FIXME: 傾斜方向が限定的になっている
 		# 注目画素からの移動画素
 		if   (math.isnan(deg)):
@@ -324,18 +341,22 @@ class CalcMovementMesh():
 
 
 	def get_heights(
-		self, 
-		image: ImageData, 
-		directions: tuple[tuple],
-		coord: tuple[int, int]
-	) -> tuple[int, int, int]:
-		"""
-		注目座標からの標高値を取得
+			self, 
+			image: ImageData, 
+			directions: tuple[tuple],
+			coord: tuple[int, int]
+		) -> tuple[int, int, int]:
+		""" 注目座標からの標高値を取得
 
-		image: 画像等のデータ
-		directions: 注目座標からの傾斜方向
-		coord: 注目座標
+		Args:
+				image (ImageData): 画像データ
+				directions (tuple[tuple]): 注目座標からの傾斜方向
+				coord (tuple[int, int]): 注目座標
+
+		Returns:
+				tuple[int, int, int]: 注目座標からの標高値
 		"""
+
 		heights = []
 
 		for direction in directions:
