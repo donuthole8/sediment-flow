@@ -93,15 +93,15 @@ def main() -> None:
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")
-	RegionProcessing().area_division(image, 3, 4.5, 100)
-	# image.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
+	# RegionProcessing().area_division(image, 3, 4.5, 100)
+	image.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
 	# TODO: 大きすぎた領域のみさらに領域分割する
 
-	# # 輪郭・重心データ抽出・ラベル画像作成
+	# 輪郭・重心データ抽出・ラベル画像作成
 	# NOTE: 処理が重い
-	# print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
-	RegionProcessing().get_region_data(image)
+	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
+	# RegionProcessing().get_region_data(image)
 
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
@@ -110,10 +110,10 @@ def main() -> None:
 	CalcGeoData().norm_elevation_sd(image)
 	CalcGeoData().norm_elevation_0to1(image)
 
-	# # 標高座標の最適化
-	# # TODO: 論文手法を実装する
-	# print("# 標高座標の最適化")
-	# CalcGeoData().norm_coord(image)
+	# 標高座標の最適化
+	# TODO: 論文手法を実装する
+	print("# 標高座標の最適化")
+	CalcGeoData().norm_coord(image)
 
 	# テクスチャ解析
 	# print("# テクスチャ解析")
@@ -123,7 +123,7 @@ def main() -> None:
 	# # エッジ抽出
 	# print("# エッジ抽出")
 	# AnalyzeImage().edge_analysis(image)
-	
+
 	# 建物領域の検出
 	print("# 建物領域を検出する")
 	RegionProcessing().extract_building(image)

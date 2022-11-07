@@ -10,16 +10,17 @@ from modules.image_data import ImageData
 class MaskProcessing():
 	@tool.stop_watch
 	def norm_mask(
-		self, 
-		image: ImageData, 
-		area_th: int, 
-		scale: int
-	) -> None:
-		"""
-		マスク画像の前処理
+			self, 
+			image: ImageData, 
+			area_th: int, 
+			scale: int
+		) -> None:
+		""" マスク画像の前処理
 
-		area_th: 面積の閾値（スケール済みであるので(area_th/scale)が閾値となる）
-		scale: 輪郭抽出の際の拡大倍率
+		Args:
+				image (ImageData): 画像データ
+				area_th (int): 面積の閾値（スケール済みであるので(area_th/scale)が閾値となる）
+				scale (int): 輪郭抽出の際の拡大倍率
 		"""
 		# 画像反転
 		image.mask = cv2.bitwise_not(image.mask)
@@ -41,16 +42,16 @@ class MaskProcessing():
 
 	@staticmethod
 	def __morphology(
-		image: ImageData, 
-		ksize: int, 
-		exe_num: int
-	) -> None:
-		"""
-		モルフォロジー処理
+			image: ImageData, 
+			ksize: int, 
+			exe_num: int
+		) -> None:
+		""" モルフォロジー処理
 
-		image: 画像データ
-		ksize: カーネルサイズ
-		exe_num: 実行回数
+		Args:
+				image (ImageData): 画像データ
+				ksize (int): カーネルサイズ
+				exe_num (int): モルフォロジー処理の実行回数
 		"""
 		# モルフォロジー処理によるノイズ除去
 		kernel = np.ones((ksize, ksize), np.uint8)
@@ -78,18 +79,18 @@ class MaskProcessing():
 
 
 	@staticmethod
-	def __get_norm_contours(
-		image: ImageData, 
-		scale: int, 
-		ksize: int
-	) -> list[list]:
-		"""
-		輪郭をぼやけさせて抽出
+	def __get_norm_contours(image: ImageData, ksize: int, scale: int) -> list[list]:
+		""" 拡大した画像から輪郭を抽出
 
-		image: 画像データ
-		scale: 拡大倍率
-		ksize: カーネルサイズ
+		Args:
+				image (ImageData): 画像データ
+				ksize (int): カーネルサイズ
+				scale (int): 拡大倍率
+
+		Returns:
+				list[list]: 輪郭データ
 		"""
+
 		# 画像の高さと幅を取得
 		w, h = image.size_2d
 
@@ -121,19 +122,20 @@ class MaskProcessing():
 
 	@staticmethod
 	def __remove_small_area(
-		image: ImageData, 
-		contours: list[list], 
-		area_th: int, 
-		scale: int
-	) -> None:
-		"""
-		面積が閾値以下の領域を除去
+			image: ImageData, 
+			contours: list[list], 
+			area_th: int, 
+			scale: int
+		) -> None:
+		"""	面積が閾値以下の領域を除去
 
-		image: 画像データ
-		contours: 輪郭データ
-		area_th: 面積の閾値
-		scale: 拡大倍率
+		Args:
+				image (ImageData): 画像データ
+				contours (list[list]): 輪郭データ
+				area_th (int): 面積の閾値
+				scale (int): 拡大倍率
 		"""
+
 		# 画像の高さと幅を取得
 		h, w = image.mask.shape
 
@@ -162,11 +164,12 @@ class MaskProcessing():
 
 	
 	def apply_mask(self, image: ImageData) -> None:
-		"""
-		マスク画像を適用し土砂領域のみを抽出
+		""" マスク画像を適用し土砂領域のみを抽出
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
+
 		# 土砂マスクを用いて土砂領域以外を除去
 		image.dsm_uav  = self.__masking(image, image.dsm_uav,  image.mask)
 		image.dsm_heli = self.__masking(image, image.dsm_heli, image.mask)
@@ -176,16 +179,16 @@ class MaskProcessing():
 
 
 	@staticmethod
-	def __masking(
-		image: ImageData, 
-		img: np.ndarray, 
-		mask: np.ndarray
-	) -> np.ndarray:
-		"""
-		マスク処理にて不要領域を除去
+	def __masking(image: ImageData, img: np.ndarray, mask: np.ndarray) -> np.ndarray:
+		""" マスク処理にて不要領域を除去
 
-		img: マスク対象の画像
-		mask: マスク画像
+		Args:
+				image (ImageData): 画像データ
+				img (np.ndarray): マスク対象の画像
+				mask (np.ndarray): マスク画像
+
+		Returns:
+				np.ndarray: マスク適用後の画像
 		"""
 		# 画像のコピー
 		masked_img = img.copy()

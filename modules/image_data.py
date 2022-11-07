@@ -6,19 +6,19 @@ import numpy as np
 """
 class ImageData():
 	def __init__(self, path_list: list[str]) -> None:
-		"""
-		初期化メソッド
+		""" コンストラクタ
 
-		path_list: 入力パス
+		Args:
+				path_list (list[str]): 入力パス
 		"""
 		# 入力パス
 		self.path_list = path_list
 
 		# tif画像
-		self.dsm_uav     = cv2.imread(path_list[0], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.dsm_heli    = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.dem         = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.degree      = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.dsm_uav  = cv2.imread(path_list[0], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.dsm_heli = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.dem      = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.degree   = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
 		# 画像
 		self.mask          = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)

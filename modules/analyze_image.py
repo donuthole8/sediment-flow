@@ -9,10 +9,10 @@ from modules.image_data import ImageData
 class AnalyzeImage():
 	@tool.stop_watch
 	def texture_analysis(self, image: ImageData) -> None:
-		"""
-		テクスチャ解析
+		""" テクスチャ解析
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# テクスチャ解析
 		# TODO: オルソ画像でなく領域分割済み画像等でやっても良いかも
@@ -23,10 +23,13 @@ class AnalyzeImage():
 
 	@staticmethod
 	def __texture_analysis(image: ImageData) -> np.ndarray:
-		"""
-		オルソ画像に対しテクスチャ解析
+		""" テクスチャ解析
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
+
+		Returns:
+				np.ndarray: テクスチャ画像
 		"""
 		mpl.rc('image', cmap='jet')
 		kernel_size = 5
@@ -97,10 +100,10 @@ class AnalyzeImage():
 
 
 	def edge_analysis(self, image: ImageData) -> None:
-		"""
-		エッジ抽出
+		""" エッジ抽出
 
-		image: 画像データ
+		Args:
+				image (ImageData): 画像データ
 		"""
 		# エッジ抽出
 		self.edge = self.__edge_analysis(image, 100, 200)
@@ -110,16 +113,20 @@ class AnalyzeImage():
 
 	@staticmethod
 	def __edge_analysis(
-		image: ImageData, 
-		threshold1: int, 
-		threshold2: int
-	) -> np.ndarray:
-		"""
-		エッジ抽出
+			image: ImageData, 
+			threshold1: int, 
+			threshold2: int
+		) -> np.ndarray:
 
-		threshold1: キャニー法の閾値1
-		threshold2: キャニー法の閾値2
-		image: 画像データ
+		""" エッジ抽出
+
+		Args:
+				image (ImageData): 画像データ
+				threshold1 (int): キャニー法の閾値1
+				threshold2 (int): キャニー法の閾値2
+
+		Returns:
+				np.ndarray: エッジ画像
 		"""
 		# グレースケール化
 		img_gray = cv2.cvtColor(image.ortho, cv2.COLOR_BGR2GRAY).astype(np.uint8)
