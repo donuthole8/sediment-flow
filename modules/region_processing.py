@@ -79,7 +79,7 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 		"""
 		# 空画像を作成
-		label_table = np.zeros((image.size_2d[1], image.size_2d[0])).astype(np.uint32)
+		label_table = np.zeros(image.size_2d).astype(np.uint32)
 
 		for region in image.pms_coords:
 			# 注目領域のラベルID,座標を取得
@@ -104,7 +104,7 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 		"""
 		# キャンパス描画
-		label_img = np.zeros((image.size_2d[1], image.size_2d[0], 3))
+		label_img = np.zeros(image.size_3d)
 
 		for region in image.pms_coords:
 			# 領域データを取得
@@ -183,8 +183,8 @@ class RegionProcessing():
 		bld_img = image.ortho.copy()
 
 		# キャンパス描画
-		cir_img  = np.zeros((image.size_2d[1], image.size_2d[0]))
-		bld_mask = np.zeros((image.size_2d[1], image.size_2d[0]))
+		cir_img  = np.zeros(image.size_2d)
+		bld_mask = np.zeros(image.size_2d)
 
 		for region, coords in zip(image.region, image.pms_coords):
 			# 領域・重心・座標データを取得
@@ -352,7 +352,7 @@ class RegionProcessing():
 				list[int]: 隣接領域の標高値
 		"""
 		# キャンパス描画
-		campus = np.zeros((image.size_2d[1], image.size_2d[0]))
+		campus = np.zeros(image.size_2d)
 
 		# 注目領域のマスク画像を作成
 		for coord in coords:

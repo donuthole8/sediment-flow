@@ -3,7 +3,6 @@ import csv
 import time
 import random
 import numpy as np
-from math import dist
 from functools import wraps
 from modules.calc_movement_mesh import CalcMovementMesh
 
@@ -216,7 +215,7 @@ def draw_region(image: ImageData, coords: list[tuple]) -> list[tuple]:
 	"""
 
 	# キャンパス描画
-	campus = np.zeros((image.size_2d[1], image.size_2d[0]))
+	campus = np.zeros(image.size_2d)
 
 	for coord in coords:
 		# 領域座標を白画素で埋める
@@ -241,7 +240,7 @@ def draw_label(
 			tuple[np.ndarray, np.ndarray]: 1領域のラベル画像・マスク画像
 	"""
 	# キャンパス描画
-	campus = np.zeros((image.size_2d[1], image.size_2d[0]))
+	campus = np.zeros(image.size_2d)
 
 	# ランダム色を生成
 	color = [
@@ -483,7 +482,7 @@ def draw_mesh(image: ImageData, mesh: CalcMovementMesh) -> None:
 			img=image.ortho,   			# 画像
 			pt1=(0, mesh.mesh_size * y),  # 始点
 			pt2=(
-				image.size_2d[0], 
+				image.size_2d[1], 
 				mesh.mesh_size * y
 			),														# 終点
 			color=(255, 255, 255),  			# 色
@@ -497,7 +496,7 @@ def draw_mesh(image: ImageData, mesh: CalcMovementMesh) -> None:
 			pt1=(mesh.mesh_size * x, 0),  # 始点
 			pt2=(
 				mesh.mesh_size * x, 
-				image.size_2d[1]
+				image.size_2d[0]
 			),														# 終点
 			color=(255, 255, 255),  			# 色
 			thickness=2,        					# 太さ

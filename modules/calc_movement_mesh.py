@@ -31,8 +31,8 @@ class CalcMovementMesh():
 		self.mesh_size = mesh_size
 
 		# メッシュサイズよりメッシュの高さと幅を取得
-		self.mesh_height = (size[1] // self.mesh_size) + 1
-		self.mesh_width  = (size[0] // self.mesh_size) + 1
+		self.mesh_height = (size[0] // self.mesh_size) + 1
+		self.mesh_width  = (size[1] // self.mesh_size) + 1
 
 		# 精度評価用の土砂移動推定結果データ
 		self.calc_movement_result = []

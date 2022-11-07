@@ -92,7 +92,7 @@ class MaskProcessing():
 		"""
 
 		# 画像の高さと幅を取得
-		w, h = image.size_2d
+		h, w = image.size_2d
 
 		# 拡大することで輪郭をぼけさせ境界を識別しやすくする
 		img_resize = cv2.resize(image.mask, (w * scale, h * scale))
