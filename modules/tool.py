@@ -3,9 +3,7 @@ import csv
 import time
 import random
 import numpy as np
-from math import dist
 from functools import wraps
-from modules.calc_movement_mesh import CalcMovementMesh
 
 from modules.image_data import ImageData
 from modules.calc_movement_mesh import CalcMovementMesh
@@ -30,12 +28,12 @@ def stop_watch(func: callable) -> callable:
 	return wrapper
 
 
-def save_resize_image(image: np.ndarray, path: str, size: tuple) -> None:
+def save_resize_image(path: str, image: np.ndarray, size: tuple) -> None:
 	"""	画像を縮小して保存
 
 	Args:
-			image (np.ndarray): 画像データ
 			path (str): 保存先のパス
+			image (np.ndarray): 画像データ
 			size (tuple):  保存サイズ
 	"""
 	# 画像をリサイズ
@@ -198,7 +196,7 @@ def coordinates2contours(image: ImageData, coordinates: list[tuple]) -> list[tup
 	contours, _ = cv2.findContours(
 		mask.astype(np.uint8), 
 		cv2.RETR_EXTERNAL, 
-		cv2.CHAIN_APPROX_NONE
+		cv2.CHAIN_APPROX_NONE 
 	)
 
 	return [(c[0, 1], c[0, 0]) for c in contours[0]]
@@ -214,9 +212,8 @@ def draw_region(image: ImageData, coords: list[tuple]) -> list[tuple]:
 	Returns:
 			list[tuple]: 1領域のマスク画像
 	"""
-
 	# キャンパス描画
-	campus = np.zeros((image.size_2d[1], image.size_2d[0]))
+	campus = np.zeros(image.size_2d)
 
 	for coord in coords:
 		# 領域座標を白画素で埋める
@@ -241,7 +238,7 @@ def draw_label(
 			tuple[np.ndarray, np.ndarray]: 1領域のラベル画像・マスク画像
 	"""
 	# キャンパス描画
-	campus = np.zeros((image.size_2d[1], image.size_2d[0]))
+	campus = np.zeros(image.size_2d)
 
 	# ランダム色を生成
 	color = [
@@ -424,7 +421,7 @@ def draw_vector_8dir(image: ImageData, region: tuple, coords: list[int]) -> None
 			color = (0,0,255)
 		elif (i == 2):
 			color = (100,255,155)
-			
+
 		print(i, label, coords, color)
 
 		# 矢印を描画
@@ -471,10 +468,11 @@ def draw_vector_8dir(image: ImageData, region: tuple, coords: list[int]) -> None
 	# self.answer_distance.append(answer_distance)
 
 
-def draw_mesh(image: ImageData, mesh: CalcMovementMesh) -> None:
+def draw_mesh(mesh: CalcMovementMesh, image: ImageData) -> None:
 	"""
 	メッシュの格子線を描画
 
+	mesh: メッシュデータ
 	image_data: 画像等データ
 	"""
 	# x軸に平行な格子線を描画
@@ -483,7 +481,7 @@ def draw_mesh(image: ImageData, mesh: CalcMovementMesh) -> None:
 			img=image.ortho,   			# 画像
 			pt1=(0, mesh.mesh_size * y),  # 始点
 			pt2=(
-				image.size_2d[0], 
+				image.size_2d[1], 
 				mesh.mesh_size * y
 			),														# 終点
 			color=(255, 255, 255),  			# 色
@@ -497,7 +495,7 @@ def draw_mesh(image: ImageData, mesh: CalcMovementMesh) -> None:
 			pt1=(mesh.mesh_size * x, 0),  # 始点
 			pt2=(
 				mesh.mesh_size * x, 
-				image.size_2d[1]
+				image.size_2d[0]
 			),														# 終点
 			color=(255, 255, 255),  			# 色
 			thickness=2,        					# 太さ

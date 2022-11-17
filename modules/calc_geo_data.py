@@ -116,8 +116,8 @@ class CalcGeoData():
 				image (ImageData): 画像データ
 		"""
 		# 平均・標準偏差算出
-		ave_dsm_uav, sd_dsm_uav   = tool.calc_ave_sd(image.dsm_uav)
-		ave_dsm_heli, sd_dsm_heli = tool.calc_ave_sd(image.dsm_heli)
+		ave_dsm_uav, sd_dsm_uav   = tool.calc_mean_sd(image.dsm_uav)
+		ave_dsm_heli, sd_dsm_heli = tool.calc_mean_sd(image.dsm_heli)
 
 		print("- uav  ave, sd :", ave_dsm_uav,  sd_dsm_uav)
 		print("- heli ave, sd :", ave_dsm_heli, sd_dsm_heli)

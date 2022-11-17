@@ -16,11 +16,11 @@ class Resampling():
 		image.mask = cv2.merge((image.mask, image.mask, image.mask))
 
 		# バイキュービック補間で解像度の統一
-		image.dsm_heli = cv2.resize(image.dsm_heli, image.size_2d, interpolation=cv2.INTER_CUBIC)
-		image.dem      = cv2.resize(image.dem,      image.size_2d, interpolation=cv2.INTER_CUBIC)
-		image.degree   = cv2.resize(image.degree,   image.size_2d, interpolation=cv2.INTER_CUBIC)
-		image.mask     = cv2.resize(image.mask,     image.size_2d, interpolation=cv2.INTER_CUBIC)
-		image.ortho    = cv2.resize(image.ortho,    image.size_2d, interpolation=cv2.INTER_CUBIC)
+		image.dsm_heli = cv2.resize(image.dsm_heli, image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
+		image.dem      = cv2.resize(image.dem,      image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
+		image.degree   = cv2.resize(image.degree,   image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
+		image.mask     = cv2.resize(image.mask,     image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
+		image.ortho    = cv2.resize(image.ortho,    image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 
 		# UAV画像のDSMの最小値を算出（領域外の透過背景値）
 		background_pix = np.min(image.dsm_uav)

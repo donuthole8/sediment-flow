@@ -31,8 +31,8 @@ class CalcMovementMesh():
 		self.mesh_size = mesh_size
 
 		# メッシュサイズよりメッシュの高さと幅を取得
-		self.mesh_height = (size[1] // self.mesh_size) + 1
-		self.mesh_width  = (size[0] // self.mesh_size) + 1
+		self.mesh_height = (size[0] // self.mesh_size) + 1
+		self.mesh_width  = (size[1] // self.mesh_size) + 1
 
 		# 精度評価用の土砂移動推定結果データ
 		self.calc_movement_result = []
@@ -40,7 +40,7 @@ class CalcMovementMesh():
 		return
 
 
-	def main(self, image: ImageData, ) -> None:
+	def main(self, image: ImageData) -> None:
 		"""	メッシュベースでの土砂移動の推定
 
 		Args:
@@ -48,7 +48,7 @@ class CalcMovementMesh():
 		"""
 		# メッシュの格子線を描画
 		tool.draw_mesh(self, image)
-		
+
 		# メッシュ中心が土砂の場合各注目領域に対して処理を行う
 		for y in range(self.mesh_height):
 			for x in range(self.mesh_width):
@@ -132,7 +132,6 @@ class CalcMovementMesh():
 		Returns:
 				bool: 土砂領域フラグ
 		"""
-
 		# マスク画像より土砂の判別
 		try:
 			if (image.mask[center][0] == 0):
@@ -175,14 +174,13 @@ class CalcMovementMesh():
 		Returns:
 				list[tuple]: 注目メッシュの座標群
 		"""
-
 		coords = []
 		for _y in range(self.mesh_size):
 			for _x in range(self.mesh_size):
 				# 座標を取得
 				coord = (
-						(y * self.mesh_size) + _y,
-						(x * self.mesh_size) + _x
+					(y * self.mesh_size) + _y, 
+					(x * self.mesh_size) + _x 
 				)
 				# 座標が画像内に収まっているかを判定
 				if (tool.is_index(size, coord)):
@@ -195,7 +193,7 @@ class CalcMovementMesh():
 			self, 
 			image: ImageData, 
 			center: tuple[int, int], 
-			coords: list[tuple]
+			coords: list[tuple] 
 		) -> list[int]:
 		""" 8方向で隣接している領域の組かつ傾斜方向に沿った3領域を全て抽出
 

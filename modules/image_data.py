@@ -33,11 +33,11 @@ class ImageData():
 		self.normed_dsm    = None
 		self.dsm_sub       = None
 
-		# 画像サイズ
-		self.size_3d   = self.dsm_uav.shape
-		# FIXME: ２ｄのみ(x,y)なので(y,x)に修正
-		self.size_2d   = (self.size_3d[1], self.size_3d[0])
-		self.s_size_2d = (int(self.size_3d[1] / 2), int(self.size_3d[0] / 2))
+		# 画像サイズ（shape=(y,x,z)）
+		self.size_3d    = self.ortho.shape
+		self.size_2d    = (self.size_3d[0], self.size_3d[1])
+		self.size_2d_xy = (self.size_3d[1], self.size_3d[0])
+		self.s_size_2d  = (int(self.size_3d[1] / 2), int(self.size_3d[0] / 2))
 
 		# 領域データ
 		self.pms_coords = []

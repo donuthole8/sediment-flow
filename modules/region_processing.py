@@ -79,7 +79,7 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 		"""
 		# 空画像を作成
-		label_table = np.zeros((image.size_2d[1], image.size_2d[0])).astype(np.uint32)
+		label_table = np.zeros(image.size_2d).astype(np.uint32)
 
 		for region in image.pms_coords:
 			# 注目領域のラベルID,座標を取得
@@ -104,7 +104,7 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 		"""
 		# キャンパス描画
-		label_img = np.zeros((image.size_2d[1], image.size_2d[0], 3))
+		label_img = np.zeros(image.size_3d)
 
 		for region in image.pms_coords:
 			# 領域データを取得
@@ -183,13 +183,13 @@ class RegionProcessing():
 		bld_img = image.ortho.copy()
 
 		# キャンパス描画
-		cir_img  = np.zeros((image.size_2d[1], image.size_2d[0]))
-		bld_mask = np.zeros((image.size_2d[1], image.size_2d[0]))
+		cir_img  = np.zeros(image.size_2d)
+		bld_mask = np.zeros(image.size_2d)
 
 		for region, coords in zip(image.region, image.pms_coords):
 			# 領域・重心・座標データを取得
 			circularity  = int(float(region["circularity"]) * 255)
-			centroids    = (region["cy"], region["cx"])
+			centroid     = (region["cy"], region["cx"])
 			_, coords, _  = tool.decode_area(coords)
 
 			# 円形度を大小で描画
@@ -197,7 +197,7 @@ class RegionProcessing():
 				cir_img[coord] = circularity
 
 			# 建物領域の検出
-			if self.__is_building(image, circularity, centroids):
+			if self.__is_building(image, circularity, centroid):
 				# 塗りつぶし
 				for coord in coords:
 					bld_img[coord]  = [0, 0, 220]
@@ -225,26 +225,26 @@ class RegionProcessing():
 			self, 
 			image: ImageData, 
 			circularity: float, 
-			centroids: tuple[int, int]
+			centroid: tuple[int, int]
 		) -> bool:
 		""" 建物領域かどうかを判別
 
 		Args:
 				image (ImageData): 画像データ
 				circularity (float): 円形度
-				centroids (tuple[int, int]): 該当領域の重心座標
+				centroid (tuple[int, int]): 該当領域の重心座標
 
 		Returns:
 				bool: 建物領域フラグ
 		"""
 
 		# 注目領域の平均異質度を取得
-		dissimilarity = np.mean(image.dissimilarity[centroids])
+		dissimilarity = np.mean(image.dissimilarity[centroid])
 
 		if (not (circularity > 40)) or (not (dissimilarity < 1)):
 			# 非建物領域
 			return False
-		elif self.__is_sediment_or_vegetation(image, centroids):
+		elif self.__is_sediment_or_vegetation(image, centroid):
 			# 土砂領域・植生領域
 			return False
 		else:
@@ -253,12 +253,12 @@ class RegionProcessing():
 
 
 	@staticmethod
-	def __is_sediment_or_vegetation(image: ImageData, centroids: tuple[int, int]) -> bool:
+	def __is_sediment_or_vegetation(image: ImageData, centroid: tuple[int, int]) -> bool:
 		""" 土砂・植生領域かどうかを判別
 
 		Args:
 				image (ImageData): 画像データ
-				centroids (tuple[int, int]): 該当領域の重心座標
+				centroid (tuple[int, int]): 該当領域の重心座標
 
 		Returns:
 				bool: 土砂・植生領域フラグ
@@ -273,9 +273,9 @@ class RegionProcessing():
 		Lp, ap, bp = Lp * 255, ap * 255, bp * 255
 
 		# 土砂
-		sediment   = (Lp[centroids] > 125) & (ap[centroids] > 130)
+		sediment   = (Lp[centroid] > 125) & (ap[centroid] > 130)
 		# 植生
-		vegetation = (ap[centroids] < 110) | (bp[centroids] <  70)
+		vegetation = (ap[centroid] < 110) | (bp[centroid] <  70)
 
 		if (sediment | vegetation):
 			return True
@@ -352,7 +352,7 @@ class RegionProcessing():
 				list[int]: 隣接領域の標高値
 		"""
 		# キャンパス描画
-		campus = np.zeros((image.size_2d[1], image.size_2d[0]))
+		campus = np.zeros(image.size_2d)
 
 		# 注目領域のマスク画像を作成
 		for coord in coords:
