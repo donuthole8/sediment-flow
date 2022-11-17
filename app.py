@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 from modules import tool
 from modules.image_data import ImageData
@@ -75,6 +76,7 @@ def main() -> None:
 
 	# # DEMより傾斜データを抽出
 	# # NOTE: リサンプリング後に行った方が良いかも
+	# # FIXME: バグがある
 	# print("# DEMより傾斜データを抽出")
 	# CalcGeoData().dem2gradient(image, 5)
 
@@ -101,7 +103,7 @@ def main() -> None:
 	# 輪郭・重心データ抽出・ラベル画像作成
 	# NOTE: 処理が重い
 	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
-	# RegionProcessing().get_region_data(image)
+	RegionProcessing().get_region_data(image)
 
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
@@ -116,17 +118,17 @@ def main() -> None:
 	CalcGeoData().norm_coord(image)
 
 	# テクスチャ解析
-	# print("# テクスチャ解析")
-	AnalyzeImage().texture_analysis(image)
-	# image.dissimilarity = cv2.imread(path8, cv2.IMREAD_ANYDEPTH).astype(np.float32)
+	print("# テクスチャ解析")
+	# AnalyzeImage().texture_analysis(image)
+	image.dissimilarity = cv2.imread(path8, cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
-	# # エッジ抽出
-	# print("# エッジ抽出")
-	# AnalyzeImage().edge_analysis(image)
+	# エッジ抽出
+	print("# エッジ抽出")
+	AnalyzeImage().edge_analysis(image)
 
 	# 建物領域の検出
 	print("# 建物領域を検出する")
-	RegionProcessing().extract_building(image)
+	# RegionProcessing().extract_building(image)
 	image.bld_mask = cv2.imread(path9)
 
 	print("# 建物領域の標高値を地表面標高値に補正")
@@ -136,8 +138,8 @@ def main() -> None:
 	# 土砂マスクの前処理
 	# TODO: 精度向上させる
 	print("# マスク画像の前処理")
-	MaskProcessing().norm_mask(image, 16666, 3)
-	# image.mask = cv2.imread("./outputs/normed_mask.png")
+	# MaskProcessing().norm_mask(image, 16666, 3)
+	image.mask = cv2.imread("./outputs/normed_mask.png")
 
 	# 土砂マスク
 	print("# 土砂マスクによる土砂領域抽出")
@@ -148,7 +150,7 @@ def main() -> None:
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")
-	CalcSedimentation()
+	CalcSedimentation(image)
 
 	# # 土砂移動推定
 	# print("# 土砂移動推定")
@@ -164,7 +166,7 @@ def main() -> None:
 
 	# 精度評価
 	print("# 精度評価")
-	AccuracyValuation(calc_movement_result)
+	AccuracyValuation(calc_movement_result).main()
 
 
 # メイン関数
