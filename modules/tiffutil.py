@@ -1,5 +1,4 @@
 import cv2
-import tifffile as tf
 import numpy as np
 
 # from osgeo import gdal
@@ -94,10 +93,7 @@ def save_tif(image: np.ndarray, path: str) -> None:
       image (np.ndarray): tifデータ
       path (str): 書き込みパス
   """
-  # tf.imwrite(path, image, imagej=True)
-  tf.imwrite(path, image)
-
-  # cv2.imwrite(save_path, data)
+  cv2.imwrite("./outputs/" + path, image)
 
 
 def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
@@ -156,7 +152,6 @@ def get_band4(path: str) -> np.ndarray:
   Returns:
       np.ndarray: 第4バンドデータ
   """
-
   src = gdal.Open(path)
 
   # 第4バンド

@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from tqdm import trange
 import matplotlib as mpl
 
 from modules import tool
@@ -46,7 +47,7 @@ class AnalyzeImage():
 		glcm = np.zeros((h,w,levels,levels), dtype=np.uint8)
 		kernel = np.ones((kernel_size, kernel_size), np.uint8)
 		dst_bin_r = np.append(dst_bin[:,1:], dst_bin[:,-1:], axis=1)
-		for i in range(levels):
+		for i in trange(levels):
 			for j in range(levels):
 				mask = (dst_bin==i) & (dst_bin_r==j)
 				mask = mask.astype(np.uint8)

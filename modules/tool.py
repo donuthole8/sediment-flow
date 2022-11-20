@@ -500,3 +500,30 @@ def draw_mesh(mesh: CalcMovementMesh, image: ImageData) -> None:
 			color=(255, 255, 255),  			# 色
 			thickness=2,        					# 太さ
 		)
+
+	# 空画像を作成
+	mesh_label = np.zeros(image.size_2d)
+
+	# メッシュのラベル番号
+	# mesh_label_y, mesh_label_x = 0, 0
+	label = 0
+
+	for y in range(mesh.mesh_height):
+		for x in range(mesh.mesh_width):
+			# ラベルを付与
+			for coord in mesh.get_mesh_coords(image.size_3d, y, x):
+				mesh_label[coord] = label
+
+			
+
+			# ラベルをインクリメント
+			# mesh_label_x += 1
+			label += 1
+		
+		# ラベルをインクリメント
+		# mesh_label_y += 1
+			
+	# ラベルテーブルの保存
+	mesh.mesh_label = mesh_label
+
+	return

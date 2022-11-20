@@ -178,7 +178,6 @@ class RegionProcessing():
 		Args:
 				image (ImageData): 画像データ
 		"""
-		
 		# 建物領域検出用画像
 		bld_img = image.ortho.copy()
 
@@ -237,7 +236,6 @@ class RegionProcessing():
 		Returns:
 				bool: 建物領域フラグ
 		"""
-
 		# 注目領域の平均異質度を取得
 		dissimilarity = np.mean(image.dissimilarity[centroid])
 
@@ -263,7 +261,6 @@ class RegionProcessing():
 		Returns:
 				bool: 土砂・植生領域フラグ
 		"""
-
 		# Lab表色系に変換
 		Lp, ap, bp = cv2.split(
 			cv2.cvtColor(

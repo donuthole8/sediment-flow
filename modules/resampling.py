@@ -11,7 +11,6 @@ class Resampling():
 		Args:
 				image (ImageData): 画像データ
 		"""
-		
 		# 3次元に変更
 		image.mask = cv2.merge((image.mask, image.mask, image.mask))
 

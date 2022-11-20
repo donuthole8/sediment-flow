@@ -24,7 +24,7 @@ class CalcSedimentation():
 		dsm_bin = self.__binarize_2area(image)
 
 		# 画像の保存
-		tif.save_tif(image.dsm_sub, "dsm_uav.tif", "./output/dsm_sub.tif")
+		tiffutil.save_tif(image.dsm_sub, "./output/dsm_sub.tif")
 		tool.save_resize_image("dsm_bin.png", dsm_bin, image.s_size_2d)
 
 		return

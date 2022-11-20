@@ -16,14 +16,15 @@ class CalcGeoData():
 				image (ImageData): 画像データ
 				mesh_size (int): DEMのメッシュサイズ
 		"""
+		# TODO: tiffutil.save_tifでQGISの位置情報に対応できていない
 		# 勾配データの算出
-		grad = self.__dem2gradient(image, mesh_size)
+		gradient = self.__dem2gradient(image, mesh_size)
 
-		# 3次元に変換
-		self.gradient = cv2.merge((grad, grad, grad))
+		# データ保存
+		image.gradient = gradient
 
 		# 画像を保存
-		tif.save_tif(image.gradient, "dem.tif", "angle.tif")
+		tiffutil.save_tif(image.gradient, "gradient.tif")
 
 		return
 
@@ -56,20 +57,18 @@ class CalcGeoData():
 
 	@staticmethod
 	def __dem2gradient(image: ImageData, size_mesh: int) -> None:
-		""" 傾斜データを算出する
+		""" 勾配データを算出する
 
 		Args:
 				image (ImageData): 画像データ
 				size_mesh (int): DEMのメッシュサイズ
 		"""
-
-
 		max = 0
 		index = [-1,1]
 		height, width = image.dem.shape[:2]
 		gradient = np.zeros((height, width))
 		dem = np.pad(image.dem, 1, mode = 'edge')
-		
+
 		for y in trange(height):
 			for x in range(width):
 				for j in range(-1,2):
@@ -178,5 +177,4 @@ class CalcGeoData():
 		Args:
 				image (ImageData): 画像データ
 		"""
-		
 		return 

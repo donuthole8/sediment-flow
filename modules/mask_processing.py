@@ -90,7 +90,6 @@ class MaskProcessing():
 		Returns:
 				list[list]: 輪郭データ
 		"""
-
 		# 画像の高さと幅を取得
 		h, w = image.size_2d
 
@@ -135,7 +134,6 @@ class MaskProcessing():
 				area_th (int): 面積の閾値
 				scale (int): 拡大倍率
 		"""
-
 		# 画像の高さと幅を取得
 		h, w = image.mask.shape
 
@@ -169,7 +167,6 @@ class MaskProcessing():
 		Args:
 				image (ImageData): 画像データ
 		"""
-
 		# 土砂マスクを用いて土砂領域以外を除去
 		image.dsm_uav  = self.__masking(image, image.dsm_uav,  image.mask)
 		image.dsm_heli = self.__masking(image, image.dsm_heli, image.mask)

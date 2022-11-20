@@ -29,6 +29,7 @@ from modules.accuracy_valuation import AccuracyValuation
 path1 = './inputs_trim/dsm_uav_re.tif'
 path2 = './inputs_trim/dsm_heli.tif'
 path3 = './inputs_trim/dem.tif'
+# path4 = './inputs_trim/degree_trig.tif'
 path4 = './inputs_trim/degree.tif'
 # path5 = './inputs_trim/mask.png'
 # path5 = './inputs_trim/manual_mask.png'
@@ -57,7 +58,7 @@ path_list = [path1, path2, path3, path4, path5, path6]
 # ラベリングの改良
 # ラベリングについて領域サイズを一定に
 # 領域同士が隣接している領域を輪郭データ等で算出
-# 傾斜方向が上から下である領域を平均標高値や傾斜方向で算出
+# 傾斜方位が上から下である領域を平均標高値や傾斜方位で算出
 # 建物領域にも矢印があるので除去など
 
 
@@ -77,11 +78,11 @@ def main() -> None:
 	# # DEMより傾斜データを抽出
 	# # NOTE: リサンプリング後に行った方が良いかも
 	# # FIXME: バグがある
-	# print("# DEMより傾斜データを抽出")
+	# print("# DEMより勾配データを抽出")
 	# CalcGeoData().dem2gradient(image, 5)
 
-	# 傾斜方位の正規化（0-255 -> 0-360）
-	print("# 傾斜方向の正規化")
+	# 傾斜方位データの正規化（0-255 -> 0-360）
+	print("# 傾斜方位データの正規化")
 	CalcGeoData().norm_degree(image)
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
@@ -138,6 +139,7 @@ def main() -> None:
 	# 土砂マスクの前処理
 	# TODO: 精度向上させる
 	print("# マスク画像の前処理")
+	# NOTE: こっちでマスク画像作成するとエラーになる
 	# MaskProcessing().norm_mask(image, 16666, 3)
 	image.mask = cv2.imread("./outputs/normed_mask.png")
 
@@ -151,14 +153,6 @@ def main() -> None:
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")
 	CalcSedimentation(image)
-
-	# # 土砂移動推定
-	# print("# 土砂移動推定")
-	# image_op.calc_movement()
-
-	# # 8方向での土砂移動推定
-	# print("# 8方向での土砂移動推定")
-	# image_op.calc_movement_8dir()
 
 	# メッシュベースでの土砂移動推定
 	print("# メッシュベースでの土砂移動推定")

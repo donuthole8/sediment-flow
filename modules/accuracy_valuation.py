@@ -90,6 +90,7 @@ class AccuracyValuation():
 		], 
 	]
 
+
 	def __init__(self, calc_movement_result: list[float, tuple]) -> None:
 		# 精度評価用の土砂移動推定結果データ
 		self.calc_movement_result = calc_movement_result
@@ -105,10 +106,6 @@ class AccuracyValuation():
 		"""
 		mesh_num = 0
 		accuracies = []
-
-		print(self.calc_movement_result)
-		print(self.calc_movement_result.shape)
-
 
 		for i, answer in enumerate(self.answer):
 			# FIXME: 100サイズメッシュの場合限定
@@ -129,6 +126,7 @@ class AccuracyValuation():
 					# メッシュ番号
 					mesh_num += 1
 
+					# FIXME: 負値がある
 					print(" -", mesh_num, self.calc_movement_result[i * len(answer) + j]["center"], ":", 1 - error)
 
 		# 各メッシュの精度平均
