@@ -3,7 +3,7 @@ import math
 import numpy as np
 from tqdm import trange
 
-from modules import tif
+from modules import tiffutil
 from modules import tool
 from modules.image_data import ImageData
 
