@@ -210,17 +210,10 @@ class CalcMovementMesh():
 		# self.calc_movement_result.append({"direction": average_direction, "center": center})
 
 		# 傾斜方位の角度データを三角関数用の表記に変更
-		# average_direction = 360 - average_direction
-
-
-		# average_direction = (average_direction - 90) if (average_direction >= 90) else ()
 		if (average_direction >= 90):
 			average_direction = average_direction - 90
 		else:
 			average_direction = 270 + average_direction
-
-		print("tri-dir", average_direction)
-
 
 		# FIXME: 違うかも
 		# https://qiita.com/FumioNonaka/items/c146420c3aeab27fc736
@@ -255,12 +248,7 @@ class CalcMovementMesh():
 		"""
 		# 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
 		average_direction = self.get_average_direction(image)
-		# 中心座標の傾斜方位 # こっちの方が精度悪い
-		# average_direction = image.degree[self.center_coord]
-
 		print("ave", average_direction)
-
-
 
 		try:
 			# 傾斜方位データを取得
@@ -273,31 +261,9 @@ class CalcMovementMesh():
 				(self.y + directions[2][0], self.x + directions[2][1]), 
 			]
 
-			# TRY全部いらない
-			try:
-				# 傾斜方位の角度データを三角関数用の表記に変更
-				average_direction_trig = 0
-				if (average_direction >= 90):
-					average_direction_trig = average_direction - 90
-				else:
-					average_direction_trig = 270 + average_direction
+			# 平均傾斜方位を描画
+			tool.draw_direction(self, image, average_direction)
 
-				# 傾斜方位の座標取得
-				y_coord = int((self.mesh_size // 2) * math.sin(math.radians(average_direction_trig))) + self.center_coord[0]
-				x_coord = int((self.mesh_size // 2) * math.cos(math.radians(average_direction_trig))) + self.center_coord[1]
-
-				# 矢印を描画
-				cv2.arrowedLine(
-					img=image.ortho,	# 画像
-					pt1=(self.center_coord[1], self.center_coord[0]), # 始点
-					pt2=(x_coord, y_coord),	# 終点
-					color=(0, 0, 255),	# 色			
-					thickness=2,	# 太さ
-				)
-			except Exception as e:
-				print(e, ", average_direction: ", average_direction)
-
-			
 		except:
 			# average_directionがnp.nanの場合
 			neighbor_mesh_labels = []
@@ -323,6 +289,8 @@ class CalcMovementMesh():
 		"""
 		# TODO: ここを中山さんの手法に修正(flow.py)
 		# NOTE: 画素単位で3方向に土砂追跡するか,領域単位でとりあえず3領域取得するか
+		# NOTE: 加重平均等にした方が良いのか
+
 		sediment_pix_num = 0
 		mask = cv2.split(image.mask)[0]
 		average_direction = 0.0

@@ -1,6 +1,7 @@
 import cv2
 import csv
 import time
+import math
 import random
 import numpy as np
 from functools import wraps
@@ -525,5 +526,39 @@ def draw_mesh(mesh: CalcMovementMesh, image: ImageData) -> None:
 			
 	# ラベルテーブルの保存
 	mesh.mesh_label = mesh_label
+
+	return
+
+
+def draw_direction(mesh: CalcMovementMesh, image: ImageData, direction: float) -> None:
+	""" メッシュに傾斜方位データを描画
+
+	Args:
+			image (ImageData): 画像データ
+			mesh (CalcMovementMesh): メッシュデータ
+			direction (float): 傾斜方位
+	"""
+	try:
+		# 傾斜方位の角度データを三角関数用の表記に変更
+		average_direction_trig = 0
+		if (direction >= 90):
+			average_direction_trig = direction - 90
+		else:
+			average_direction_trig = 270 + direction
+
+		# 傾斜方位の座標取得
+		y_coord = int((mesh.mesh_size // 2) * math.sin(math.radians(average_direction_trig))) + mesh.center_coord[0]
+		x_coord = int((mesh.mesh_size // 2) * math.cos(math.radians(average_direction_trig))) + mesh.center_coord[1]
+
+		# 矢印を描画
+		cv2.arrowedLine(
+			img=image.ortho,	# 画像
+			pt1=(mesh.center_coord[1], mesh.center_coord[0]), # 始点
+			pt2=(x_coord, y_coord),	# 終点
+			color=(0, 0, 255),	# 色			
+			thickness=2,	# 太さ
+		)
+	except Exception as e:
+		print(e, ", average_direction: ", direction)
 
 	return

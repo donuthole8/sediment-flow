@@ -158,9 +158,9 @@ def main() -> None:
 	print("# メッシュベースでの土砂移動推定")
 	calc_movement_result = CalcMovementMesh(100, image.size_2d).main(image)
 
-	# 精度評価
-	print("# 精度評価")
-	AccuracyValuation(calc_movement_result).main()
+	# # 精度評価
+	# print("# 精度評価")
+	# AccuracyValuation(calc_movement_result).main()
 
 
 # メイン関数
