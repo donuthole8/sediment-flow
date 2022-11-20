@@ -38,10 +38,6 @@ class CalcMovementMesh():
 		# 精度評価用の土砂移動推定結果データ
 		self.calc_movement_result = []
 
-
-		self.c = 1	
-
-
 		return
 
 
@@ -51,10 +47,6 @@ class CalcMovementMesh():
 		Args:
 				image (ImageData): 画像データ
 		"""
-		print("deg")
-		print(image.degree)
-
-
 		# メッシュの格子線を描画
 		tool.draw_mesh(self, image)
 
@@ -86,11 +78,9 @@ class CalcMovementMesh():
 
 					# 傾斜方位のと隣接2方向の3方向に対しての隣接領域を取得
 					labels = self.extract_neighbor(image)
-					print("yx:", (y, x), "labels:", labels)
-					print("-----------------------------")
 
-					# # 傾斜方位が上から下の領域を抽出
-					# labels = self.extract_downstream(image, labels)
+					# 傾斜方位が上から下の領域を抽出
+					labels = self.extract_downstream(image, labels)
 
 					# # 侵食と堆積の組み合わせの領域を抽出
 					# coords = self.extract_sediment(self, region, labels)
@@ -248,7 +238,6 @@ class CalcMovementMesh():
 		"""
 		# 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
 		average_direction = self.get_average_direction(image)
-		print("ave", average_direction)
 
 		try:
 			# 傾斜方位データを取得
@@ -290,7 +279,6 @@ class CalcMovementMesh():
 		# TODO: ここを中山さんの手法に修正(flow.py)
 		# NOTE: 画素単位で3方向に土砂追跡するか,領域単位でとりあえず3領域取得するか
 		# NOTE: 加重平均等にした方が良いのか
-
 		sediment_pix_num = 0
 		mask = cv2.split(image.mask)[0]
 		average_direction = 0.0
@@ -363,4 +351,80 @@ class CalcMovementMesh():
 		return heights
 
 
-	
+	def extract_downstream(self, image: ImageData, labels: list[int]) -> list[int]:
+		""" 上流から下流のメッシュを抽出
+
+		Args:
+				image (ImageData): 画像データ
+				labels (list[int]): 傾斜方位隣接3領域のメッシュラベル
+
+		Returns:
+				list[int]: 上流から下流のメッシュラベル
+		"""
+		if (labels != []):
+			# 平均標高値が最も低いメッシュを抽出
+			average_heights = []
+			for i in range(3):
+				average_heights.append(self.get_average_height(image, labels[i]))
+			min_index = average_heights.index(min(average_heights))
+
+			# メッシュ中で最小標高値の座標を抽出
+			min_height_coord = self.get_min_height_coord(image, labels[min_index])
+
+			# 最小標高値までの矢印を描画
+			tool.draw_min_height(self, image, min_height_coord)
+
+			# 傾斜方位線上で一番低い画素値を抽出（なしでいいかもお）
+		else:
+			print("nan")
+
+
+	def get_average_height(self, image: ImageData, label: tuple[int, int]) -> float:
+		""" メッシュ内の土砂マスク内の標高値平均を取得
+
+		Args:
+				image (ImageData): 画像データ
+				label(tuple[int, int]): メッシュラベル
+
+		Returns:
+				float: 平均標高値
+		"""
+		sediment_pix_num = 0
+		mask = cv2.split(image.mask)[0]
+		average_height = 0.0
+		for coord in self.get_mesh_coords(image.size_3d, label[0], label[1]):
+			# 土砂マスクの領域のみ
+			if (mask[coord] == 0):
+				average_height   += image.dsm_uav[coord]
+				sediment_pix_num += 1
+
+		try:
+			return average_height / sediment_pix_num
+		except:
+			return average_height
+
+
+	def get_min_height_coord(self, image: ImageData, label: tuple[int, int]) -> tuple[int, int]:
+		""" 最小標高値の座標を取得
+
+		Args:
+				image (ImageData): 画像データ
+				label (tuple[int, int]): メッシュラベル
+
+		Returns:
+				tuple[int, int]: 
+		"""
+		mask = cv2.split(image.mask)[0]
+		min_height = 999
+		min_height_coord = ()
+		for coord in self.get_mesh_coords(image.size_3d, label[0], label[1]):
+			# 土砂マスクの領域のみ
+			if (mask[coord] == 0):
+				if (image.dsm_uav[coord] < min_height):
+					min_height = image.dsm_uav[coord] 
+					min_height_coord = coord
+
+		return min_height_coord
+
+
+

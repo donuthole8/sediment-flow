@@ -562,3 +562,26 @@ def draw_direction(mesh: CalcMovementMesh, image: ImageData, direction: float) -
 		print(e, ", average_direction: ", direction)
 
 	return
+
+
+def draw_min_height(mesh: CalcMovementMesh, image: ImageData, coord: tuple[int, int]) -> None:
+	""" メッシュに最小標高値までの矢印を描画
+
+	Args:
+			image (ImageData): 画像データ
+			mesh (CalcMovementMesh): メッシュデータ
+			coord (tuple[int, int]): 
+	"""
+	try:
+		# 矢印を描画
+		cv2.arrowedLine(
+			img=image.ortho,	# 画像
+			pt1=(mesh.center_coord[1], mesh.center_coord[0]), # 始点
+			pt2=(coord[1], coord[0]),	# 終点
+			color=(0, 255, 0),	# 色			
+			thickness=2,	# 太さ
+		)
+	except Exception as e:
+		print(e, ", coord: ", coord)
+
+	return
