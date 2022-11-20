@@ -56,30 +56,27 @@ class CalcMovementMesh():
 				# print("(y, x) ", y, x)
 
 				# 注目メッシュの中心座標を取得
-				center_coord = self.get_center_coord(y, x)
+				self.center_coord = self.get_center_coord(y, x)
 
 				# 注目メッシュの座標群を取得
-				mesh_coords  = self.get_mesh_coords(image.size_3d, y, x)
+				self.mesh_coords  = self.get_mesh_coords(image.size_3d, y, x)
 
 				# 注目メッシュの中心座標が土砂領域か判別
-				# TODO: 土砂マスクを利用しない場合座標群(mesh_coords)を利用
-				# if not (self.is_sedimentation(image, center_coord)):
-
-				# print(center_coord)
-
-
-				if (self.is_sedimentation_mask(image, center_coord)):
+				# TODO: 中心座標で判別するのではなくメッシュ内の土砂領域画素数（中心座標から数十ピクセル）で判別
+				if (self.is_sedimentation_mask(image)):
+				# if (self.is_sedimentation(image, mesh_coords)):	# 精度悪い
 					# 点を描画
 					cv2.circle(
-						img=image.ortho,                       # 画像
-						center=(center_coord[1], center_coord[0]),  # 中心
-						radius=3,                                   # 半径
-						color=(0, 0, 255),                          # 色
-						thickness=self.mesh_size // 20,                                # 太さ
+						img=image.ortho,	# 画像
+						center=(self.center_coord[1], self.center_coord[0]),	# 中心
+						radius=3,	# 半径
+						color=(0, 0, 255),	# 色
+						thickness=self.mesh_size // 20,	# 太さ
 					)
 
 					# 傾斜方向のと隣接2方向の3方向に対しての隣接領域を取得
-					coords = self.extract_neighbor(image, center_coord, mesh_coords)
+					# or 隣接周囲8領域取得
+					coords = self.extract_neighbor(image)
 
 					# # 傾斜方向が上から下の領域を抽出
 					# coords = self.extract_downstream(self, region, labels)
@@ -95,52 +92,6 @@ class CalcMovementMesh():
 		cv2.imwrite("mesh_line.png", image.ortho)
 
 		return self.calc_movement_result
-
-
-	def is_sedimentation(self, image: ImageData, center: tuple[int, int]) -> bool:
-		""" 土砂領域かどうかを判別
-
-		Args:
-				image (ImageData): 画像データ
-				center (tuple[int, int]): 該当領域の中心座標
-
-		Returns:
-				bool: 土砂領域フラグ
-		"""
-		# Lab表色系に変換
-		Lp, ap, bp = cv2.split(
-			cv2.cvtColor(
-				image.div_img.astype(np.uint8), 
-				cv2.COLOR_BGR2Lab)
-		)
-		Lp, ap, bp = Lp * 255, ap * 255, bp * 255
-
-		# 土砂の判別
-		if (Lp[center] > 125) & (ap[center] > 130):
-			return True
-		else:
-			return False
-
-
-	def is_sedimentation_mask(self, image: ImageData, center: tuple[int, int]) -> bool:
-		""" 土砂マスク画像を用いて土砂領域かどうかを判別
-
-		Args:
-				image (ImageData): 画像データ
-				center (tuple[int, int]): 該当領域の中心座標
-
-		Returns:
-				bool: 土砂領域フラグ
-		"""
-		# マスク画像より土砂の判別
-		try:
-			if (image.mask[center][0] == 0):
-				return True
-			else:
-				return False
-		except:
-			return False
-
 
 	def get_center_coord(self, y: int, x: int) -> tuple[int, int]:
 		""" 注目メッシュの中心座標を取得
@@ -189,18 +140,58 @@ class CalcMovementMesh():
 		return coords
 
 
+	def is_sedimentation(self, image: ImageData, coords: list[tuple]) -> bool:
+		""" 土砂領域かどうかを判別
+
+		Args:
+				image (ImageData): 画像データ
+				coords (list[tuple]): 該当領域の座標群
+
+		Returns:
+				bool: 土砂領域フラグ
+		"""
+		# カウンタ
+		is_sedimentation = 0
+		is_not_sedimentation = 0
+
+		# 全画素について調べる
+		for coord in coords:
+			if (self.is_sedimentation_mask(image, coord)):
+				is_sedimentation     += 1
+			else:
+				is_not_sedimentation += 1
+
+		# 画素数の多い方を返却
+		return True if (is_sedimentation > is_not_sedimentation) else False
+
+
+	def is_sedimentation_mask(self, image: ImageData) -> bool:
+		""" 土砂マスク画像を用いて土砂領域かどうかを判別
+
+		Args:
+				image (ImageData): 画像データ
+
+		Returns:
+				bool: 土砂領域フラグ
+		"""
+		# マスク画像より土砂の判別
+		try:
+			if (image.mask[self.center_coord][0] == 0):
+				return True
+			else:
+				return False
+		except:
+			return False
+
+
 	def extract_neighbor(
 			self, 
-			image: ImageData, 
-			center: tuple[int, int], 
-			coords: list[tuple] 
+			image: ImageData
 		) -> list[int]:
 		""" 8方向で隣接している領域の組かつ傾斜方向に沿った3領域を全て抽出
 
 		Args:
 				image (ImageData): 画像データ
-				center (tuple[int, int]): 注目メッシュの中心座標
-				coords (list[tuple]): 注目メッシュの座標群
 
 		Returns:
 				list[int]: 隣接領域のラベル
@@ -211,11 +202,11 @@ class CalcMovementMesh():
 		# NOTE: 3画素分岐するとしても最終的には1点からは１本ベクトルにしたい
 		pass
 
-		# 注目メッシュの平均傾斜方向を取得
+		# 注目メッシュの土砂領域内の平均傾斜方向を取得
 		sediment_pix_num = 0
 		mask = cv2.split(image.mask)[0]
 		average_direction = 0.0
-		for coord in coords:
+		for coord in self.mesh_coords:
 			if (mask[coord] == 0):
 				average_direction += image.degree[coord]
 				sediment_pix_num += 1
@@ -225,8 +216,8 @@ class CalcMovementMesh():
 		# # 中心座標の傾斜方向
 		# average_direction = image.degree[center]
 
-		# 精度評価用のデータを保存
-		self.calc_movement_result.append({"direction": average_direction, "center": center})
+		# # 精度評価用のデータを保存
+		# self.calc_movement_result.append({"direction": average_direction, "center": center})
 
 		# 傾斜方向の角度データを三角関数用の表記に変更
 		average_direction = 360 - average_direction
@@ -235,16 +226,16 @@ class CalcMovementMesh():
 		# FIXME: 違うかも
 		# https://qiita.com/FumioNonaka/items/c146420c3aeab27fc736
 		try:
-			y_coord = int((self.mesh_size // 2) * math.sin(math.radians(average_direction))) + center[0]
-			x_coord = int((self.mesh_size // 2) * math.cos(math.radians(average_direction))) + center[1]
+			y_coord = int((self.mesh_size // 2) * math.sin(math.radians(average_direction))) + self.center_coord[0]
+			x_coord = int((self.mesh_size // 2) * math.cos(math.radians(average_direction))) + self.center_coord[1]
 
 			# 矢印を描画
 			cv2.arrowedLine(
-				img=image.ortho,     	# 画像
-				pt1=(center[1], center[0]), # 始点
-				pt2=(x_coord, y_coord),			# 終点
-				color=(0, 0, 255),  				# 色			
-				thickness=2,        				# 太さ
+				img=image.ortho,	# 画像
+				pt1=(self.center_coord[1], self.center_coord[0]), # 始点
+				pt2=(x_coord, y_coord),	# 終点
+				color=(0, 0, 255),	# 色			
+				thickness=2,	# 太さ
 			)
 		except Exception as e:
 			print(e, "average_direction: ", average_direction)
@@ -314,7 +305,6 @@ class CalcMovementMesh():
 		Returns:
 				tuple[tuple]: 傾斜方向と隣接2方向
 		"""
-
 		# FIXME: 傾斜方向が限定的になっている
 		# 注目画素からの移動画素
 		if   (math.isnan(deg)):
@@ -354,7 +344,6 @@ class CalcMovementMesh():
 		Returns:
 				tuple[int, int, int]: 注目座標からの標高値
 		"""
-
 		heights = []
 
 		for direction in directions:

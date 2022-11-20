@@ -105,6 +105,11 @@ class AccuracyValuation():
 		"""
 		mesh_num = 0
 		accuracies = []
+
+		print(self.calc_movement_result)
+		print(self.calc_movement_result.shape)
+
+
 		for i, answer in enumerate(self.answer):
 			# FIXME: 100サイズメッシュの場合限定
 			for j in range(len(answer)):
