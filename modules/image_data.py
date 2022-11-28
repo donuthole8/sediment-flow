@@ -32,6 +32,12 @@ class ImageData():
 		self.bld_mask      = None
 		self.normed_dsm    = None
 		self.dsm_sub       = None
+		self.bld_gsi       = cv2.imread(path_list[6], cv2.IMREAD_GRAYSCALE)
+
+		# 2値化
+		# NOTE: いらないかも？
+		self.bld_gsi[np.where(self.bld_gsi < 128)] = 0
+
 
 		# 画像サイズ（shape=(y,x,z)）
 		self.size_3d    = self.ortho.shape

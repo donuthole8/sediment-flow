@@ -58,14 +58,14 @@ class CalcMovementMesh():
 				self.y, self.x = y, x
 
 				# 注目メッシュの中心座標を取得
-				self.center_coord = self.get_center_coord()
+				self.center_coord = self.__get_center_coord()
 
 				# 注目メッシュの座標群を取得
 				self.mesh_coords = self.get_mesh_coords(image.size_3d, y, x)
 
 				# 注目メッシュの中心座標が土砂領域か判別
 				# TODO: 中心座標で判別するのではなくメッシュ内の土砂領域画素数（中心座標から数十ピクセル）で判別
-				if (self.is_sedimentation_mask(image)):
+				if (self.__is_sedimentation_mask(image)):
 				# if (self.is_sedimentation(image, mesh_coords)):	# 精度悪い
 					# 点を描画
 					cv2.circle(
@@ -77,10 +77,10 @@ class CalcMovementMesh():
 					)
 
 					# 傾斜方位のと隣接2方向の3方向に対しての隣接領域を取得
-					labels = self.extract_neighbor(image)
+					labels = self.__extract_neighbor(image)
 
 					# 傾斜方位が上から下の領域を抽出
-					labels = self.extract_downstream(image, labels)
+					labels = self.__extract_downstream(image, labels)
 
 					# # 侵食と堆積の組み合わせの領域を抽出
 					# coords = self.extract_sediment(self, region, labels)
@@ -95,7 +95,7 @@ class CalcMovementMesh():
 		return self.calc_movement_result
 
 
-	def get_center_coord(self) -> tuple[int, int]:
+	def __get_center_coord(self) -> tuple[int, int]:
 		""" 注目メッシュの中心座標を取得
 
 		Returns:
@@ -138,7 +138,7 @@ class CalcMovementMesh():
 		return coords
 
 
-	def is_sedimentation(self, image: ImageData, coords: list[tuple]) -> bool:
+	def __is_sedimentation(self, image: ImageData, coords: list[tuple]) -> bool:
 		""" 土砂領域かどうかを判別
 
 		Args:
@@ -154,7 +154,7 @@ class CalcMovementMesh():
 
 		# 全画素について調べる
 		for coord in coords:
-			if (self.is_sedimentation_mask(image, coord)):
+			if (self.__is_sedimentation_mask(image, coord)):
 				is_sedimentation     += 1
 			else:
 				is_not_sedimentation += 1
@@ -163,7 +163,7 @@ class CalcMovementMesh():
 		return True if (is_sedimentation > is_not_sedimentation) else False
 
 
-	def is_sedimentation_mask(self, image: ImageData) -> bool:
+	def __is_sedimentation_mask(self, image: ImageData) -> bool:
 		""" 土砂マスク画像を用いて土砂領域かどうかを判別
 
 		Args:
@@ -182,7 +182,7 @@ class CalcMovementMesh():
 			return False
 
 
-	def extract_neighbor_tmp(self, image: ImageData) -> list[int]:
+	def __extract_neighbor_tmp(self, image: ImageData) -> list[int]:
 		""" 8方向で隣接している領域の組かつ傾斜方位に沿った3領域を全て抽出
 
 		Args:
@@ -192,7 +192,7 @@ class CalcMovementMesh():
 				list[int]: 隣接領域のラベル
 		"""
 		# 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
-		average_direction = self.get_average_direction()
+		average_direction = self.__get_average_direction()
 		# # 中心座標の傾斜方位
 		# average_direction = image.degree[center]
 
@@ -224,7 +224,7 @@ class CalcMovementMesh():
 			print(e, ", average_direction: ", average_direction)
 
 
-	def extract_neighbor(
+	def __extract_neighbor(
 			self, 
 			image: ImageData
 		) -> list[int]:
@@ -237,11 +237,11 @@ class CalcMovementMesh():
 				list[tuple]: 隣接領域データ
 		"""
 		# 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
-		average_direction = self.get_average_direction(image)
+		average_direction = self.__get_average_direction(image)
 
 		try:
 			# 傾斜方位データを取得
-			directions = self.get_directions(average_direction)
+			directions = self.__get_directions(average_direction)
 
 			# 傾斜方位と隣接2領域のメッシュラベルを取得
 			neighbor_mesh_labels = [
@@ -267,7 +267,7 @@ class CalcMovementMesh():
 		return neighbor_mesh_labels
 
 
-	def get_average_direction(self, image: ImageData) -> float:
+	def __get_average_direction(self, image: ImageData) -> float:
 		""" 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
 
 		Args:
@@ -291,7 +291,7 @@ class CalcMovementMesh():
 		return average_direction / sediment_pix_num
 
 
-	def get_directions(self, degree: float) -> tuple[tuple]:
+	def __get_directions(self, degree: float) -> tuple[tuple]:
 		""" 傾斜方位を画素インデックスに変換し傾斜方位と隣接2方向を取得
 
 		Args:
@@ -324,7 +324,7 @@ class CalcMovementMesh():
 
 
 	@staticmethod
-	def get_heights(
+	def __get_heights(
 			image: ImageData, 
 			directions: tuple[tuple],
 			coord: tuple[int, int]
@@ -351,7 +351,7 @@ class CalcMovementMesh():
 		return heights
 
 
-	def extract_downstream(self, image: ImageData, labels: list[int]) -> list[int]:
+	def __extract_downstream(self, image: ImageData, labels: list[int]) -> list[int]:
 		""" 上流から下流のメッシュを抽出
 
 		Args:
@@ -361,15 +361,16 @@ class CalcMovementMesh():
 		Returns:
 				list[int]: 上流から下流のメッシュラベル
 		"""
+		# TODO: メッシュ格子まで矢印を描画,描画する矢印が無い場合傾斜方位の矢印,
 		if (labels != []):
 			# 平均標高値が最も低いメッシュを抽出
 			average_heights = []
 			for i in range(3):
-				average_heights.append(self.get_average_height(image, labels[i]))
+				average_heights.append(self.__get_average_height(image, labels[i]))
 			min_index = average_heights.index(min(average_heights))
 
 			# メッシュ中で最小標高値の座標を抽出
-			min_height_coord = self.get_min_height_coord(image, labels[min_index])
+			min_height_coord = self.__get_min_height_coord(image, labels[min_index])
 
 			# 最小標高値までの矢印を描画
 			tool.draw_min_height(self, image, min_height_coord)
@@ -379,7 +380,7 @@ class CalcMovementMesh():
 			print("nan")
 
 
-	def get_average_height(self, image: ImageData, label: tuple[int, int]) -> float:
+	def __get_average_height(self, image: ImageData, label: tuple[int, int]) -> float:
 		""" メッシュ内の土砂マスク内の標高値平均を取得
 
 		Args:
@@ -404,7 +405,7 @@ class CalcMovementMesh():
 			return average_height
 
 
-	def get_min_height_coord(self, image: ImageData, label: tuple[int, int]) -> tuple[int, int]:
+	def __get_min_height_coord(self, image: ImageData, label: tuple[int, int]) -> tuple[int, int]:
 		""" 最小標高値の座標を取得
 
 		Args:

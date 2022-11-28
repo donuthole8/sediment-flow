@@ -39,6 +39,7 @@ path6 = './inputs_trim/uav_img.tif'
 path7 = './inputs_trim/heli_img.tif'
 path8 = './outputs/texture/dissimilarity.tif'
 path9 = './outputs/building_mask.png'
+path10 = './inputs_trim/building_gsi.png'
 
 
 # # リサイズしたテスト用画像
@@ -51,7 +52,7 @@ path9 = './outputs/building_mask.png'
 # path6 = './inputs_re/uav_img.tif'
 # path7 = './inputs_re/heli_img.tif'
 
-path_list = [path1, path2, path3, path4, path5, path6]
+path_list = [path1, path2, path3, path4, path5, path6, path10]
 
 
 # TODO: ラプラシアンフィルタとかを領域に使って勾配を求める
@@ -130,8 +131,8 @@ def main() -> None:
 
 	# 建物領域の検出
 	print("# 建物領域を検出する")
-	# RegionProcessing().extract_building(image)
-	image.bld_mask = cv2.imread(path9)
+	RegionProcessing().extract_building(image)
+	# image.bld_mask = cv2.imread(path9)
 
 	print("# 建物領域の標高値を地表面標高値に補正")
 	# TODO: 建物領域の標高値を地表面と同じ標高値にする
@@ -159,9 +160,9 @@ def main() -> None:
 	print("# メッシュベースでの土砂移動推定")
 	calc_movement_result = CalcMovementMesh(100, image.size_2d).main(image)
 
-	# # 精度評価
-	# print("# 精度評価")
-	# AccuracyValuation(calc_movement_result).main()
+	# 精度評価
+	print("# 精度評価")
+	AccuracyValuation(calc_movement_result).main()
 
 
 # メイン関数

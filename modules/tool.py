@@ -62,6 +62,7 @@ def show_image_size(image: ImageData) -> None:
 	print("- deg-size  :", image.degree.shape)
 	print("- mask-size :", image.mask.shape)
 	print("- img-size  :", image.ortho.shape)
+	print("- bld-size  :", image.bld_gsi.shape)
 
 	return
 
@@ -550,14 +551,14 @@ def draw_direction(mesh: CalcMovementMesh, image: ImageData, direction: float) -
 		y_coord = int((mesh.mesh_size // 2) * math.sin(math.radians(average_direction_trig))) + mesh.center_coord[0]
 		x_coord = int((mesh.mesh_size // 2) * math.cos(math.radians(average_direction_trig))) + mesh.center_coord[1]
 
-		# 矢印を描画
-		cv2.arrowedLine(
-			img=image.ortho,	# 画像
-			pt1=(mesh.center_coord[1], mesh.center_coord[0]), # 始点
-			pt2=(x_coord, y_coord),	# 終点
-			color=(0, 0, 255),	# 色			
-			thickness=2,	# 太さ
-		)
+		# # 矢印を描画
+		# cv2.arrowedLine(
+		# 	img=image.ortho,	# 画像
+		# 	pt1=(mesh.center_coord[1], mesh.center_coord[0]), # 始点
+		# 	pt2=(x_coord, y_coord),	# 終点
+		# 	color=(0, 0, 255),	# 色			
+		# 	thickness=2,	# 太さ
+		# )
 	except Exception as e:
 		print(e, ", average_direction: ", direction)
 
@@ -572,6 +573,12 @@ def draw_min_height(mesh: CalcMovementMesh, image: ImageData, coord: tuple[int, 
 			mesh (CalcMovementMesh): メッシュデータ
 			coord (tuple[int, int]): 
 	"""
+	# 傾きと切片
+	# ac_steep, ac_intercept = (cy-ay)/(cx-ax),(cx*ay-ax*cy)/(cx-ax)
+
+	# メッシュ格子と直線の交点座標を算出
+	# coord = 
+
 	try:
 		# 矢印を描画
 		cv2.arrowedLine(

@@ -161,11 +161,12 @@ class RegionProcessing():
 
 
 	def extract_building(self, image: ImageData) -> None:
-		""" 円形度より建物領域を抽出する
+		""" 建物領域を抽出する
 
 		Args:
 				image (ImageData): 画像データ
 		"""
+		print("", image.bld_gsi)
 		# 建物領域を抽出
 		self.__extract_building(image)
 
@@ -196,7 +197,7 @@ class RegionProcessing():
 				cir_img[coord] = circularity
 
 			# 建物領域の検出
-			if self.__is_building(image, circularity, centroid):
+			if self.__is_building(image, circularity, centroid, coords):
 				# 塗りつぶし
 				for coord in coords:
 					bld_img[coord]  = [0, 0, 220]
@@ -224,7 +225,8 @@ class RegionProcessing():
 			self, 
 			image: ImageData, 
 			circularity: float, 
-			centroid: tuple[int, int]
+			centroid: tuple[int, int], 
+			coords: list[tuple]
 		) -> bool:
 		""" 建物領域かどうかを判別
 
@@ -232,22 +234,57 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 				circularity (float): 円形度
 				centroid (tuple[int, int]): 該当領域の重心座標
+				coords (list[tuple]): 領域座標群
 
 		Returns:
 				bool: 建物領域フラグ
 		"""
-		# 注目領域の平均異質度を取得
-		dissimilarity = np.mean(image.dissimilarity[centroid])
+		# # 注目領域の平均異質度を取得
+		# dissimilarity = np.mean(image.dissimilarity[centroid])
 
-		if (not (circularity > 40)) or (not (dissimilarity < 1)):
-			# 非建物領域
-			return False
-		elif self.__is_sediment_or_vegetation(image, centroid):
-			# 土砂領域・植生領域
-			return False
+			# 建物ポリゴンと一致度が閾値以上あるか
+		if (self.__is_building_polygon(image, coords)):
+			# 円形度
+			if (not (circularity > 30)):		
+			# if (not (circularity > 40)) or (not (dissimilarity < 1)):
+				# 非建物領域
+				return False
+			elif self.__is_sediment_or_vegetation(image, centroid):
+				# 土砂領域・植生領域
+				return False
+			else:
+				# 建物領域
+				return True
 		else:
-			# 建物領域
+			return False
+
+
+	@staticmethod
+	def __is_building_polygon(image: ImageData, coords: list[tuple]) -> bool:
+		""" 建物ポリゴンと領域が閾値以上一致しているか判別
+
+		Args:
+				image (ImageData): 画像データ
+				coords (list[tuple]): 領域座標群
+
+		Returns:
+				bool: 建物フラグ
+		"""
+		building_counter = 0
+		region_counter = 0
+
+		for coord in coords:
+			if (image.bld_gsi[coord] == 0):
+				building_counter += 1
+			region_counter += 1
+
+		# 建物ポリゴンとの一致率
+		agreement = (building_counter / region_counter)
+
+		if (agreement > 0.5):
 			return True
+		else:
+			return False
 
 
 	@staticmethod
@@ -340,6 +377,7 @@ class RegionProcessing():
 	def __get_neighbor_region(image: ImageData, coords: tuple[int, int]) -> list[int]:
 		"""	建物領域でない隣接領域の標高値を取得
 				TODO: 新しく作成した隣接領域検出を使えないか検討
+				TODO: 隣接領域中で最も低い領域が良い気がする
 
 		Args:
 				image (ImageData): 画像データ

@@ -20,6 +20,7 @@ class Resampling():
 		image.degree   = cv2.resize(image.degree,   image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 		image.mask     = cv2.resize(image.mask,     image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 		image.ortho    = cv2.resize(image.ortho,    image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
+		image.bld_gsi  = cv2.resize(image.bld_gsi,  image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 
 		# UAV画像のDSMの最小値を算出（領域外の透過背景値）
 		background_pix = np.min(image.dsm_uav)
@@ -32,12 +33,15 @@ class Resampling():
 		image.degree[idx]   = np.nan
 		image.mask[idx]     = 0
 		image.ortho[idx]    = 0
+		image.bld_gsi[idx]  = 255
 
 		# tool.save_resize_image("resamp_heli.png",  image.dsm_heli, image.s_size_2d)
 		# tool.save_resize_image("resamp_dem.png",   image.dem,      image.s_size_2d)
 		# tool.save_resize_image("resamp_deg.png",   image.degree,   image.s_size_2d)
 		# tool.save_resize_image("resamp_mask.png",  image.mask,     image.s_size_2d)
 		# tool.save_resize_image("resamp_ortho.png", image.ortho,    image.s_size_2d)
+
+		cv2.imwrite("bldwww.png", image.bld_gsi)
 
 		# 1次元に戻す
 		image.mask = cv2.split(image.mask)[0]
