@@ -382,6 +382,7 @@ def draw_min_height(mesh: CalcMovementMesh, image: ImageData, coord: tuple[int, 
 			thickness=2,	# 太さ
 		)
 	except Exception as e:
-		print(e, ", coord: ", coord)
+		pass
+		# print(e, ", coord: ", coord)
 
 	return

@@ -42,6 +42,7 @@ class CalcMovementMesh():
 		return
 
 
+	@common_util.stop_watch
 	def main(self, image: ImageData) -> None:
 		"""	メッシュベースでの土砂移動の推定
 
@@ -427,6 +428,3 @@ class CalcMovementMesh():
 					min_height_coord = coord
 
 		return min_height_coord
-
-
-

@@ -163,15 +163,17 @@ class RegionProcessing():
 		return
 
 
-	def extract_building(self, image: ImageData) -> None:
+	def extract_building(self, image: ImageData) -> np.ndarray:
 		""" 建物領域を抽出する
 
 		Args:
 				image (ImageData): 画像データ
+
+		Returns:
+				np.ndarray 建物領域データ
 		"""
-		print("", image.bld_gsi)
 		# 建物領域を抽出
-		self.__extract_building(image)
+		image.bld_mask = self.__extract_building(image)
 
 		return
 
@@ -219,9 +221,7 @@ class RegionProcessing():
 		image_util.save_resize_image("building.png",    bld_img, image.s_size_2d)
 		cv2.imwrite("./outputs/building_mask.png", bld_mask)
 
-		image.bld_mask = bld_mask
-
-		return
+		return bld_mask
 
 
 	def __is_building(
