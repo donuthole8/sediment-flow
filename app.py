@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 
-from modules import tool
+from modules.utils import common_util
+from modules.utils import image_util
 from modules.image_data import ImageData
 from modules.calc_geo_data import CalcGeoData
 from modules.resampling import Resampling
@@ -64,7 +65,7 @@ path_list = [path1, path2, path3, path4, path5, path6, path10]
 # 建物領域にも矢印があるので除去など
 
 
-@tool.stop_watch
+@common_util.stop_watch
 def main() -> None:
 	"""
 	メイン関数
@@ -93,7 +94,7 @@ def main() -> None:
 
 	# 画像サイズの確認
 	print("# 入力画像のサイズ確認")
-	tool.show_image_size(image)
+	image_util.show_image_size(image)
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも

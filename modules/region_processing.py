@@ -3,12 +3,15 @@ import math
 import numpy as np
 import pymeanshift as pms
 
-from modules import tool
+from modules.utils import common_util
+from modules.utils import csv_util
+from modules.utils import image_util
+from modules.utils import drawing_util
 from modules.image_data import ImageData
 
 
 class RegionProcessing():
-	@tool.stop_watch
+	@common_util.stop_watch
 	def area_division(
 			self, 
 			image: ImageData, 
@@ -52,7 +55,7 @@ class RegionProcessing():
 		return
 
 
-	@tool.stop_watch
+	@common_util.stop_watch
 	def get_region_data(self, image: ImageData) -> None:
 		"""	csvに保存された領域の座標データより領域データを算出
 
@@ -60,7 +63,7 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 		"""
 		# 領域データの保存
-		tool.csv2self(image)
+		csv_util.csv2self(image)
 
 		# ラベリングテーブルの作成
 		self.__create_label_table(image)
@@ -83,7 +86,7 @@ class RegionProcessing():
 
 		for region in image.pms_coords:
 			# 注目領域のラベルID,座標を取得
-			label, coords, _ = tool.decode_area(region)
+			label, coords, _ = common_util.decode_area(region)
 
 			# ラベルを付与
 			for coord in coords:
@@ -108,11 +111,11 @@ class RegionProcessing():
 
 		for region in image.pms_coords:
 			# 領域データを取得
-			label, coords, area = tool.decode_area(region)
+			label, coords, area = common_util.decode_area(region)
 
-			# FIXME: tool.coord2cont使う
+			# FIXME: util.coord2cont使う
 			# 注目領域のマスク画像を作成
-			label_img, mask = tool.draw_label(image, label_img, coords)
+			label_img, mask = drawing_util.draw_label(image, label_img, coords)
 
 			# 輪郭抽出
 			contours, _ = cv2.findContours(
@@ -190,7 +193,7 @@ class RegionProcessing():
 			# 領域・重心・座標データを取得
 			circularity  = int(float(region["circularity"]) * 255)
 			centroid     = (region["cy"], region["cx"])
-			_, coords, _  = tool.decode_area(coords)
+			_, coords, _  = common_util.decode_area(coords)
 
 			# 円形度を大小で描画
 			for coord in coords:
@@ -212,8 +215,8 @@ class RegionProcessing():
 				})
 
 		# 画像を保存
-		tool.save_resize_image("circularity.png", cir_img, image.s_size_2d)
-		tool.save_resize_image("building.png",    bld_img, image.s_size_2d)
+		image_util.save_resize_image("circularity.png", cir_img, image.s_size_2d)
+		image_util.save_resize_image("building.png",    bld_img, image.s_size_2d)
 		cv2.imwrite("./outputs/building_mask.png", bld_mask)
 
 		image.bld_mask = bld_mask

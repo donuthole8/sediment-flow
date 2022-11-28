@@ -3,7 +3,8 @@ import math
 import numpy as np
 from tqdm import trange
 
-from modules import tool
+from modules.utils import common_util
+from modules.utils import drawing_util
 from modules.image_data import ImageData
 
 
@@ -48,7 +49,7 @@ class CalcMovementMesh():
 				image (ImageData): 画像データ
 		"""
 		# メッシュの格子線を描画
-		tool.draw_mesh(self, image)
+		drawing_util.draw_mesh(self, image)
 
 		# メッシュ中心が土砂の場合各注目領域に対して処理を行う
 		# for y in trange(self.mesh_height):
@@ -132,7 +133,7 @@ class CalcMovementMesh():
 					(x * self.mesh_size) + _x 
 				)
 				# 座標が画像内に収まっているかを判定
-				if (tool.is_index(size, coord)):
+				if (common_util.is_index(size, coord)):
 					coords.append(coord)
 
 		return coords
@@ -251,7 +252,7 @@ class CalcMovementMesh():
 			]
 
 			# 平均傾斜方位を描画
-			tool.draw_direction(self, image, average_direction)
+			drawing_util.draw_direction(self, image, average_direction)
 
 		except:
 			# average_directionがnp.nanの場合
@@ -373,7 +374,7 @@ class CalcMovementMesh():
 			min_height_coord = self.__get_min_height_coord(image, labels[min_index])
 
 			# 最小標高値までの矢印を描画
-			tool.draw_min_height(self, image, min_height_coord)
+			drawing_util.draw_min_height(self, image, min_height_coord)
 
 			# 傾斜方位線上で一番低い画素値を抽出（なしでいいかもお）
 		else:

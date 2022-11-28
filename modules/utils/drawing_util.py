@@ -1,117 +1,10 @@
 import cv2
-import csv
-import time
 import math
 import random
 import numpy as np
-from functools import wraps
 
 from modules.image_data import ImageData
 from modules.calc_movement_mesh import CalcMovementMesh
-
-
-def stop_watch(func: callable) -> callable:
-	"""	関数の実行時間測定
-
-	Args:
-			func (callable): 測定対象の関数
-
-	Returns:
-			callable: 関数
-	"""
-	@wraps(func)
-	def wrapper(*args, **kargs) :
-		start = time.time()
-		result = func(*args, **kargs)
-		process_time =  time.time() - start
-		print(f"-- {func.__name__} : {int(process_time)}[sec] / {int(process_time/60)}[min]")
-		return result
-	return wrapper
-
-
-def save_resize_image(path: str, image: np.ndarray, size: tuple) -> None:
-	"""	画像を縮小して保存
-
-	Args:
-			path (str): 保存先のパス
-			image (np.ndarray): 画像データ
-			size (tuple):  保存サイズ
-	"""
-	# 画像をリサイズ
-	resize_img = cv2.resize(
-		image, 
-		size, 
-		interpolation=cv2.INTER_CUBIC
-	)
-
-	# 画像を保存
-	cv2.imwrite("./outputs/" + path, resize_img)
-
-	return
-
-
-def show_image_size(image: ImageData) -> None:
-	"""	画像サイズの確認
-
-	Args:
-			image (imageData): 画像データ
-	"""
-	print("- uav-size  :", image.dsm_uav.shape)
-	print("- heli-size :", image.dsm_heli.shape)
-	print("- dem-size  :", image.dem.shape)
-	print("- deg-size  :", image.degree.shape)
-	print("- mask-size :", image.mask.shape)
-	print("- img-size  :", image.ortho.shape)
-	print("- bld-size  :", image.bld_gsi.shape)
-
-	return
-
-
-def csv2self(image: ImageData) -> None:
-	""" PyMeanShiftで取得したcsvファイルをインスタンスに格納
-
-	Args:
-			image (imageData): 画像データ
-	"""
-	# 領域データ読み込み
-	coords_list = load_csv("./area_data/pms_coords.csv")
-	# pix_list    = load_csv("./area_data/pms_pix.csv")
-
-	# データの保存
-	image.pms_coords = coords_list
-	# self.pms_pix    = pix_list
-
-	return
-
-
-def calc_min_max(dsm: np.ndarray) -> tuple[float, float]:
-	""" 標高値モデルから最小値と最大値を算出
-
-	Args:
-			dsm (np.ndarray): DSM（或いはDEM）
-
-	Returns:
-			tuple[float, float]: 最小値・最大値
-	"""
-	# 最大値と最小値を算出
-	_min, _max = np.nanmin(dsm), np.nanmax(dsm)
-
-	return _min, _max
-
-
-def calc_mean_sd(dsm: np.ndarray) -> tuple[float, float]:
-	""" 標高値モデルから平均と標準偏差を算出
-
-	Args:
-			dsm (np.ndarray): DSM（或いはDEM）
-
-	Returns:
-			tuple[float, float]: 平均・標準偏差
-	"""
-	# 平均と標準偏差を算出
-	mean, sd = np.nanmean(dsm), np.nanstd(dsm)
-
-	return mean, sd
 
 
 def draw_color(img: np.ndarray, idx: np.ndarray, color: list[int]) -> np.ndarray:
@@ -142,68 +35,6 @@ def draw_color(img: np.ndarray, idx: np.ndarray, color: list[int]) -> np.ndarray
 	return res
 
 
-def write_binfile(data: np.ndarray, path: str) -> None:
-	"""	バイナリデータの書き出し
-
-	Args:
-			data (np.ndarray): 画像データ
-			path (str): 保存パス
-	"""
-
-	f = open(path, 'w')
-	for i in data:
-		for j in i:
-			f.write(str(j) + ' ')
-		f.write(str('\n'))
-	f.close()
-
-	return
-
-
-def load_csv(path: str) -> list[tuple]:
-	""" cvsデータを読み込みヘッダを削除
-
-	Args:
-			path (str): csvファイルの入力パス
-
-	Returns:
-			list[tuple]: csvデータ
-	"""
-	# csvデータ読み込み
-	with open(path, encoding='utf8', newline='') as f:
-		area = csv.reader(f)
-		area_list = [a for a in area]
-		# ヘッダを削除
-		area_list.pop(0)
-		# # 背景領域を削除
-		# area_list.pop(0)
-
-		return area_list
-
-
-def coordinates2contours(image: ImageData, coordinates: list[tuple]) -> list[tuple]:
-	"""	領域の座標データから輪郭座標を取得
-
-	Args:
-			image (ImageData): 画像データ
-			coordinates (list[tuple]): 注目領域の座標群
-
-	Returns:
-			list[tuple]: 輪郭座標
-	"""
-	# 注目領域のマスク画像を作成
-	mask = draw_region(image, coordinates)
-
-	# 輪郭抽出
-	contours, _ = cv2.findContours(
-		mask.astype(np.uint8), 
-		cv2.RETR_EXTERNAL, 
-		cv2.CHAIN_APPROX_NONE 
-	)
-
-	return [(c[0, 1], c[0, 0]) for c in contours[0]]
-
-
 def draw_region(image: ImageData, coords: list[tuple]) -> list[tuple]:
 	"""	与えられた座標を領域とし特定画素で埋める
 
@@ -222,6 +53,7 @@ def draw_region(image: ImageData, coords: list[tuple]) -> list[tuple]:
 		campus[coord] = 255
 
 	return campus
+
 
 
 def draw_label(
@@ -257,45 +89,6 @@ def draw_label(
 
 	return label_img, campus
 
-
-def decode_area(region: tuple) -> tuple[int, list, float]:
-	""" 領域データをlabel, coords, areaに変換
-
-	Args:
-			region (tuple): PyMeanShiftで抽出した領域csvデータ
-
-	Returns:
-			tuple: ラベル番号・座標・面積
-	"""
-	# 領域ID
-	label = int(region[0])
-	# 座標
-	coords = [
-		(int(coord_str[1:-1].split(' ')[0]), int(coord_str[1:-1].split(' ')[1])) 
-		for coord_str in region[1:-2]
-	]
-		# 面積
-	area  = int(region[-2])
-
-	return label, coords, area
-
-
-def is_index(size: tuple[int, int, int], coordinate: tuple[int, int]) -> bool:
-	"""	タプル型座標が画像領域内に収まっているかを判定
-
-	Args:
-			size (tuple[int, int, int]): 画像サイズ
-			coordinate (tuple[int, int]): タプル型座標
-
-	Returns:
-			bool: 判別結果
-	"""
-	# (0 <= y < height) & (0 <= x < width)
-	if 	(((coordinate[0] >= 0) and (coordinate[0] < size[0])) 
-	and  ((coordinate[1] >= 0) and (coordinate[1] < size[1]))):
-		return True
-	else:
-		return False
 
 
 def draw_vector(image: ImageData,  region: tuple, labels: list[int]) -> None:

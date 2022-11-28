@@ -3,12 +3,12 @@ import numpy as np
 from tqdm import trange
 import matplotlib as mpl
 
-from modules import tool
+from modules.utils import common_util
 from modules.image_data import ImageData
 
 
 class AnalyzeImage():
-	@tool.stop_watch
+	@common_util.stop_watch
 	def texture_analysis(self, image: ImageData) -> None:
 		""" テクスチャ解析
 

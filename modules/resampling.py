@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+
 from modules.image_data import ImageData
 
 

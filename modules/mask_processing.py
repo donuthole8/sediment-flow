@@ -2,13 +2,14 @@ import cv2
 import numpy as np
 import scipy.ndimage as ndimage
 
-from modules import tool
+from modules.utils import common_util
+from modules.utils import image_util
 from modules.image_data import ImageData
 
 
 
 class MaskProcessing():
-	@tool.stop_watch
+	@common_util.stop_watch
 	def norm_mask(
 			self, 
 			image: ImageData, 
@@ -69,8 +70,8 @@ class MaskProcessing():
 		closing = cv2.erode (closing, kernel, iterations = 1)
 
 		# 画像を保存
-		tool.save_resize_image("opening.png", opening, image.s_size_2d)
-		tool.save_resize_image("closing.png", closing, image.s_size_2d)
+		image_util.save_resize_image("opening.png", opening, image.s_size_2d)
+		image_util.save_resize_image("closing.png", closing, image.s_size_2d)
 
 		# 結果を保存
 		image.mask = closing
@@ -209,7 +210,7 @@ class MaskProcessing():
 		# return sed.astype(np.uint8)
 
 		# 画像を保存
-		tool.save_resize_image("masked_img.png", masked_img, image.s_size_2d)
+		image_util.save_resize_image("masked_img.png", masked_img, image.s_size_2d)
 
 		return masked_img
 
