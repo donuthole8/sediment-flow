@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 from modules.image_data import ImageData
-
+from modules.utils import tiff_util
 
 class Resampling():
 	@staticmethod
@@ -46,5 +46,14 @@ class Resampling():
 
 		# 1次元に戻す
 		image.mask = cv2.split(image.mask)[0]
+
+		# 使えない
+		# cv2.imwrite("./inputs_trim/dem_resampling.tif", image.dem)
+		# ビューワは変だけどQGISで見れる
+		tiff_util._save_tif(
+			cv2.merge((image.dem, image.dem, image.dem)), 
+			"./inputs_trim/dsm_uav_re.tif", 
+			"./inputs_trim/dem_resampling.tif", 
+		)
 
 		return

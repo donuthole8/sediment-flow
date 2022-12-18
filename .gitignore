@@ -25,6 +25,7 @@ modules/delete/*
 app_test.py
 app_dem.py
 test.py
+test_chatgpt/*
 
 # .vscode
 .vscode

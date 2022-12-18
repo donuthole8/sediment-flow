@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from modules.utils import calculation_util
+
 """
 各種画像データや画像サイズを扱う
 """
@@ -19,6 +21,12 @@ class ImageData():
 		self.dsm_heli = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.dem      = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.degree   = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+
+		print(calculation_util.calc_min_max(self.dsm_uav))
+		print(calculation_util.calc_min_max(self.dsm_heli))
+		print(calculation_util.calc_min_max(self.dem))
+		print(calculation_util.calc_min_max(self.degree))
+
 
 		# 画像
 		self.mask          = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)

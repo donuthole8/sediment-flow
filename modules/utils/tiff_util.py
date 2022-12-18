@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-# from osgeo import gdal
+from osgeo import gdal
 # from osgeo import osr
 
 
@@ -105,8 +105,8 @@ def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
       save_path (str): 出力tifファイルのパス
   """
   # 入出力パス
-  load_path = "./inputs/"  + load_path
-  save_path = "./outputs/" + save_path
+  # load_path = "./inputs/"  + load_path
+  # save_path = "./outputs/" + save_path
 
   # tif画像テンプレ読み込み
   src = gdal.Open(load_path)
