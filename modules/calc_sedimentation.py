@@ -1,7 +1,7 @@
 import numpy as np
 
-from modules import tif
-from modules import tool
+from modules.utils import tiff_util
+from modules.utils import image_util
 from modules.image_data import ImageData
 
 
@@ -24,8 +24,8 @@ class CalcSedimentation():
 		dsm_bin = self.__binarize_2area(image)
 
 		# 画像の保存
-		tif.save_tif(image.dsm_sub, "dsm_uav.tif", "./output/dsm_sub.tif")
-		tool.save_resize_image("dsm_bin.png", dsm_bin, image.s_size_2d)
+		tiff_util.save_tif(image.dsm_sub, "./output/dsm_sub.tif")
+		image_util.save_resize_image("dsm_bin.png", dsm_bin, image.s_size_2d)
 
 		return
 

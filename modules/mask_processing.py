@@ -2,13 +2,14 @@ import cv2
 import numpy as np
 import scipy.ndimage as ndimage
 
-from modules import tool
+from modules.utils import common_util
+from modules.utils import image_util
 from modules.image_data import ImageData
 
 
 
 class MaskProcessing():
-	@tool.stop_watch
+	@common_util.stop_watch
 	def norm_mask(
 			self, 
 			image: ImageData, 
@@ -69,8 +70,8 @@ class MaskProcessing():
 		closing = cv2.erode (closing, kernel, iterations = 1)
 
 		# 画像を保存
-		tool.save_resize_image("opening.png", opening, image.s_size_2d)
-		tool.save_resize_image("closing.png", closing, image.s_size_2d)
+		image_util.save_resize_image("opening.png", opening, image.s_size_2d)
+		image_util.save_resize_image("closing.png", closing, image.s_size_2d)
 
 		# 結果を保存
 		image.mask = closing
@@ -90,7 +91,6 @@ class MaskProcessing():
 		Returns:
 				list[list]: 輪郭データ
 		"""
-
 		# 画像の高さと幅を取得
 		h, w = image.size_2d
 
@@ -135,7 +135,6 @@ class MaskProcessing():
 				area_th (int): 面積の閾値
 				scale (int): 拡大倍率
 		"""
-
 		# 画像の高さと幅を取得
 		h, w = image.mask.shape
 
@@ -169,7 +168,6 @@ class MaskProcessing():
 		Args:
 				image (ImageData): 画像データ
 		"""
-
 		# 土砂マスクを用いて土砂領域以外を除去
 		image.dsm_uav  = self.__masking(image, image.dsm_uav,  image.mask)
 		image.dsm_heli = self.__masking(image, image.dsm_heli, image.mask)
@@ -212,7 +210,7 @@ class MaskProcessing():
 		# return sed.astype(np.uint8)
 
 		# 画像を保存
-		tool.save_resize_image("masked_img.png", masked_img, image.s_size_2d)
+		image_util.save_resize_image("masked_img.png", masked_img, image.s_size_2d)
 
 		return masked_img
 

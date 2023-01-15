@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
-# from osgeo import gdal
+
+from osgeo import gdal
 # from osgeo import osr
+
 
 
 def load_tif(path: str) -> np.ndarray:
@@ -84,15 +86,14 @@ def load_tif(path: str) -> np.ndarray:
 #   output.FlushCache()
 
 
-def save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
-  """ tif画像を保存
+def save_tif(image: np.ndarray, path: str) -> None:
+  """ tiff画像を保存
 
   Args:
-      data (np.ndarray): tifデータ
-      load_path (str): 読み込みパス
-      save_path (str): 書き込みパス
+      image (np.ndarray): tifデータ
+      path (str): 書き込みパス
   """
-  cv2.imwrite(save_path, data)
+  cv2.imwrite("./outputs/" + path, image)
 
 
 def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
@@ -104,8 +105,8 @@ def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
       save_path (str): 出力tifファイルのパス
   """
   # 入出力パス
-  load_path = "./inputs/"  + load_path
-  save_path = "./outputs/" + save_path
+  # load_path = "./inputs/"  + load_path
+  # save_path = "./outputs/" + save_path
 
   # tif画像テンプレ読み込み
   src = gdal.Open(load_path)
@@ -151,7 +152,6 @@ def get_band4(path: str) -> np.ndarray:
   Returns:
       np.ndarray: 第4バンドデータ
   """
-
   src = gdal.Open(path)
 
   # 第4バンド

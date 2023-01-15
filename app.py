@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 
-from modules import tool
+from modules.utils import common_util
+from modules.utils import image_util
 from modules.image_data import ImageData
 from modules.calc_geo_data import CalcGeoData
 from modules.resampling import Resampling
@@ -29,7 +30,9 @@ from modules.accuracy_valuation import AccuracyValuation
 path1 = './inputs_trim/dsm_uav_re.tif'
 path2 = './inputs_trim/dsm_heli.tif'
 path3 = './inputs_trim/dem.tif'
-path4 = './inputs_trim/degree.tif'
+# path4 = './inputs_trim/degree_trig.tif'
+# path4 = './inputs_trim/degree.tif'
+path4 = './inputs_trim/degree_zeven.tif'
 # path5 = './inputs_trim/mask.png'
 # path5 = './inputs_trim/manual_mask.png'
 path5 = './inputs_trim/normed_mask.png'
@@ -37,6 +40,7 @@ path6 = './inputs_trim/uav_img.tif'
 path7 = './inputs_trim/heli_img.tif'
 path8 = './outputs/texture/dissimilarity.tif'
 path9 = './outputs/building_mask.png'
+path10 = './inputs_trim/building_gsi.png'
 
 
 # # リサイズしたテスト用画像
@@ -49,7 +53,7 @@ path9 = './outputs/building_mask.png'
 # path6 = './inputs_re/uav_img.tif'
 # path7 = './inputs_re/heli_img.tif'
 
-path_list = [path1, path2, path3, path4, path5, path6]
+path_list = [path1, path2, path3, path4, path5, path6, path10]
 
 
 # TODO: ラプラシアンフィルタとかを領域に使って勾配を求める
@@ -57,11 +61,11 @@ path_list = [path1, path2, path3, path4, path5, path6]
 # ラベリングの改良
 # ラベリングについて領域サイズを一定に
 # 領域同士が隣接している領域を輪郭データ等で算出
-# 傾斜方向が上から下である領域を平均標高値や傾斜方向で算出
+# 傾斜方位が上から下である領域を平均標高値や傾斜方位で算出
 # 建物領域にも矢印があるので除去など
 
 
-@tool.stop_watch
+@common_util.stop_watch
 def main() -> None:
 	"""
 	メイン関数
@@ -77,11 +81,11 @@ def main() -> None:
 	# # DEMより傾斜データを抽出
 	# # NOTE: リサンプリング後に行った方が良いかも
 	# # FIXME: バグがある
-	# print("# DEMより傾斜データを抽出")
+	# print("# DEMより勾配データを抽出")
 	# CalcGeoData().dem2gradient(image, 5)
 
-	# 傾斜方位の正規化（0-255 -> 0-360）
-	print("# 傾斜方向の正規化")
+	# 傾斜方位データの正規化（0-255 -> 0-360）
+	print("# 傾斜方位データの正規化")
 	CalcGeoData().norm_degree(image)
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
@@ -90,7 +94,7 @@ def main() -> None:
 
 	# 画像サイズの確認
 	print("# 入力画像のサイズ確認")
-	tool.show_image_size(image)
+	image_util.show_image_size(image)
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
@@ -128,8 +132,8 @@ def main() -> None:
 
 	# 建物領域の検出
 	print("# 建物領域を検出する")
-	# RegionProcessing().extract_building(image)
-	image.bld_mask = cv2.imread(path9)
+	RegionProcessing().extract_building(image)
+	# image.bld_mask = cv2.imread(path9)
 
 	print("# 建物領域の標高値を地表面標高値に補正")
 	# TODO: 建物領域の標高値を地表面と同じ標高値にする
@@ -138,6 +142,7 @@ def main() -> None:
 	# 土砂マスクの前処理
 	# TODO: 精度向上させる
 	print("# マスク画像の前処理")
+	# NOTE: こっちでマスク画像作成するとエラーになる
 	# MaskProcessing().norm_mask(image, 16666, 3)
 	image.mask = cv2.imread("./outputs/normed_mask.png")
 
@@ -151,14 +156,6 @@ def main() -> None:
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")
 	CalcSedimentation(image)
-
-	# # 土砂移動推定
-	# print("# 土砂移動推定")
-	# image_op.calc_movement()
-
-	# # 8方向での土砂移動推定
-	# print("# 8方向での土砂移動推定")
-	# image_op.calc_movement_8dir()
 
 	# メッシュベースでの土砂移動推定
 	print("# メッシュベースでの土砂移動推定")

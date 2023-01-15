@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from modules.utils import calculation_util
+
 """
 各種画像データや画像サイズを扱う
 """
@@ -20,6 +22,12 @@ class ImageData():
 		self.dem      = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.degree   = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
+		print(calculation_util.calc_min_max(self.dsm_uav))
+		print(calculation_util.calc_min_max(self.dsm_heli))
+		print(calculation_util.calc_min_max(self.dem))
+		print(calculation_util.calc_min_max(self.degree))
+
+
 		# 画像
 		self.mask          = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
 		self.ortho         = cv2.imread(path_list[5]).astype(np.float32)
@@ -32,6 +40,12 @@ class ImageData():
 		self.bld_mask      = None
 		self.normed_dsm    = None
 		self.dsm_sub       = None
+		self.bld_gsi       = cv2.imread(path_list[6], cv2.IMREAD_GRAYSCALE)
+
+		# 2値化
+		# NOTE: いらないかも？
+		self.bld_gsi[np.where(self.bld_gsi < 128)] = 0
+
 
 		# 画像サイズ（shape=(y,x,z)）
 		self.size_3d    = self.ortho.shape

@@ -3,12 +3,15 @@ import math
 import numpy as np
 import pymeanshift as pms
 
-from modules import tool
+from modules.utils import common_util
+from modules.utils import csv_util
+from modules.utils import image_util
+from modules.utils import drawing_util
 from modules.image_data import ImageData
 
 
 class RegionProcessing():
-	@tool.stop_watch
+	@common_util.stop_watch
 	def area_division(
 			self, 
 			image: ImageData, 
@@ -52,7 +55,7 @@ class RegionProcessing():
 		return
 
 
-	@tool.stop_watch
+	@common_util.stop_watch
 	def get_region_data(self, image: ImageData) -> None:
 		"""	csvに保存された領域の座標データより領域データを算出
 
@@ -60,7 +63,7 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 		"""
 		# 領域データの保存
-		tool.csv2self(image)
+		csv_util.csv2self(image)
 
 		# ラベリングテーブルの作成
 		self.__create_label_table(image)
@@ -83,7 +86,7 @@ class RegionProcessing():
 
 		for region in image.pms_coords:
 			# 注目領域のラベルID,座標を取得
-			label, coords, _ = tool.decode_area(region)
+			label, coords, _ = common_util.decode_area(region)
 
 			# ラベルを付与
 			for coord in coords:
@@ -108,11 +111,11 @@ class RegionProcessing():
 
 		for region in image.pms_coords:
 			# 領域データを取得
-			label, coords, area = tool.decode_area(region)
+			label, coords, area = common_util.decode_area(region)
 
-			# FIXME: tool.coord2cont使う
+			# FIXME: util.coord2cont使う
 			# 注目領域のマスク画像を作成
-			label_img, mask = tool.draw_label(image, label_img, coords)
+			label_img, mask = drawing_util.draw_label(image, label_img, coords)
 
 			# 輪郭抽出
 			contours, _ = cv2.findContours(
@@ -160,14 +163,17 @@ class RegionProcessing():
 		return
 
 
-	def extract_building(self, image: ImageData) -> None:
-		""" 円形度より建物領域を抽出する
+	def extract_building(self, image: ImageData) -> np.ndarray:
+		""" 建物領域を抽出する
 
 		Args:
 				image (ImageData): 画像データ
+
+		Returns:
+				np.ndarray 建物領域データ
 		"""
 		# 建物領域を抽出
-		self.__extract_building(image)
+		image.bld_mask = self.__extract_building(image)
 
 		return
 
@@ -178,7 +184,6 @@ class RegionProcessing():
 		Args:
 				image (ImageData): 画像データ
 		"""
-		
 		# 建物領域検出用画像
 		bld_img = image.ortho.copy()
 
@@ -190,14 +195,14 @@ class RegionProcessing():
 			# 領域・重心・座標データを取得
 			circularity  = int(float(region["circularity"]) * 255)
 			centroid     = (region["cy"], region["cx"])
-			_, coords, _  = tool.decode_area(coords)
+			_, coords, _  = common_util.decode_area(coords)
 
 			# 円形度を大小で描画
 			for coord in coords:
 				cir_img[coord] = circularity
 
 			# 建物領域の検出
-			if self.__is_building(image, circularity, centroid):
+			if self.__is_building(image, circularity, centroid, coords):
 				# 塗りつぶし
 				for coord in coords:
 					bld_img[coord]  = [0, 0, 220]
@@ -212,20 +217,19 @@ class RegionProcessing():
 				})
 
 		# 画像を保存
-		tool.save_resize_image("circularity.png", cir_img, image.s_size_2d)
-		tool.save_resize_image("building.png",    bld_img, image.s_size_2d)
+		image_util.save_resize_image("circularity.png", cir_img, image.s_size_2d)
+		image_util.save_resize_image("building.png",    bld_img, image.s_size_2d)
 		cv2.imwrite("./outputs/building_mask.png", bld_mask)
 
-		image.bld_mask = bld_mask
-
-		return
+		return bld_mask
 
 
 	def __is_building(
 			self, 
 			image: ImageData, 
 			circularity: float, 
-			centroid: tuple[int, int]
+			centroid: tuple[int, int], 
+			coords: list[tuple]
 		) -> bool:
 		""" 建物領域かどうかを判別
 
@@ -233,23 +237,57 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 				circularity (float): 円形度
 				centroid (tuple[int, int]): 該当領域の重心座標
+				coords (list[tuple]): 領域座標群
 
 		Returns:
 				bool: 建物領域フラグ
 		"""
+		# # 注目領域の平均異質度を取得
+		# dissimilarity = np.mean(image.dissimilarity[centroid])
 
-		# 注目領域の平均異質度を取得
-		dissimilarity = np.mean(image.dissimilarity[centroid])
-
-		if (not (circularity > 40)) or (not (dissimilarity < 1)):
-			# 非建物領域
-			return False
-		elif self.__is_sediment_or_vegetation(image, centroid):
-			# 土砂領域・植生領域
-			return False
+			# 建物ポリゴンと一致度が閾値以上あるか
+		if (self.__is_building_polygon(image, coords)):
+			# 円形度
+			if (not (circularity > 30)):		
+			# if (not (circularity > 40)) or (not (dissimilarity < 1)):
+				# 非建物領域
+				return False
+			elif self.__is_sediment_or_vegetation(image, centroid):
+				# 土砂領域・植生領域
+				return False
+			else:
+				# 建物領域
+				return True
 		else:
-			# 建物領域
+			return False
+
+
+	@staticmethod
+	def __is_building_polygon(image: ImageData, coords: list[tuple]) -> bool:
+		""" 建物ポリゴンと領域が閾値以上一致しているか判別
+
+		Args:
+				image (ImageData): 画像データ
+				coords (list[tuple]): 領域座標群
+
+		Returns:
+				bool: 建物フラグ
+		"""
+		building_counter = 0
+		region_counter = 0
+
+		for coord in coords:
+			if (image.bld_gsi[coord] == 0):
+				building_counter += 1
+			region_counter += 1
+
+		# 建物ポリゴンとの一致率
+		agreement = (building_counter / region_counter)
+
+		if (agreement > 0.5):
 			return True
+		else:
+			return False
 
 
 	@staticmethod
@@ -263,7 +301,6 @@ class RegionProcessing():
 		Returns:
 				bool: 土砂・植生領域フラグ
 		"""
-
 		# Lab表色系に変換
 		Lp, ap, bp = cv2.split(
 			cv2.cvtColor(
@@ -343,6 +380,7 @@ class RegionProcessing():
 	def __get_neighbor_region(image: ImageData, coords: tuple[int, int]) -> list[int]:
 		"""	建物領域でない隣接領域の標高値を取得
 				TODO: 新しく作成した隣接領域検出を使えないか検討
+				TODO: 隣接領域中で最も低い領域が良い気がする
 
 		Args:
 				image (ImageData): 画像データ

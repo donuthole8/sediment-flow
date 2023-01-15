@@ -3,8 +3,9 @@ import math
 import numpy as np
 from tqdm import trange
 
-from modules import tif
-from modules import tool
+from modules.utils import tiff_util
+from modules.utils import calculation_util
+from modules.utils import image_util
 from modules.image_data import ImageData
 
 
@@ -16,14 +17,15 @@ class CalcGeoData():
 				image (ImageData): 画像データ
 				mesh_size (int): DEMのメッシュサイズ
 		"""
+		# TODO: tiffutil.save_tifでQGISの位置情報に対応できていない
 		# 勾配データの算出
-		grad = self.__dem2gradient(image, mesh_size)
+		gradient = self.__dem2gradient(image, mesh_size)
 
-		# 3次元に変換
-		self.gradient = cv2.merge((grad, grad, grad))
+		# データ保存
+		image.gradient = gradient
 
 		# 画像を保存
-		tif.save_tif(image.gradient, "dem.tif", "angle.tif")
+		tiff_util.save_tif(image.gradient, "gradient.tif")
 
 		return
 
@@ -56,20 +58,18 @@ class CalcGeoData():
 
 	@staticmethod
 	def __dem2gradient(image: ImageData, size_mesh: int) -> None:
-		""" 傾斜データを算出する
+		""" 勾配データを算出する
 
 		Args:
 				image (ImageData): 画像データ
 				size_mesh (int): DEMのメッシュサイズ
 		"""
-
-
 		max = 0
 		index = [-1,1]
 		height, width = image.dem.shape[:2]
 		gradient = np.zeros((height, width))
 		dem = np.pad(image.dem, 1, mode = 'edge')
-		
+
 		for y in trange(height):
 			for x in range(width):
 				for j in range(-1,2):
@@ -94,16 +94,16 @@ class CalcGeoData():
 		image: 画像データ
 		"""
 		# 最小値・最大値算出
-		min_uav,  max_uav  = tool.calc_min_max(image.dsm_uav)
-		min_heli, max_heli = tool.calc_min_max(image.dsm_heli)
+		min_uav,  max_uav  = calculation_util.calc_min_max(image.dsm_uav)
+		min_heli, max_heli = calculation_util.calc_min_max(image.dsm_heli)
 
 		# 正規化処理
 		image.dsm_uav  = (image.dsm_uav - min_uav) / (max_uav - min_uav)
 		image.dsm_heli = (image.dsm_heli - min_heli) / (max_heli - min_heli)
 
 		# 画像を保存
-		tool.save_resize_image("normed_uav.png",  image.dsm_uav,  image.s_size_2d)
-		tool.save_resize_image("normed_heli.png", image.dsm_heli, image.s_size_2d)
+		image_util.save_resize_image("normed_uav.png",  image.dsm_uav,  image.s_size_2d)
+		image_util.save_resize_image("normed_heli.png", image.dsm_heli, image.s_size_2d)
 
 		return
 
@@ -116,8 +116,8 @@ class CalcGeoData():
 				image (ImageData): 画像データ
 		"""
 		# 平均・標準偏差算出
-		ave_dsm_uav, sd_dsm_uav   = tool.calc_mean_sd(image.dsm_uav)
-		ave_dsm_heli, sd_dsm_heli = tool.calc_mean_sd(image.dsm_heli)
+		ave_dsm_uav, sd_dsm_uav   = calculation_util.calc_mean_sd(image.dsm_uav)
+		ave_dsm_heli, sd_dsm_heli = calculation_util.calc_mean_sd(image.dsm_heli)
 
 		print("- uav  ave, sd :", ave_dsm_uav,  sd_dsm_uav)
 		print("- heli ave, sd :", ave_dsm_heli, sd_dsm_heli)
@@ -143,9 +143,9 @@ class CalcGeoData():
 				image (ImageData): 画像データ
 		"""
 		# 最小値・最大値算出
-		min_uav,  max_uav  = tool.calc_min_max(image.dsm_uav)
-		min_heli, max_heli = tool.calc_min_max(image.dsm_heli)
-		min_dem,  max_dem  = tool.calc_min_max(image.dem)
+		min_uav,  max_uav  = calculation_util.calc_min_max(image.dsm_uav)
+		min_heli, max_heli = calculation_util.calc_min_max(image.dsm_heli)
+		min_dem,  max_dem  = calculation_util.calc_min_max(image.dem)
 		# print("- uav-range  :", min_uav , max_uav)    # 1.0 255.0
 		# print("- heli-range :", min_heli, max_heli)   # 52.16754 180.19545
 		# print("- dem-range  :", min_dem , max_dem)    # -0.54201436 146.51208
@@ -162,8 +162,8 @@ class CalcGeoData():
 		# self.dsm_heli = (self.dsm_heli - min_heli) / (max_heli - min_heli) * (max_dem + veg_height)
 
 		# 画像を保存
-		tool.save_resize_image("normed_uav.png",  image.dsm_uav,  image.s_size_2d)
-		tool.save_resize_image("normed_heli.png", image.dsm_heli, image.s_size_2d)
+		image_util.save_resize_image("normed_uav.png",  image.dsm_uav,  image.s_size_2d)
+		image_util.save_resize_image("normed_heli.png", image.dsm_heli, image.s_size_2d)
 
 		# 画像の保存
 		cv2.imwrite("./output/meterd_uav_dsm.tif", image.dsm_uav)
@@ -178,5 +178,4 @@ class CalcGeoData():
 		Args:
 				image (ImageData): 画像データ
 		"""
-		
 		return 
