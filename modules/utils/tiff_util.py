@@ -23,9 +23,12 @@ def load_tif(path: str) -> np.ndarray:
 
   # 第1-4バンド
   b1 = src.GetRasterBand(1).ReadAsArray()
-  b2 = src.GetRasterBand(2).ReadAsArray()
-  b3 = src.GetRasterBand(3).ReadAsArray()
-  b4 = src.GetRasterBand(4).ReadAsArray()
+  try:
+    b2 = src.GetRasterBand(2).ReadAsArray()
+    b3 = src.GetRasterBand(3).ReadAsArray()
+    b4 = src.GetRasterBand(4).ReadAsArray()
+  except:
+    pass
 
   # データタイプ番号
   # dtid = src.GetRasterBand(1).DataType
@@ -45,7 +48,11 @@ def load_tif(path: str) -> np.ndarray:
   # output.FlushCache()
   # output = None
 
-  return cv2.merge((b1,b2,b3))
+  try:
+    return cv2.merge((b1,b2,b3))
+  except:
+    print("1 band")
+    return b1
 
 
 # def write_tiffile(res,read_file,write_file):
@@ -117,8 +124,11 @@ def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
   band = src.RasterCount
 
   # 第1-4バンド
-  b3, b2, b1 = cv2.split(data)
-  b4 = src.GetRasterBand(4).ReadAsArray()
+  try:
+    b3, b2, b1 = cv2.split(data)
+    b4 = src.GetRasterBand(4).ReadAsArray()
+  except:
+    b3, b2, b1 = data, data, data
 
   # データタイプ番号（32-bit float）
   dtid = 6
@@ -136,10 +146,13 @@ def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
 
   # 空間情報を結合
   output.SetProjection(src.GetProjection())
-  output.GetRasterBand(1).WriteArray(b1)
-  output.GetRasterBand(2).WriteArray(b2)
-  output.GetRasterBand(3).WriteArray(b3)
-  output.GetRasterBand(4).WriteArray(b4)
+  try:
+    output.GetRasterBand(1).WriteArray(b1)
+    output.GetRasterBand(2).WriteArray(b2)
+    output.GetRasterBand(3).WriteArray(b3)
+    output.GetRasterBand(4).WriteArray(b4)
+  except:
+    pass
   output.FlushCache()
 
 

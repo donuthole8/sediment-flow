@@ -339,10 +339,10 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 		"""
 		# 正規化後のDSM標高値
-		# image.normed_dsm = self.dsm_uav.copy()
+		# image.normed_dsm = self.dsm_after.copy()
 
 		# 比較用
-		cv2.imwrite("./outputs/uav_dsm.tif",  image.dsm_uav)
+		cv2.imwrite("./outputs/uav_dsm.tif",  image.dsm_after)
 
 		# 建物領域毎に処理
 		for bld in image.building:
@@ -350,7 +350,7 @@ class RegionProcessing():
 			neighbor_height = self.__get_neighbor_region(image, bld["coords"])
 
 			# TODO: できるか試す
-			# image.dsm_uav[bld["coords"]] = neighbor_height
+			# image.dsm_after[bld["coords"]] = neighbor_height
 
 			# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
 			# NOTE: DEMを使う場合はコメントアウトのままで良い
@@ -360,15 +360,15 @@ class RegionProcessing():
 			for coords in bld["coords"]:
 				# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
 				# image.normed_dsm[coords] = neighbor_height
-				image.dsm_uav[coords] = neighbor_height
+				image.dsm_after[coords] = neighbor_height
 
 				# TODO: subも検討
 				# image.dsm_sub[coords] -= 10
 
 		# 画像の保存
 		# cv2.imwrite("./outputs/normed_uav_dsm.tif",  image.normed_dsm)
-		cv2.imwrite("./outputs/normed_uav_dsm.tif",  image.dsm_uav)
-		# cv2.imwrite("normed_uav_heli.tif", image.dsm_heli)
+		cv2.imwrite("./outputs/normed_uav_dsm.tif",  image.dsm_after)
+		# cv2.imwrite("normed_uav_heli.tif", image.dem_before)
 
 		# 建物領域データの開放
 		image.building = None
@@ -425,85 +425,85 @@ class RegionProcessing():
 
 		try:
 			if (image.bld_mask[     cy - r2, cx - r2] == 0):
-				return image.dsm_uav[(cy - r2, cx - r2)]
+				return image.dsm_after[(cy - r2, cx - r2)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy - r2, cx     ] == 0):
-				return image.dsm_uav[(cy - r2, cx     )]
+				return image.dsm_after[(cy - r2, cx     )]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy - r2, cx + r2] == 0):
-				return image.dsm_uav[(cy - r2, cx + r2)]
+				return image.dsm_after[(cy - r2, cx + r2)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy     , cx + r2] == 0):
-				return image.dsm_uav[(cy     , cx + r2)]
+				return image.dsm_after[(cy     , cx + r2)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy + r2, cx + r2] == 0):
-				return image.dsm_uav[(cy + r2, cx + r2)]
+				return image.dsm_after[(cy + r2, cx + r2)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy + r2, cx     ] == 0):
-				return image.dsm_uav[(cy + r2, cx     )]
+				return image.dsm_after[(cy + r2, cx     )]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy + r2, cx - r2] == 0):
-				return image.dsm_uav[(cy + r2, cx - r2)]
+				return image.dsm_after[(cy + r2, cx - r2)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy     , cx - r2] == 0):
-				return image.dsm_uav[(cy     , cx - r2)]
+				return image.dsm_after[(cy     , cx - r2)]
 		except:
 			pass
 
 		# 隣接領域の画素を取得
 		try:
 			if (image.bld_mask[     cy - r1, cx - r1] == 0):
-				return image.dsm_uav[(cy - r1, cx - r1)]
+				return image.dsm_after[(cy - r1, cx - r1)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy - r1, cx     ] == 0):
-				return image.dsm_uav[(cy - r1, cx     )]
+				return image.dsm_after[(cy - r1, cx     )]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy - r1, cx + r1] == 0):
-				return image.dsm_uav[(cy - r1, cx + r1)]
+				return image.dsm_after[(cy - r1, cx + r1)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy     , cx + r1] == 0):
-				return image.dsm_uav[(cy     , cx + r1)]
+				return image.dsm_after[(cy     , cx + r1)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy + r1, cx + r1] == 0):
-				return image.dsm_uav[(cy + r1, cx + r1)]
+				return image.dsm_after[(cy + r1, cx + r1)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy + r1, cx     ] == 0):
-				return image.dsm_uav[(cy + r1, cx     )]
+				return image.dsm_after[(cy + r1, cx     )]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy + r1, cx - r1] == 0):
-				return image.dsm_uav[(cy + r1, cx - r1)]
+				return image.dsm_after[(cy + r1, cx - r1)]
 		except:
 			pass
 		try:
 			if (image.bld_mask[     cy     , cx - r1] == 0):
-				return image.dsm_uav[(cy     , cx - r1)]
+				return image.dsm_after[(cy     , cx - r1)]
 		except:
 			pass
 
-		return image.dsm_uav[(cy, cx)]
+		return image.dsm_after[(cy, cx)]

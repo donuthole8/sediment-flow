@@ -25,12 +25,9 @@ def draw_color(img: np.ndarray, idx: np.ndarray, color: list[int]) -> np.ndarray
 	b, g, r = cv2.split(img)
 
 	# 画像を着色
-	b[idx] = b[idx] * al + color[0] * (1 - al)
-	g[idx] = g[idx] * al + color[1] * (1 - al)
-	r[idx] = r[idx] * al + color[2] * (1 - al)
-
-	# チャンネルを結合
-	res = np.dstack((np.dstack((b, g)), r))
+	res = cv2.addWeighted(b, al, color[0], 1 - al, 0)
+	res = cv2.addWeighted(g, al, color[1], 1 - al, 0)
+	res = cv2.addWeighted(r, al, color[2], 1 - al, 0)
 
 	return res
 

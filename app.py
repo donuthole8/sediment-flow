@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 
 from modules.utils import common_util
-from modules.utils import image_util
 from modules.image_data import ImageData
 from modules.calc_geo_data import CalcGeoData
 from modules.resampling import Resampling
@@ -15,8 +14,8 @@ from modules.accuracy_valuation import AccuracyValuation
 
 
 # # 本番用画像
-# path1 = './inputs/dsm_uav.tif'
-# path2 = './inputs/dsm_heli.tif'
+# path1 = './inputs/dsm_after.tif'
+# path2 = './inputs/dem_before.tif'
 # path3 = './inputs/dem.tif'
 # path4 = './inputs/degree.tif'
 # # path5 = './inputs_trim/mask.png'
@@ -27,8 +26,8 @@ from modules.accuracy_valuation import AccuracyValuation
 
 
 # トリミングしたテスト用画像
-path1 = './inputs_trim/dsm_uav_re.tif'
-path2 = './inputs_trim/dsm_heli.tif'
+path1 = './inputs_trim/dsm_after.tif'
+path2 = './inputs_trim/dem_before.tif'
 path3 = './inputs_trim/dem.tif'
 # path4 = './inputs_trim/degree_trig.tif'
 # path4 = './inputs_trim/degree.tif'
@@ -36,7 +35,7 @@ path4 = './inputs_trim/degree_zeven.tif'
 # path5 = './inputs_trim/mask.png'
 # path5 = './inputs_trim/manual_mask.png'
 path5 = './inputs_trim/normed_mask.png'
-path6 = './inputs_trim/uav_img.tif'
+path6 = './inputs_trim/ortho_img.tif'
 path7 = './inputs_trim/heli_img.tif'
 path8 = './outputs/texture/dissimilarity.tif'
 path9 = './outputs/building_mask.png'
@@ -44,8 +43,8 @@ path10 = './inputs_trim/building_gsi.png'
 
 
 # # リサイズしたテスト用画像
-# path1 = './inputs_re/dsm_uav.tif'
-# path2 = './inputs_re/dsm_heli.tif'
+# path1 = './inputs_re/dsm_after.tif'
+# path2 = './inputs_re/dem_before.tif'
 # path3 = './inputs_re/dem.tif'
 # path4 = './inputs_re/degree.tif'
 # # path5 = './inputs_re/mask.png'
@@ -70,9 +69,6 @@ def main() -> None:
 	"""
 	メイン関数
 	"""
-	# TODO: 建物輪郭データとか？？読み込み？？
-	# TODO: 建物使うべき？？
-
 	# TODO: 土砂マスク画像の作成に中山さんの手法を適用する・海領域の除去・影領域の対処・前後差分の検討
 	# FIXME: 画素値が0-255に正規化されている
 	# クラス初期化
@@ -92,10 +88,6 @@ def main() -> None:
 	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
 	Resampling(image)
 
-	# 画像サイズの確認
-	print("# 入力画像のサイズ確認")
-	image_util.show_image_size(image)
-
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")
@@ -113,8 +105,8 @@ def main() -> None:
 	# TODO: 絶対値で算出できるよう実装を行う
 	print("# 標高値の正規化")
 	CalcGeoData().norm_elevation_meter(image)
-	CalcGeoData().norm_elevation_sd(image)
-	CalcGeoData().norm_elevation_0to1(image)
+	# CalcGeoData().norm_elevation_sd(image)
+	# CalcGeoData().norm_elevation_0to1(image)
 
 	# 標高座標の最適化
 	# TODO: 論文手法を実装する

@@ -82,7 +82,7 @@ class CalcMovementMesh():
 					labels = self.__extract_neighbor(image)
 
 					# 傾斜方位が上から下の領域を抽出
-					labels = self.__extract_downstream(image, labels)
+					# labels = self.__extract_downstream(image, labels)
 
 					# # 侵食と堆積の組み合わせの領域を抽出
 					# coords = self.extract_sediment(self, region, labels)
@@ -345,7 +345,7 @@ class CalcMovementMesh():
 
 		for direction in directions:
 			# 注目画素からの傾斜方位の標高値を取得
-			heights.append(image.dsm_uav[
+			heights.append(image.dsm_after[
 				coord[0] + direction[0], 
 				coord[1] + direction[1]
 			])
@@ -398,7 +398,7 @@ class CalcMovementMesh():
 		for coord in self.get_mesh_coords(image.size_3d, label[0], label[1]):
 			# 土砂マスクの領域のみ
 			if (mask[coord] == 0):
-				average_height   += image.dsm_uav[coord]
+				average_height   += image.dsm_after[coord]
 				sediment_pix_num += 1
 
 		try:
@@ -423,8 +423,8 @@ class CalcMovementMesh():
 		for coord in self.get_mesh_coords(image.size_3d, label[0], label[1]):
 			# 土砂マスクの領域のみ
 			if (mask[coord] == 0):
-				if (image.dsm_uav[coord] < min_height):
-					min_height = image.dsm_uav[coord] 
+				if (image.dsm_after[coord] < min_height):
+					min_height = image.dsm_after[coord] 
 					min_height_coord = coord
 
 		return min_height_coord
