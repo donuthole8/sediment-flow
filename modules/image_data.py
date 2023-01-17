@@ -20,8 +20,8 @@ class ImageData():
 		# tif画像
 		self.dsm_after  = cv2.imread(path_list[0], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.dem_before = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.dem      = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.degree   = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.dem        = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.degree     = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
 		# 画像
 		self.mask          = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
@@ -56,5 +56,7 @@ class ImageData():
 
 		# 入力画像の最大最小値確認
 		image_util.show_max_min(self)
+
+		cv2.imwrite("./outputs/ortho.png", self.ortho)
 		
 		return

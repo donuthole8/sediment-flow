@@ -44,14 +44,10 @@ class Resampling():
 		# tool.save_resize_image("resamp_mask.png",  image.mask,     image.s_size_2d)
 		# tool.save_resize_image("resamp_ortho.png", image.ortho,    image.s_size_2d)
 
-		cv2.imwrite("bldwww.png", image.bld_gsi)
-
 		# 1次元に戻す
 		image.mask = cv2.split(image.mask)[0]
 
-		# 使えない
-		# cv2.imwrite("./inputs_trim/dem_resampling.tif", image.dem)
-		# ビューワは変だけどQGISで見れる
+		# 画像の保存
 		tiff_util._save_tif(
 			cv2.merge((image.dem, image.dem, image.dem)), 
 			"./inputs_trim/dsm_after.tif", 

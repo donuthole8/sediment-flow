@@ -248,7 +248,7 @@ class RegionProcessing():
 			# 建物ポリゴンと一致度が閾値以上あるか
 		if (self.__is_building_polygon(image, coords)):
 			# 円形度
-			if (not (circularity > 30)):		
+			if (not (circularity > 40)):		
 			# if (not (circularity > 40)) or (not (dissimilarity < 1)):
 				# 非建物領域
 				return False

@@ -143,23 +143,36 @@ class CalcGeoData():
 				image (ImageData): 画像データ
 		"""
 		# 最小値・最大値算出
-		min_uav,  max_uav  = calculation_util.calc_min_max(image.dsm_after)
-		min_heli, max_heli = calculation_util.calc_min_max(image.dem_before)
-		min_dem,  max_dem  = calculation_util.calc_min_max(image.dem)
-		# print("- uav-range  :", min_uav , max_uav)    # 1.0 255.0
-		# print("- heli-range :", min_heli, max_heli)   # 52.16754 180.19545
-		# print("- dem-range  :", min_dem , max_dem)    # -0.54201436 146.51208
+		min_after,  max_after  = calculation_util.calc_min_max(image.dsm_after)
+		min_before, max_before = calculation_util.calc_min_max(image.dem_before)
+		min_dem,    max_dem    = calculation_util.calc_min_max(image.dem)
 
-		# 植生を加味
-		# TODO: 植生領域を除去し，植生による誤差を除去
-		# veg_height = 0
-		veg_height = 15
-		# veg_height = 10
+		print("->>>>>>> 正規化前")
+		image_util.show_max_min(image)
 
 		# 正規化処理
 		# TODO: 修正・改善
-		image.dsm_after  = (image.dsm_after - min_uav) / (max_uav - min_uav) * (max_dem + veg_height)
-		# self.dem_before = (self.dem_before - min_heli) / (max_heli - min_heli) * (max_dem + veg_height)
+		# image.dsm_after  = (image.dsm_after - min_before) / (max_before - min_before) * max_dem
+		# image.dsm_after  = (image.dsm_after - min_after) / (max_after - min_after) * max_before
+
+
+		# DEMの場合
+		image.dsm_after  = min_before + (max_before - min_before) * ((image.dsm_after - min_after) / (max_after - min_after)) 
+
+
+
+		# # ヘリとUAVの場合
+		# print("dem", min_dem ,max_dem)
+		# image.dsm_after   = min_dem + (max_dem - min_dem) * ((image.dsm_after - min_after) / (max_after - min_after)) 
+		# image.dem_before  = min_dem + (max_dem - min_dem) * ((image.dem_before - min_before) / (max_before - min_before)) 
+
+		# print("after", np.nanmin(image.dsm_after), np.nanmax(image.dsm_after))
+		# print("before", np.nanmin(image.dem_before), np.nanmax(image.dem_before))
+
+
+
+		print("->>>>>>> 正規化後")
+		image_util.show_max_min(image)
 
 		# 画像を保存
 		image_util.save_resize_image("normed_uav.png",  image.dsm_after,  image.s_size_2d)
@@ -168,9 +181,6 @@ class CalcGeoData():
 		# 画像の保存
 		cv2.imwrite("./output/meterd_uav_dsm.tif", image.dsm_after)
 		cv2.imwrite("./output/meterd_uav_heli.tif", image.dem_before)
-
-		# 入力画像の最大最小値確認
-		image_util.show_max_min(image)
 
 		return
 

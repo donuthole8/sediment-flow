@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 
 from modules.utils import tiff_util
@@ -24,7 +25,9 @@ class CalcSedimentation():
 		dsm_bin = self.__binarize_2area(image)
 
 		# 画像の保存
-		tiff_util.save_tif(image.dsm_sub, "./output/dsm_sub.tif")
+		tiff_util._save_tif(image.dsm_sub, "./inputs_trim/dsm_after.tif", "./outputs/dsm_sub2.tif")
+		# tiff_util.save_tif(image.dsm_sub, "./outputs/dsm_sub.tif")
+		cv2.imwrite("./outputs/dsm_sub.png", image.dsm_sub)
 		image_util.save_resize_image("dsm_bin.png", dsm_bin, image.s_size_2d)
 
 		return

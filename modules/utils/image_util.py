@@ -53,9 +53,9 @@ def show_max_min(image) -> None:
 	"""
 	print("# 入力画像の最大最小値確認")
 
-	print("- uav (min, max):", calculation_util.calc_min_max(image.dsm_after))
-	print("- heli(min, max):", calculation_util.calc_min_max(image.dem_before))
-	print("- dem (min, max):", calculation_util.calc_min_max(image.dem))
-	print("- deg (min, max):", calculation_util.calc_min_max(image.degree))
+	print("- after (min, max):", calculation_util.calc_min_max(image.dsm_after))
+	print("- before(min, max):", calculation_util.calc_min_max(image.dem_before))
+	print("- dem   (min, max):", calculation_util.calc_min_max(image.dem))
+	print("- deg   (min, max):", calculation_util.calc_min_max(image.degree))
 
 	return
