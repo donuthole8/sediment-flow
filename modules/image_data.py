@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 
-from modules.utils import calculation_util
+from modules.utils import image_util
+
 
 """
 各種画像データや画像サイズを扱う
@@ -17,16 +18,10 @@ class ImageData():
 		self.path_list = path_list
 
 		# tif画像
-		self.dsm_uav  = cv2.imread(path_list[0], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.dsm_heli = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.dem      = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.degree   = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-
-		print(calculation_util.calc_min_max(self.dsm_uav))
-		print(calculation_util.calc_min_max(self.dsm_heli))
-		print(calculation_util.calc_min_max(self.dem))
-		print(calculation_util.calc_min_max(self.degree))
-
+		self.dsm_after  = cv2.imread(path_list[0], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.dem_before = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.dem        = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.degree     = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
 		# 画像
 		self.mask          = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
@@ -58,3 +53,10 @@ class ImageData():
 		self.pms_pix    = []
 		self.region     = []
 		self.building   = []
+
+		# 入力画像の最大最小値確認
+		image_util.show_max_min(self)
+
+		cv2.imwrite("./outputs/ortho.png", self.ortho)
+		
+		return

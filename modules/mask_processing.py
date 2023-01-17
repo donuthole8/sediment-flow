@@ -161,7 +161,7 @@ class MaskProcessing():
 
 		return
 
-	
+
 	def apply_mask(self, image: ImageData) -> None:
 		""" マスク画像を適用し土砂領域のみを抽出
 
@@ -169,9 +169,10 @@ class MaskProcessing():
 				image (ImageData): 画像データ
 		"""
 		# 土砂マスクを用いて土砂領域以外を除去
-		image.dsm_uav  = self.__masking(image, image.dsm_uav,  image.mask)
-		image.dsm_heli = self.__masking(image, image.dsm_heli, image.mask)
-		image.degree   = self.__masking(image, image.degree,   image.mask)
+		image.dsm_after  = self.__masking(image, image.dsm_after,  image.mask)
+		image.dem_before = self.__masking(image, image.dem_before, image.mask)
+		image.dem        = self.__masking(image, image.dem,        image.mask)
+		image.degree     = self.__masking(image, image.degree,     image.mask)
 
 		return
 
@@ -206,7 +207,7 @@ class MaskProcessing():
 		# idx = np.where(mask == 0).astype(np.float32)
 		# # 土砂領域以外の標高データを消去
 		# sed[idx] = np.nan
-		# tif.save_tif(dsm, "dsm_uav.tif", "sediment.tif")
+		# tif.save_tif(dsm, "dsm_after.tif", "sediment.tif")
 		# return sed.astype(np.uint8)
 
 		# 画像を保存

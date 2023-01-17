@@ -127,7 +127,7 @@ class AccuracyValuation():
 					mesh_num += 1
 
 					# FIXME: 負値がある
-					print(" -", mesh_num, self.calc_movement_result[i * len(answer) + j]["center"], ":", 1 - error)
+					print("-", mesh_num, self.calc_movement_result[i * len(answer) + j]["center"], ":", 1 - error)
 
 		# 各メッシュの精度平均
 		print("- 各メッシュの精度平均:", np.nanmean(accuracies))

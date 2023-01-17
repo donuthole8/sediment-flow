@@ -14,7 +14,10 @@ area_data/*
 *.csv
 *.txt
 *.xml
+atami_old/*
 atami/*
+mihara-north1/*
+mihara-north2/*
 
 # openpiv
 openpiv-python

@@ -94,16 +94,16 @@ class CalcGeoData():
 		image: 画像データ
 		"""
 		# 最小値・最大値算出
-		min_uav,  max_uav  = calculation_util.calc_min_max(image.dsm_uav)
-		min_heli, max_heli = calculation_util.calc_min_max(image.dsm_heli)
+		min_uav,  max_uav  = calculation_util.calc_min_max(image.dsm_after)
+		min_heli, max_heli = calculation_util.calc_min_max(image.dem_before)
 
 		# 正規化処理
-		image.dsm_uav  = (image.dsm_uav - min_uav) / (max_uav - min_uav)
-		image.dsm_heli = (image.dsm_heli - min_heli) / (max_heli - min_heli)
+		image.dsm_after  = (image.dsm_after - min_uav) / (max_uav - min_uav)
+		image.dem_before = (image.dem_before - min_heli) / (max_heli - min_heli)
 
 		# 画像を保存
-		image_util.save_resize_image("normed_uav.png",  image.dsm_uav,  image.s_size_2d)
-		image_util.save_resize_image("normed_heli.png", image.dsm_heli, image.s_size_2d)
+		image_util.save_resize_image("normed_uav.png",  image.dsm_after,  image.s_size_2d)
+		image_util.save_resize_image("normed_heli.png", image.dem_before, image.s_size_2d)
 
 		return
 
@@ -116,11 +116,11 @@ class CalcGeoData():
 				image (ImageData): 画像データ
 		"""
 		# 平均・標準偏差算出
-		ave_dsm_uav, sd_dsm_uav   = calculation_util.calc_mean_sd(image.dsm_uav)
-		ave_dsm_heli, sd_dsm_heli = calculation_util.calc_mean_sd(image.dsm_heli)
+		ave_dsm_after, sd_dsm_after   = calculation_util.calc_mean_sd(image.dsm_after)
+		ave_dem_before, sd_dem_before = calculation_util.calc_mean_sd(image.dem_before)
 
-		print("- uav  ave, sd :", ave_dsm_uav,  sd_dsm_uav)
-		print("- heli ave, sd :", ave_dsm_heli, sd_dsm_heli)
+		print("- uav  ave, sd :", ave_dsm_after,  sd_dsm_after)
+		print("- heli ave, sd :", ave_dem_before, sd_dem_before)
 
 		# 標高最大値（山間部の頂上・植生頂上）の変化は無いと仮定する
 		# （標高最小値（海・海岸）は海抜0mと仮定する）
@@ -129,8 +129,8 @@ class CalcGeoData():
 		max_height_uav  = 190
 		max_height_heli = 185
 
-		image.dsm_uav  = (image.dsm_uav - ave_dsm_uav) / sd_dsm_uav  * max_height_uav
-		image.dsm_heli = (image.dsm_heli - ave_dsm_heli) / sd_dsm_heli * max_height_heli
+		image.dsm_after  = (image.dsm_after - ave_dsm_after) / sd_dsm_after  * max_height_uav
+		image.dem_before = (image.dem_before - ave_dem_before) / sd_dem_before * max_height_heli
 
 		return
 
@@ -143,31 +143,44 @@ class CalcGeoData():
 				image (ImageData): 画像データ
 		"""
 		# 最小値・最大値算出
-		min_uav,  max_uav  = calculation_util.calc_min_max(image.dsm_uav)
-		min_heli, max_heli = calculation_util.calc_min_max(image.dsm_heli)
-		min_dem,  max_dem  = calculation_util.calc_min_max(image.dem)
-		# print("- uav-range  :", min_uav , max_uav)    # 1.0 255.0
-		# print("- heli-range :", min_heli, max_heli)   # 52.16754 180.19545
-		# print("- dem-range  :", min_dem , max_dem)    # -0.54201436 146.51208
+		min_after,  max_after  = calculation_util.calc_min_max(image.dsm_after)
+		min_before, max_before = calculation_util.calc_min_max(image.dem_before)
+		min_dem,    max_dem    = calculation_util.calc_min_max(image.dem)
 
-		# 植生を加味
-		# TODO: 植生領域を除去し，植生による誤差を除去
-		# veg_height = 0
-		veg_height = 15
-		# veg_height = 10
+		print("->>>>>>> 正規化前")
+		image_util.show_max_min(image)
 
 		# 正規化処理
 		# TODO: 修正・改善
-		image.dsm_uav  = (image.dsm_uav - min_uav) / (max_uav - min_uav) * (max_dem + veg_height)
-		# self.dsm_heli = (self.dsm_heli - min_heli) / (max_heli - min_heli) * (max_dem + veg_height)
+		# image.dsm_after  = (image.dsm_after - min_before) / (max_before - min_before) * max_dem
+		# image.dsm_after  = (image.dsm_after - min_after) / (max_after - min_after) * max_before
+
+
+		# DEMの場合
+		image.dsm_after  = min_before + (max_before - min_before) * ((image.dsm_after - min_after) / (max_after - min_after)) 
+
+
+
+		# # ヘリとUAVの場合
+		# print("dem", min_dem ,max_dem)
+		# image.dsm_after   = min_dem + (max_dem - min_dem) * ((image.dsm_after - min_after) / (max_after - min_after)) 
+		# image.dem_before  = min_dem + (max_dem - min_dem) * ((image.dem_before - min_before) / (max_before - min_before)) 
+
+		# print("after", np.nanmin(image.dsm_after), np.nanmax(image.dsm_after))
+		# print("before", np.nanmin(image.dem_before), np.nanmax(image.dem_before))
+
+
+
+		print("->>>>>>> 正規化後")
+		image_util.show_max_min(image)
 
 		# 画像を保存
-		image_util.save_resize_image("normed_uav.png",  image.dsm_uav,  image.s_size_2d)
-		image_util.save_resize_image("normed_heli.png", image.dsm_heli, image.s_size_2d)
+		image_util.save_resize_image("normed_uav.png",  image.dsm_after,  image.s_size_2d)
+		image_util.save_resize_image("normed_heli.png", image.dem_before, image.s_size_2d)
 
 		# 画像の保存
-		cv2.imwrite("./output/meterd_uav_dsm.tif", image.dsm_uav)
-		cv2.imwrite("./output/meterd_uav_heli.tif", image.dsm_heli)
+		cv2.imwrite("./output/meterd_uav_dsm.tif", image.dsm_after)
+		cv2.imwrite("./output/meterd_uav_heli.tif", image.dem_before)
 
 		return
 
