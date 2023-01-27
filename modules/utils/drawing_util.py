@@ -341,14 +341,14 @@ def draw_direction(mesh: CalcMovementMesh, image: ImageData, direction: float) -
 		y_coord = int((mesh.mesh_size // 2) * math.sin(math.radians(average_direction_trig))) + mesh.center_coord[0]
 		x_coord = int((mesh.mesh_size // 2) * math.cos(math.radians(average_direction_trig))) + mesh.center_coord[1]
 
-		# # 矢印を描画
-		# cv2.arrowedLine(
-		# 	img=image.ortho,	# 画像
-		# 	pt1=(mesh.center_coord[1], mesh.center_coord[0]), # 始点
-		# 	pt2=(x_coord, y_coord),	# 終点
-		# 	color=(0, 0, 255),	# 色			
-		# 	thickness=2,	# 太さ
-		# )
+		# 矢印を描画
+		cv2.arrowedLine(
+			img=image.ortho,	# 画像
+			pt1=(mesh.center_coord[1], mesh.center_coord[0]), # 始点
+			pt2=(x_coord, y_coord),	# 終点
+			color=(0, 0, 255),	# 色			
+			thickness=2,	# 太さ
+		)
 	except Exception as e:
 		print(e, ", average_direction: ", direction)
 

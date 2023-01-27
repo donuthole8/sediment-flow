@@ -28,21 +28,15 @@ class Resampling():
 		# UAV画像のDSMの最小値を算出（領域外の透過背景値）
 		background_pix = np.min(image.dsm_after)
 
-		# 航空写真DSM・DEMの不要範囲除去（UAVでの透過背景消去）
-		idx = np.where(image.dsm_after == background_pix)
-		image.dsm_after[idx]  = np.nan
-		image.dem_before[idx] = np.nan
-		image.dem[idx]      = np.nan 
-		image.degree[idx]   = np.nan
-		image.mask[idx]     = 0
-		image.ortho[idx]    = 0
-		image.bld_gsi[idx]  = 255
-
-		# tool.save_resize_image("resamp_heli.png",  image.dem_before, image.s_size_2d)
-		# tool.save_resize_image("resamp_dem.png",   image.dem,      image.s_size_2d)
-		# tool.save_resize_image("resamp_deg.png",   image.degree,   image.s_size_2d)
-		# tool.save_resize_image("resamp_mask.png",  image.mask,     image.s_size_2d)
-		# tool.save_resize_image("resamp_ortho.png", image.ortho,    image.s_size_2d)
+		# # 航空写真DSM・DEMの不要範囲除去（UAVでの透過背景消去）
+		# idx = np.where(image.dsm_after == background_pix)
+		# image.dsm_after[idx]  = np.nan
+		# image.dem_before[idx] = np.nan
+		# image.dem[idx]      = np.nan 
+		# image.degree[idx]   = np.nan
+		# image.mask[idx]     = 0
+		# image.ortho[idx]    = 0
+		# image.bld_gsi[idx]  = 255
 
 		# 1次元に戻す
 		image.mask = cv2.split(image.mask)[0]
@@ -50,14 +44,14 @@ class Resampling():
 		# 画像の保存
 		tiff_util._save_tif(
 			cv2.merge((image.dem, image.dem, image.dem)), 
-			"./inputs_trim/dsm_after.tif", 
-			"./inputs_trim/dem_resampling.tif", 
+			image.path_list[0],
+			"./outputs/dem_resampling.tif" 
 		)
 
-		# 画像サイズの確認
-		image_util.show_image_size(image)
+		# # 画像サイズの確認
+		# image_util.show_image_size(image)
 
-		# 入力画像の最大最小値確認
-		image_util.show_max_min(image)
+		# # 入力画像の最大最小値確認
+		# image_util.show_max_min(image)
 
 		return

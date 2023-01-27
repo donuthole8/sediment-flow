@@ -1,9 +1,7 @@
 # images
 inputs/*
-inputs_trim/*
-inputs_re/*
 outputs/*
-piv_out/*
+outputs_koyaura/*
 
 # area_data
 area_data/*
@@ -14,10 +12,7 @@ area_data/*
 *.csv
 *.txt
 *.xml
-atami_old/*
-atami/*
-mihara-north1/*
-mihara-north2/*
+*.icloud
 
 # openpiv
 openpiv-python

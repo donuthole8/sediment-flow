@@ -14,47 +14,16 @@ from modules.calc_movement_mesh import CalcMovementMesh
 from modules.accuracy_valuation import AccuracyValuation
 
 
-# # 本番用画像
-# path1 = './inputs/dsm_after.tif'
-# path2 = './inputs/dem_before.tif'
-# path3 = './inputs/dem.tif'
-# path4 = './inputs/degree.tif'
-# # path5 = './inputs_trim/mask.png'
-# # path5 = './inputs_trim/manual_mask.png'
-# path5 = './inputs/mask.png'
-# path6 = './inputs/uav_img.tif'
-# path7 = './inputs/heli_img.tif'
+# 画像のファイルパス
+path1 = './inputs/atami/trim/dsm_raw.tif'
+path2 = './inputs/atami/trim/dem.tif'
+path3 = './inputs/atami/trim/dem.tif'
+path4 = './inputs/atami/trim/degree.tif'
+path5 = './inputs/atami/trim/normed_mask.png'
+path6 = './inputs/atami/trim/ortho_img.tif'
+path7 = './inputs/atami/trim/building_polygon.png'
 
-
-# トリミングしたテスト用画像
-path1 = './inputs_trim/dsm_after.tif'
-# path2 = './inputs_trim/dem_heli_not_used.tif'
-path2 = './inputs_trim/dem.tif'
-path3 = './inputs_trim/dem.tif'
-# path4 = './inputs_trim/degree_trig.tif'
-# path4 = './inputs_trim/degree.tif'
-path4 = './inputs_trim/degree_zeven.tif'
-# path5 = './inputs_trim/mask.png'
-# path5 = './inputs_trim/manual_mask.png'
-path5 = './inputs_trim/normed_mask.png'
-path6 = './inputs_trim/ortho_img.tif'
-path7 = './inputs_trim/heli_img.tif'
-path8 = './outputs/texture/dissimilarity.tif'
-path9 = './outputs/building_mask.png'
-path10 = './inputs_trim/building_gsi.png'
-
-
-# # リサイズしたテスト用画像
-# path1 = './inputs_re/dsm_after.tif'
-# path2 = './inputs_re/dem_before.tif'
-# path3 = './inputs_re/dem.tif'
-# path4 = './inputs_re/degree.tif'
-# # path5 = './inputs_re/mask.png'
-# path5 = './inputs_re/manual_mask.png'
-# path6 = './inputs_re/uav_img.tif'
-# path7 = './inputs_re/heli_img.tif'
-
-path_list = [path1, path2, path3, path4, path5, path6, path10]
+path_list = [path1, path2, path3, path4, path5, path6, path7]
 
 
 # TODO: ラプラシアンフィルタとかを領域に使って勾配を求める
@@ -78,14 +47,14 @@ def main() -> None:
 	CalcGeoData().norm_degree_v2(image)
 
 	# 航空画像のDSMとDEMの切り抜き・リサンプリング
-	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
+	print("# 災害前DEM切り抜き・解像度のリサンプリング")
 	Resampling(image)
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")
-	RegionProcessing().area_division(image, 3, 4.5, 100)
-	# RegionProcessing().area_division(image, 10, 10, 300)
+	# RegionProcessing().area_division(image, 3, 4.5, 100)
+	RegionProcessing().area_division(image, 10, 10, 300)
 	# image.div_img = cv2.imread("./outputs/meanshift.png").astype(np.float32)
 
 	# 輪郭・重心データ抽出・ラベル画像作成
@@ -100,19 +69,12 @@ def main() -> None:
 	# NOTE: こっちでマスク画像作成するとエラーになる
 	# NOTE: 別リポジトリで作成
 	# MaskProcessing().norm_mask(image, 16666, 3)
-	image.mask = cv2.imread("./outputs/normed_mask.png")
-
-	print("--->>> 土砂領域マスク適用前")
-	image_util.show_max_min(image)
+	image.mask = cv2.imread("./inputs/atami/trim/normed_mask.png")
 
 	# 土砂マスク
 	# TODO: 隣接領域抽出のコスト削減のためにこれを行う
 	print("# 土砂マスクによる土砂領域抽出")
 	MaskProcessing().apply_mask(image)
-
-	print("--->>> 土砂領域マスク適用後")
-	# NOTE: DEMの方が正しい標高値
-	image_util.show_max_min(image)
 
 	# 標高値の正規化
 	# TODO: 絶対値で算出できるよう実装を行う
@@ -144,9 +106,6 @@ def main() -> None:
 	print("# 建物領域の標高値を地表面標高値に補正")
 	# TODO: 建物領域の標高値を地表面と同じ標高値にする
 	RegionProcessing().norm_building(image)
-
-	print(">>>>>>>> 建物領域補正後")
-	image_util.show_max_min(image)
 
 	# 土砂マスクを利用し堆積差分算出
 	print("# 堆積差分算出")

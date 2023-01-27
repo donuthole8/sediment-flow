@@ -27,7 +27,7 @@ class ImageData():
 		self.mask          = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
 		self.ortho         = cv2.imread(path_list[5]).astype(np.float32)
 		self.masked_ortho  = None
-		self.gradient      = None
+		self.slope         = None
 		self.div_img       = None
 		self.label_table   = None
 		self.dissimilarity = None
@@ -41,9 +41,8 @@ class ImageData():
 		# NOTE: いらないかも？
 		self.bld_gsi[np.where(self.bld_gsi < 128)] = 0
 
-
 		# 画像サイズ（shape=(y,x,z)）
-		self.size_3d    = self.ortho.shape
+		self.size_3d    = self.dsm_after.shape
 		self.size_2d    = (self.size_3d[0], self.size_3d[1])
 		self.size_2d_xy = (self.size_3d[1], self.size_3d[0])
 		self.s_size_2d  = (int(self.size_3d[1] / 2), int(self.size_3d[0] / 2))
@@ -53,9 +52,6 @@ class ImageData():
 		self.pms_pix    = []
 		self.region     = []
 		self.building   = []
-
-		# 入力画像の最大最小値確認
-		image_util.show_max_min(self)
 
 		cv2.imwrite("./outputs/ortho.png", self.ortho)
 		

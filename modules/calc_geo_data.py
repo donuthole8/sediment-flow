@@ -10,7 +10,7 @@ from modules.image_data import ImageData
 
 
 class CalcGeoData():
-	def dem2gradient(self, image: ImageData, mesh_size: int) -> None:
+	def dem2slope(self, image: ImageData, mesh_size: int) -> None:
 		""" DEMを勾配データへ変換
 
 		Args:
@@ -19,13 +19,13 @@ class CalcGeoData():
 		"""
 		# TODO: tiffutil.save_tifでQGISの位置情報に対応できていない
 		# 勾配データの算出
-		gradient = self.__dem2gradient(image, mesh_size)
+		slope = self.__dem2slope(image, mesh_size)
 
 		# データ保存
-		image.gradient = gradient
+		image.slope = slope
 
 		# 画像を保存
-		tiff_util.save_tif(image.gradient, "gradient.tif")
+		tiff_util.save_tif(image.slope, "slope.tif")
 
 		return
 
@@ -57,7 +57,7 @@ class CalcGeoData():
 
 
 	@staticmethod
-	def __dem2gradient(image: ImageData, size_mesh: int) -> None:
+	def __dem2slope(image: ImageData, size_mesh: int) -> None:
 		""" 勾配データを算出する
 
 		Args:
@@ -67,7 +67,7 @@ class CalcGeoData():
 		max = 0
 		index = [-1,1]
 		height, width = image.dem.shape[:2]
-		gradient = np.zeros((height, width))
+		slope = np.zeros((height, width))
 		dem = np.pad(image.dem, 1, mode = 'edge')
 
 		for y in trange(height):
@@ -80,10 +80,10 @@ class CalcGeoData():
 							angle = math.degrees(math.atan((float(abs(dem[y+j+1, x+i+1] - dem[y+1, x+1])) / float(size_mesh))))
 						if angle > max:
 							max = angle
-				gradient[y,x] = angle
+				slope[y,x] = angle
 				max = 0
 		
-		return gradient.astype(np.int8)
+		return slope.astype(np.int8)
 
 
 	@staticmethod
@@ -100,10 +100,6 @@ class CalcGeoData():
 		# 正規化処理
 		image.dsm_after  = (image.dsm_after - min_uav) / (max_uav - min_uav)
 		image.dem_before = (image.dem_before - min_heli) / (max_heli - min_heli)
-
-		# 画像を保存
-		image_util.save_resize_image("normed_uav.png",  image.dsm_after,  image.s_size_2d)
-		image_util.save_resize_image("normed_heli.png", image.dem_before, image.s_size_2d)
 
 		return
 
@@ -147,16 +143,16 @@ class CalcGeoData():
 		min_before, max_before = calculation_util.calc_min_max(image.dem_before)
 		min_dem,    max_dem    = calculation_util.calc_min_max(image.dem)
 
-		print("->>>>>>> 正規化前")
-		image_util.show_max_min(image)
-
 		# 正規化処理
 		# TODO: 修正・改善
 		# image.dsm_after  = (image.dsm_after - min_before) / (max_before - min_before) * max_dem
 		# image.dsm_after  = (image.dsm_after - min_after) / (max_after - min_after) * max_before
 
+		# 侵食深さ加味，三浦の手法
+		min_before += 1
+		max_before -= 1
 
-		# DEMの場合
+		# DEMの場合（min_before-after_beforeの範囲に正規化）
 		image.dsm_after  = min_before + (max_before - min_before) * ((image.dsm_after - min_after) / (max_after - min_after)) 
 
 
@@ -169,18 +165,12 @@ class CalcGeoData():
 		# print("after", np.nanmin(image.dsm_after), np.nanmax(image.dsm_after))
 		# print("before", np.nanmin(image.dem_before), np.nanmax(image.dem_before))
 
-
-
-		print("->>>>>>> 正規化後")
-		image_util.show_max_min(image)
-
 		# 画像を保存
-		image_util.save_resize_image("normed_uav.png",  image.dsm_after,  image.s_size_2d)
-		image_util.save_resize_image("normed_heli.png", image.dem_before, image.s_size_2d)
-
-		# 画像の保存
-		cv2.imwrite("./output/meterd_uav_dsm.tif", image.dsm_after)
-		cv2.imwrite("./output/meterd_uav_heli.tif", image.dem_before)
+		tiff_util._save_tif(
+			image.dsm_after,
+			image.path_list[0],
+			"./outputs/normed_dsm1.tif"
+		)
 
 		return
 
