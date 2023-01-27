@@ -6,6 +6,7 @@ import pymeanshift as pms
 from modules.utils import common_util
 from modules.utils import csv_util
 from modules.utils import image_util
+from modules.utils import tiff_util
 from modules.utils import drawing_util
 from modules.image_data import ImageData
 
@@ -27,16 +28,21 @@ class RegionProcessing():
 				range_radius (float): 範囲半径
 				min_density (float): 最小密度
 		"""
+		# ヒストグラム平均化
+		img = self.equalization(image.ortho)
+
 		# Lab表色系に変換
 		# NOTE: RGB表色系のままでも良いかも
 
 		# lab_img = cv2.cvtColor(self.ortho, cv2.COLOR_BGR2Lab)
+		lab_img = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_BGR2Lab)
 		# lab_img = cv2.cvtColor(self.masked_ortho, cv2.COLOR_BGR2Lab)
 
 		# PyMeanShiftによる域分割
 		# TODO: マスク済みオルソ画像を用いると良いかも
 		img, _, number_regions = pms.segment(
-			image.ortho.astype(np.uint8), 
+			lab_img,
+			# image.ortho.astype(np.uint8), 
 			# self.masked_ortho.astype(np.uint8), 
 			spatial_radius, 
 			range_radius, 
@@ -44,8 +50,8 @@ class RegionProcessing():
 		)
 
 		# RGB表色系に変換
-		# self.div_img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR).astype(np.float32)
-		image.div_img = img
+		image.div_img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR).astype(np.float32)
+		# image.div_img = img
 
 		# 画像の保存
 		cv2.imwrite('./outputs/meanshift.png', image.div_img)
@@ -53,6 +59,27 @@ class RegionProcessing():
 		print("- meanshift-num:", number_regions)
 
 		return
+
+
+	@staticmethod
+	def equalization(img):
+		# HSV表色系に変化
+		hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+		h, s, v = cv2.split(hsv_img)
+
+		# V値（明度）補正
+		clahe = cv2.createCLAHE(clipLimit=15.0, tileGridSize=(9, 9))
+		# clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(3, 3))
+		new_v = (clahe.apply(v.astype(np.uint8))).astype(np.float32)
+
+		# 画像を再生成
+		hsv_clahe = cv2.merge((h, s, new_v))
+		new_rgb_img = cv2.cvtColor(hsv_clahe, cv2.COLOR_HSV2BGR)
+
+		img = new_rgb_img
+		cv2.imwrite('outputs/equalization.png',img)
+
+		return img
 
 
 	@common_util.stop_watch
@@ -107,7 +134,7 @@ class RegionProcessing():
 				image (ImageData): 画像データ
 		"""
 		# キャンパス描画
-		label_img = np.zeros(image.size_3d)
+		label_img = np.zeros((image.size_2d[0], image.size_2d[1], 3))
 
 		for region in image.pms_coords:
 			# 領域データを取得
@@ -342,7 +369,7 @@ class RegionProcessing():
 		# image.normed_dsm = self.dsm_after.copy()
 
 		# 比較用
-		cv2.imwrite("./outputs/uav_dsm.tif",  image.dsm_after)
+		# cv2.imwrite("./outputs/uav_dsm.tif",  image.dsm_after)
 
 		# 建物領域毎に処理
 		for bld in image.building:
@@ -367,11 +394,17 @@ class RegionProcessing():
 
 		# 画像の保存
 		# cv2.imwrite("./outputs/normed_uav_dsm.tif",  image.normed_dsm)
-		cv2.imwrite("./outputs/normed_uav_dsm.tif",  image.dsm_after)
+		# cv2.imwrite("./outputs/normed_uav_dsm.tif",  image.dsm_after)
 		# cv2.imwrite("normed_uav_heli.tif", image.dem_before)
 
 		# 建物領域データの開放
 		image.building = None
+
+		tiff_util._save_tif(
+			image.dsm_after,
+			image.path_list[0],
+			"./outputs/normed_dsm2.tif"
+		)
 
 		return
 

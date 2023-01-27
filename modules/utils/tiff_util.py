@@ -126,10 +126,13 @@ def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
   # 第1-4バンド
   try:
     b3, b2, b1 = cv2.split(data)
-    b4 = src.GetRasterBand(4).ReadAsArray()
   except Exception as e:
-    print("err:", e)
     b3, b2, b1 = data, data, data
+
+  try:
+    b4 = src.GetRasterBand(4).ReadAsArray()
+  except:
+    pass
 
   # データタイプ番号（32-bit float）
   dtid = 6
@@ -153,7 +156,6 @@ def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
     output.GetRasterBand(3).WriteArray(b3)
     output.GetRasterBand(4).WriteArray(b4)
   except Exception as e:
-    print("err:", e)
     output.GetRasterBand(1).WriteArray(b1)
   output.FlushCache()
 

@@ -26,10 +26,10 @@ class CalcMovementMesh():
 		""" コンストラクタ
 
 		Args:
-				mesh_size (int): メッシュサイズ
+				mesh_size (int): メッシュサイズ（画素単位）
 				size (tuple[int, int]): 画像サイズ
 		"""
-		# メッシュサイズ
+		# メッシュサイズ（1メッシュ当たりの正方画素数）
 		self.mesh_size = mesh_size
 
 		# メッシュサイズよりメッシュの高さと幅を取得

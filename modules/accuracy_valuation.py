@@ -126,8 +126,24 @@ class AccuracyValuation():
 					# メッシュ番号
 					mesh_num += 1
 
-					# FIXME: 負値がある
-					print("-", mesh_num, self.calc_movement_result[i * len(answer) + j]["center"], ":", 1 - error)
+					# # FIXME: 負値がある
+					# print("- {} ({}, {}) {}: {}".format(
+					# 	mesh_num, 
+					# 	i, j,
+					# 	self.calc_movement_result[i * len(answer) + j]["center"], 1 - error
+					# ))
+
+					# Latex用
+					print("{} ({},{}) & {} & {} & {:} \\\\".format(
+						mesh_num, 
+						i, j, 
+						int(result_direction),
+						answer_direction,
+						round(1 - error, 3))
+					)
+
+					# TODO: 正解画像の描画関数を作成
+
 
 		# 各メッシュの精度平均
 		print("- 各メッシュの精度平均:", np.nanmean(accuracies))
