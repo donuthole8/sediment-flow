@@ -1,5 +1,20 @@
 import csv
+import shutil
+
 from modules.image_data import ImageData
+
+
+def move_area_data(image: ImageData) -> None:
+	""" PyMeanShiftで取得したcsvファイルを各実験フォルダに移動
+
+	Args:
+			image (ImageData): 画像データ
+	"""
+	shutil.move('./area_data/pms_coords.csv', './area_data/' + image.experiment + '/pms_coords.csv')
+	shutil.move('./area_data/pms_pix.csv', './area_data/' + image.experiment + '/pms_pix.csv')
+
+	return
+
 
 
 def csv2self(image: ImageData) -> None:
@@ -9,8 +24,8 @@ def csv2self(image: ImageData) -> None:
 			image (imageData): 画像データ
 	"""
 	# 領域データ読み込み
-	coords_list = load_csv("./area_data/pms_coords.csv")
-	# pix_list    = load_csv("./area_data/pms_pix.csv")
+	coords_list = load_csv("./area_data/" + image.experiment + "/pms_coords.csv")
+	# pix_list    = load_csv("./area_data/" + image.experiment + "/pms_pix.csv")
 
 	# データの保存
 	image.pms_coords = coords_list

@@ -169,7 +169,7 @@ class CalcGeoData():
 		tiff_util._save_tif(
 			image.dsm_after,
 			image.path_list[0],
-			"./outputs/normed_dsm1.tif"
+			"./outputs/" + image.experiment + "/normed_dsm1.tif"
 		)
 
 		return

@@ -1,4 +1,5 @@
 import cv2
+import sys
 import numpy as np
 
 from modules.utils import common_util
@@ -15,23 +16,15 @@ from modules.accuracy_valuation import AccuracyValuation
 
 
 # 画像のファイルパス
-path1 = './inputs/koyaura/trim/dsm_after.tif'
-# path2 = './inputs/koyaura/trim/dem_heli_not_used.tif'
-path2 = './inputs/koyaura/trim/dem.tif'
-path3 = './inputs/koyaura/trim/dem.tif'
-# path4 = './inputs/koyaura/trim/degree_trig.tif'
-# path4 = './inputs/koyaura/trim/degree.tif'
-path4 = './inputs/koyaura/trim/degree_zeven.tif'
-# path5 = './inputs/koyaura/trim/mask.png'
-# path5 = './inputs/koyaura/trim/manual_mask.png'
-path5 = './inputs/koyaura/trim/normed_mask.png'
-path6 = './inputs/koyaura/trim/ortho_img.tif'
-path7 = './inputs/koyaura/trim/heli_img.tif'
-path8 = './outputs/koyaura/texture/dissimilarity.tif'
-path9 = './outputs/koyaura/building_mask.png'
-path10 = './inputs/koyaura/trim/building_gsi.png'
+path1 = './inputs/mihara/trim/dsm_raw.tif'
+path2 = './inputs/mihara/trim/dem_raw.tif'
+path3 = './inputs/mihara/trim/dem_raw.tif'
+path4 = './inputs/mihara/trim/degree.tif'
+path5 = './inputs/mihara/trim/normed_mask.png'
+path6 = './inputs/mihara/trim/ortho_img.tif'
+path7 = './inputs/mihara/trim/building_polygon.png'
 
-path_list = [path1, path2, path3, path4, path5, path6, path10]
+path_list = [path1, path2, path3, path4, path5, path6, path7]
 
 
 # TODO: ラプラシアンフィルタとかを領域に使って勾配を求める
@@ -47,23 +40,24 @@ def main() -> None:
 	メイン関数
 	"""
 	# クラス初期化
-	image = ImageData("koyaura", path_list)
+	image = ImageData("mihara", path_list)
 
 	# 傾斜方位データの正規化（0-255 -> 0-360）
 	# TODO: 値がおかしい
 	print("# 傾斜方位データの正規化")
 	CalcGeoData().norm_degree_v2(image)
 
-	# 航空画像のDSMとDEMの切り抜き・リサンプリング
-	print("# 航空画像のDSM・DEM切り抜き・解像度のリサンプリング")
+	# DSMとDEMの切り抜き・リサンプリング
+	print("# 災害前DEM切り抜き・解像度のリサンプリング")
 	Resampling(image)
 
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")
-	RegionProcessing().area_division(image, 3, 4.5, 100)
-	# RegionProcessing().area_division(image, 10, 10, 300)
-	# image.div_img = cv2.imread("./outputs/" + image.experiment + "/meanshift.png").astype(np.float32)
+	# RegionProcessing().area_division(image, 3, 4.5, 100)
+	# RegionProcessing().area_division(image, 10, 10, 0)
+	# RegionProcessing().area_division(image, 15, 4.5, 300)
+	image.div_img = cv2.imread("./outputs/" + image.experiment + "/meanshift.png").astype(np.float32)
 
 	# 輪郭・重心データ抽出・ラベル画像作成
 	# TODO: 大きすぎた領域のみさらに領域分割する
@@ -77,7 +71,7 @@ def main() -> None:
 	# NOTE: こっちでマスク画像作成するとエラーになる
 	# NOTE: 別リポジトリで作成
 	# MaskProcessing().norm_mask(image, 16666, 3)
-	image.mask = cv2.imread("./outputs/" + image.experiment + "/normed_mask.png")
+	image.mask = cv2.imread("./inputs/mihara/trim/normed_mask.png")
 
 	# 土砂マスク
 	# TODO: 隣接領域抽出のコスト削減のためにこれを行う
@@ -128,7 +122,37 @@ def main() -> None:
 	AccuracyValuation(calc_movement_result).main()
 
 
+def building_masking():
+	"""建物領域検出
+	"""
+	# クラス初期化
+	image = ImageData("mihara", path_list)
+
+	# DSMとDEMの切り抜き・リサンプリング
+	print("# 災害前DEM切り抜き・解像度のリサンプリング")
+	Resampling(image)
+
+	# 領域分割
+	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
+	print("# オルソ画像の領域分割")
+	# RegionProcessing().area_division(image, 15, 5, 300)
+	image.div_img = cv2.imread("./outputs/" + image.experiment + "/meanshift.png").astype(np.float32)
+
+	# 輪郭・重心データ抽出・ラベル画像作成
+	# TODO: 大きすぎた領域のみさらに領域分割する
+	# NOTE: 処理が重い
+	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
+	RegionProcessing().get_region_data(image)
+
+	# 建物領域の検出
+	print("# 建物領域を検出する")
+	RegionProcessing().extract_building(image)
+
+
 # メイン関数
 if __name__ == "__main__":
-	# テスト実行
-	main()
+	try:
+		if (sys.argv[1] == "bld"):
+			building_masking()
+	except:
+		main()

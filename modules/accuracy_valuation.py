@@ -133,14 +133,25 @@ class AccuracyValuation():
 					# 	self.calc_movement_result[i * len(answer) + j]["center"], 1 - error
 					# ))
 
-					# Latex用
-					print("{} ({},{}) & {} & {} & {:} \\\\".format(
-						mesh_num, 
-						i, j, 
-						int(result_direction),
-						answer_direction,
-						round(1 - error, 3))
-					)
+					try:
+						# Latex用
+						print("{} ({},{}) & {} & {} & {:} \\\\".format(
+							mesh_num, 
+							i, j, 
+							int(result_direction),
+							answer_direction,
+							round(1 - error, 3))
+						)
+					except:
+						# Latex用
+						print("{} ({},{}) & {} & {} & {:} \\\\".format(
+							mesh_num, 
+							i, j, 
+							result_direction,
+							answer_direction,
+							round(1 - error, 3))
+						)
+
 
 					# TODO: 正解画像の描画関数を作成
 

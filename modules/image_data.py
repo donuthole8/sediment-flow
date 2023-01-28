@@ -8,12 +8,16 @@ from modules.utils import image_util
 各種画像データや画像サイズを扱う
 """
 class ImageData():
-	def __init__(self, path_list: list[str]) -> None:
+	def __init__(self, experiment: str, path_list: list[str]) -> None:
 		""" コンストラクタ
 
 		Args:
+				experiment: 実験地域
 				path_list (list[str]): 入力パス
 		"""
+		# 実験対象
+		self.experiment = experiment
+
 		# 入力パス
 		self.path_list = path_list
 
@@ -53,6 +57,6 @@ class ImageData():
 		self.region     = []
 		self.building   = []
 
-		cv2.imwrite("./outputs/ortho.png", self.ortho)
+		cv2.imwrite("./outputs/" + self.experiment + "/ortho.png", self.ortho)
 		
 		return

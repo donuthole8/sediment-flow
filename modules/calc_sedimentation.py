@@ -28,7 +28,7 @@ class CalcSedimentation():
 		tiff_util._save_tif(
 			image.dsm_sub, 
 			image.path_list[0], 
-			"./outputs/dsm_sub.tif"
+			"./outputs/" + image.experiment + "/dsm_sub.tif"
 		)
 
 		return

@@ -93,7 +93,7 @@ class AnalyzeImage():
 			glcm_entropy]
 		titles = ['original','mean','std','contrast','dissimilarity','homogeneity','ASM','energy','max','entropy']
 		for i in range(10):
-			cv2.imwrite("./outputs/texture/" + titles[i] + '.tif', outs[i])
+			cv2.imwrite("./outputs/" + image.experiment + "/texture/" + titles[i] + '.tif', outs[i])
 
 		# GLCM dissimilarity（不均一性）
 		# - [0.0 - 3.8399997]
@@ -136,6 +136,6 @@ class AnalyzeImage():
 		img_canny = cv2.Canny(img_gray, threshold1, threshold2)
 
 		# 画像保存
-		cv2.imwrite("./outputs/edge.png", img_canny)
+		cv2.imwrite("./outputs/" + image.experiment + "/edge.png", img_canny)
 
 		return img_canny

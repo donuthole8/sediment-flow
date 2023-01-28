@@ -41,12 +41,12 @@ class Resampling():
 		# 1次元に戻す
 		image.mask = cv2.split(image.mask)[0]
 
-		# 画像の保存
-		tiff_util._save_tif(
-			cv2.merge((image.dem, image.dem, image.dem)), 
-			image.path_list[0],
-			"./outputs/dem_resampling.tif" 
-		)
+		# # 画像の保存
+		# tiff_util._save_tif(
+		# 	cv2.merge((image.dem, image.dem, image.dem)), 
+		# 	image.path_list[0],
+		# 	"./outputs/" + image.experiment + "/dem_resampling.tif" 
+		# )
 
 		# # 画像サイズの確認
 		# image_util.show_image_size(image)

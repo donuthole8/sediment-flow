@@ -90,9 +90,9 @@ class CalcMovementMesh():
 					self.calc_movement_result.append({"direction": np.nan, "center": np.nan})
 
 		# メッシュ画像を保存
-		cv2.imwrite("./outputs/mesh.png", image.ortho)
+		cv2.imwrite("./outputs/" + image.experiment + "/mesh.png", image.ortho)
 		# 隣接領域抽出での土砂流れ方向検知結果
-		cv2.imwrite("mesh_line.png", image.ortho)
+		cv2.imwrite("./outputs/" + image.experiment + "/sediment_flow.png", image.ortho)
 
 		return self.calc_movement_result
 

@@ -100,7 +100,7 @@ def save_tif(image: np.ndarray, path: str) -> None:
       image (np.ndarray): tifデータ
       path (str): 書き込みパス
   """
-  cv2.imwrite("./outputs/" + path, image)
+  cv2.imwrite("./outputs/" + image.experiment + "/" + path, image)
 
 
 def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
@@ -113,7 +113,7 @@ def _save_tif(data: np.ndarray, load_path: str, save_path: str) -> None:
   """
   # 入出力パス
   # load_path = "./inputs/"  + load_path
-  # save_path = "./outputs/" + save_path
+  # save_path = "./outputs/" + image.experiment + "/" + save_path
 
   # tif画像テンプレ読み込み
   src = gdal.Open(load_path)

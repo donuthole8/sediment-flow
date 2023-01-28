@@ -24,6 +24,7 @@ app_test.py
 app_dem.py
 test.py
 test_chatgpt/*
+tif2png.py
 
 # .vscode
 .vscode

@@ -5,27 +5,6 @@ import numpy as np
 from modules.utils import calculation_util
 
 
-def save_resize_image(path: str, image: np.ndarray, size: tuple) -> None:
-	"""	画像を縮小して保存
-
-	Args:
-			path (str): 保存先のパス
-			image (np.ndarray): 画像データ
-			size (tuple):  保存サイズ
-	"""
-	# 画像をリサイズ
-	resize_img = cv2.resize(
-		image, 
-		size, 
-		interpolation=cv2.INTER_CUBIC
-	)
-
-	# 画像を保存
-	cv2.imwrite("./outputs/" + path, resize_img)
-
-	return
-
-
 def show_image_size(image) -> None:
 	"""	画像サイズの確認
 

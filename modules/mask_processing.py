@@ -70,8 +70,8 @@ class MaskProcessing():
 		closing = cv2.erode (closing, kernel, iterations = 1)
 
 		# 画像を保存
-		image_util.save_resize_image("opening.png", opening, image.s_size_2d)
-		image_util.save_resize_image("closing.png", closing, image.s_size_2d)
+		cv2.imwrite("./outputs/" + image.experiment + "/opening.png", opening)
+		cv2.imwrite("./outputs/" + image.experiment + "/closing.png", closing)
 
 		# 結果を保存
 		image.mask = closing
@@ -157,7 +157,7 @@ class MaskProcessing():
 		image.mask = cv2.resize(normed_mask, (int(w/scale), int(h/scale)))
 
 		# 画像の保存
-		cv2.imwrite("./outputs/normed_mask.png", image.mask)
+		cv2.imwrite("./outputs/" + image.experiment + "/normed_mask.png", image.mask)
 
 		return
 
@@ -197,7 +197,7 @@ class MaskProcessing():
 			mask = cv2.split(mask)[0]
 
 		# マスク領域以外を除去
-		idx = np.where(mask != 0)
+		idx = np.where(mask == 0)
 		try:
 			masked_img[idx] = np.nan
 		except:
@@ -209,9 +209,6 @@ class MaskProcessing():
 		# sed[idx] = np.nan
 		# tif.save_tif(dsm, "dsm_after.tif", "sediment.tif")
 		# return sed.astype(np.uint8)
-
-		# 画像を保存
-		image_util.save_resize_image("masked_img.png", masked_img, image.s_size_2d)
 
 		return masked_img
 

@@ -29,19 +29,21 @@ class RegionProcessing():
 				min_density (float): 最小密度
 		"""
 		# ヒストグラム平均化
-		img = self.equalization(image.ortho)
+		img = self.equalization(image.ortho).astype(np.uint8)
+		cv2.imwrite('./outputs/' + image.experiment + '/equalization.png', img)
 
 		# Lab表色系に変換
 		# NOTE: RGB表色系のままでも良いかも
 
 		# lab_img = cv2.cvtColor(self.ortho, cv2.COLOR_BGR2Lab)
-		lab_img = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_BGR2Lab)
+		# lab_img = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_BGR2Lab)
 		# lab_img = cv2.cvtColor(self.masked_ortho, cv2.COLOR_BGR2Lab)
+		img = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
 
 		# PyMeanShiftによる域分割
 		# TODO: マスク済みオルソ画像を用いると良いかも
 		img, _, number_regions = pms.segment(
-			lab_img,
+			img,
 			# image.ortho.astype(np.uint8), 
 			# self.masked_ortho.astype(np.uint8), 
 			spatial_radius, 
@@ -50,11 +52,15 @@ class RegionProcessing():
 		)
 
 		# RGB表色系に変換
-		image.div_img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR).astype(np.float32)
+		# image.div_img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR).astype(np.float32)
 		# image.div_img = img
+		image.div_img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR)
+
+		# 領域データを各実験フォルダに移動
+		csv_util.move_area_data(image)
 
 		# 画像の保存
-		cv2.imwrite('./outputs/meanshift.png', image.div_img)
+		cv2.imwrite('./outputs/' + image.experiment + '/meanshift.png', image.div_img)
 
 		print("- meanshift-num:", number_regions)
 
@@ -68,7 +74,7 @@ class RegionProcessing():
 		h, s, v = cv2.split(hsv_img)
 
 		# V値（明度）補正
-		clahe = cv2.createCLAHE(clipLimit=15.0, tileGridSize=(9, 9))
+		clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(9, 9))
 		# clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(3, 3))
 		new_v = (clahe.apply(v.astype(np.uint8))).astype(np.float32)
 
@@ -77,7 +83,6 @@ class RegionProcessing():
 		new_rgb_img = cv2.cvtColor(hsv_clahe, cv2.COLOR_HSV2BGR)
 
 		img = new_rgb_img
-		cv2.imwrite('outputs/equalization.png',img)
 
 		return img
 
@@ -170,7 +175,11 @@ class RegionProcessing():
 			arc_len = cv2.arcLength(contours[0], True)
 
 			# 円形度
-			circularity = 4.0 * math.pi * area_float / (arc_len * arc_len)
+			try:
+				circularity = 4.0 * math.pi * area_float / (arc_len * arc_len)
+			except:
+				print("div by 0:", arc_len, area_float)
+				circularity = 0.0
 
 			# データの保存
 			# NOTE: selfに保存するなら辞書型の方が良い？
@@ -185,7 +194,7 @@ class RegionProcessing():
 			image.region.append(data_list)
 
 		# 画像を保存
-		cv2.imwrite("./outputs/label.png", label_img)
+		cv2.imwrite("./outputs/" + image.experiment + "/label.png", label_img)
 		
 		return
 
@@ -244,9 +253,9 @@ class RegionProcessing():
 				})
 
 		# 画像を保存
-		image_util.save_resize_image("circularity.png", cir_img, image.s_size_2d)
-		image_util.save_resize_image("building.png",    bld_img, image.s_size_2d)
-		cv2.imwrite("./outputs/building_mask.png", bld_mask)
+		cv2.imwrite("./outputs/" + image.experiment + "/circularity.png", cir_img)
+		cv2.imwrite("./outputs/" + image.experiment + "/building.png", bld_img)
+		cv2.imwrite("./outputs/" + image.experiment + "/building_mask.png", bld_mask)
 
 		return bld_mask
 
@@ -272,21 +281,55 @@ class RegionProcessing():
 		# # 注目領域の平均異質度を取得
 		# dissimilarity = np.mean(image.dissimilarity[centroid])
 
+		# 土砂マスクの範囲内か
+		# if (self.__is_masking(image, centroid)):
+		# 円形度
+		if (circularity > 40):
 			# 建物ポリゴンと一致度が閾値以上あるか
-		if (self.__is_building_polygon(image, coords)):
-			# 円形度
-			if (not (circularity > 40)):		
-			# if (not (circularity > 40)) or (not (dissimilarity < 1)):
-				# 非建物領域
-				return False
-			elif self.__is_sediment_or_vegetation(image, centroid):
-				# 土砂領域・植生領域
-				return False
-			else:
-				# 建物領域
+			if (self.__is_building_polygon(image, coords)):
 				return True
-		else:
-			return False
+
+		return False
+
+		
+		# if (circularity > 30):
+		# 	if (self.__is_building_polygon(image, coords)):
+		# 		return True
+
+		# return False
+
+
+		# 	# 建物ポリゴンと一致度が閾値以上あるか
+		# if (self.__is_building_polygon(image, coords)):
+		# 	# 円形度
+		# 	if (not (circularity > 30)):		
+		# 	# if (not (circularity > 40)) or (not (dissimilarity < 1)):
+		# 		# 非建物領域
+		# 		return False
+		# 	elif self.__is_sediment_or_vegetation(image, centroid):
+		# 		# 土砂領域・植生領域
+		# 		return False
+		# 	else:
+		# 		# 建物領域
+		# 		return True
+		# else:
+		# 	return False
+
+
+	@staticmethod
+	def __is_masking(image: ImageData, centroid: tuple[int, int]):
+		""" 土砂マスクの土砂領域かどうかを判別
+
+		Args:
+				image (ImageData): 画像データ
+				centroid (tuple[int, int]): 該当領域の重心座標
+
+		Returns:
+				bool: 土砂領域フラグ
+		"""
+		if (image.mask[centroid] == 255):
+			return True
+		return False
 
 
 	@staticmethod
@@ -301,17 +344,16 @@ class RegionProcessing():
 				bool: 建物フラグ
 		"""
 		building_counter = 0
-		region_counter = 0
+		region_counter = len(coords)
 
 		for coord in coords:
 			if (image.bld_gsi[coord] == 0):
 				building_counter += 1
-			region_counter += 1
 
 		# 建物ポリゴンとの一致率
 		agreement = (building_counter / region_counter)
 
-		if (agreement > 0.5):
+		if (agreement > 0.3):
 			return True
 		else:
 			return False
@@ -369,7 +411,7 @@ class RegionProcessing():
 		# image.normed_dsm = self.dsm_after.copy()
 
 		# 比較用
-		# cv2.imwrite("./outputs/uav_dsm.tif",  image.dsm_after)
+		# cv2.imwrite("./outputs/" + image.experiment + "/uav_dsm.tif",  image.dsm_after)
 
 		# 建物領域毎に処理
 		for bld in image.building:
@@ -393,8 +435,8 @@ class RegionProcessing():
 				# image.dsm_sub[coords] -= 10
 
 		# 画像の保存
-		# cv2.imwrite("./outputs/normed_uav_dsm.tif",  image.normed_dsm)
-		# cv2.imwrite("./outputs/normed_uav_dsm.tif",  image.dsm_after)
+		# cv2.imwrite("./outputs/" + image.experiment + "/normed_uav_dsm.tif",  image.normed_dsm)
+		# cv2.imwrite("./outputs/" + image.experiment + "/normed_uav_dsm.tif",  image.dsm_after)
 		# cv2.imwrite("normed_uav_heli.tif", image.dem_before)
 
 		# 建物領域データの開放
@@ -403,7 +445,7 @@ class RegionProcessing():
 		tiff_util._save_tif(
 			image.dsm_after,
 			image.path_list[0],
-			"./outputs/normed_dsm2.tif"
+			"./outputs/" + image.experiment + "/normed_dsm2.tif"
 		)
 
 		return
