@@ -61,23 +61,18 @@ def main() -> None:
 	# 領域分割
 	# NOTE: 領域分割画像のみ取得する（ラベル画像・領域数必要無い）場合PyMeanShiftを変更し処理時間を短縮できるかも
 	print("# オルソ画像の領域分割")
-	RegionProcessing().area_division(image, 3, 4.5, 100)
+	# RegionProcessing().area_division(image, 3, 4.5, 100)
 	# RegionProcessing().area_division(image, 10, 10, 300)
-	# image.div_img = cv2.imread("./outputs/" + image.experiment + "/meanshift.png").astype(np.float32)
+	# RegionProcessing().area_division(image, 20, 20, 300)
+	# RegionProcessing().area_division(image, 20, 15, 300)
+	# RegionProcessing().area_division(image, 15, 5, 300, (2.0, (3, 3)))
+	image.div_img = cv2.imread("./outputs/" + image.experiment + "/meanshift.png").astype(np.float32)
 
 	# 輪郭・重心データ抽出・ラベル画像作成
 	# TODO: 大きすぎた領域のみさらに領域分割する
 	# NOTE: 処理が重い
 	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
 	RegionProcessing().get_region_data(image)
-
-	# 土砂マスクの前処理
-	# TODO: 土砂マスク画像の作成に中山さんの手法を適用する・海領域の除去・影領域の対処・前後差分の検討
-	print("# マスク画像の前処理")
-	# NOTE: こっちでマスク画像作成するとエラーになる
-	# NOTE: 別リポジトリで作成
-	# MaskProcessing().norm_mask(image, 16666, 3)
-	image.mask = cv2.imread("./outputs/" + image.experiment + "/normed_mask.png")
 
 	# 土砂マスク
 	# TODO: 隣接領域抽出のコスト削減のためにこれを行う
@@ -107,7 +102,8 @@ def main() -> None:
 
 	# 建物領域の検出
 	print("# 建物領域を検出する")
-	RegionProcessing().extract_building(image)
+	RegionProcessing().extract_building(image, 20, 0.35)
+	# RegionProcessing().extract_building(image, 15, 0.5)
 	# image.bld_mask = cv2.imread(path9)
 
 	# 建物領域の標高値補正

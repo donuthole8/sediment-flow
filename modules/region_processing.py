@@ -18,7 +18,8 @@ class RegionProcessing():
 			image: ImageData, 
 			spatial_radius: float, 
 			range_radius: float, 
-			min_density: float
+			min_density: float,
+			clahe: tuple[float, tuple]
 		) -> None:
 		""" オルソ画像の領域分割を行う
 
@@ -27,9 +28,10 @@ class RegionProcessing():
 				spatial_radius (float): 空間半径
 				range_radius (float): 範囲半径
 				min_density (float): 最小密度
+				clahe (tuple[float, tuple]): ヒストグラム平均化のパラメータ
 		"""
 		# ヒストグラム平均化
-		img = self.equalization(image.ortho).astype(np.uint8)
+		img = self.equalization(image.ortho, clahe[0], clahe[1]).astype(np.uint8)
 		cv2.imwrite('./outputs/' + image.experiment + '/equalization.png', img)
 
 		# Lab表色系に変換
@@ -68,14 +70,14 @@ class RegionProcessing():
 
 
 	@staticmethod
-	def equalization(img):
+	def equalization(img, clip_limit, tile_grid_size):
 		# HSV表色系に変化
 		hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 		h, s, v = cv2.split(hsv_img)
 
 		# V値（明度）補正
-		clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(9, 9))
-		# clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(3, 3))
+		# clahe = cv2.createCLAHE(clipLimit=8.0, tileGridSize=(9, 9))
+		clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
 		new_v = (clahe.apply(v.astype(np.uint8))).astype(np.float32)
 
 		# 画像を再生成
@@ -199,15 +201,26 @@ class RegionProcessing():
 		return
 
 
-	def extract_building(self, image: ImageData) -> np.ndarray:
+	def extract_building(
+		self, 
+		image: ImageData, 
+		circularity_th: int,
+		bld_polygon_th: int
+		) -> np.ndarray:
 		""" 建物領域を抽出する
 
 		Args:
 				image (ImageData): 画像データ
+				circularity_th: 円形度閾値
+				bld_polygon_th: 建物ポリゴン含有率閾値
 
 		Returns:
 				np.ndarray 建物領域データ
 		"""
+		# 閾値の設定
+		self.circularity_th = circularity_th
+		self.bld_polygon_th = bld_polygon_th
+
 		# 建物領域を抽出
 		image.bld_mask = self.__extract_building(image)
 
@@ -284,36 +297,12 @@ class RegionProcessing():
 		# 土砂マスクの範囲内か
 		# if (self.__is_masking(image, centroid)):
 		# 円形度
-		if (circularity > 40):
+		if (circularity > self.circularity_th):
 			# 建物ポリゴンと一致度が閾値以上あるか
 			if (self.__is_building_polygon(image, coords)):
 				return True
 
 		return False
-
-		
-		# if (circularity > 30):
-		# 	if (self.__is_building_polygon(image, coords)):
-		# 		return True
-
-		# return False
-
-
-		# 	# 建物ポリゴンと一致度が閾値以上あるか
-		# if (self.__is_building_polygon(image, coords)):
-		# 	# 円形度
-		# 	if (not (circularity > 30)):		
-		# 	# if (not (circularity > 40)) or (not (dissimilarity < 1)):
-		# 		# 非建物領域
-		# 		return False
-		# 	elif self.__is_sediment_or_vegetation(image, centroid):
-		# 		# 土砂領域・植生領域
-		# 		return False
-		# 	else:
-		# 		# 建物領域
-		# 		return True
-		# else:
-		# 	return False
 
 
 	@staticmethod
@@ -332,8 +321,7 @@ class RegionProcessing():
 		return False
 
 
-	@staticmethod
-	def __is_building_polygon(image: ImageData, coords: list[tuple]) -> bool:
+	def __is_building_polygon(self, image: ImageData, coords: list[tuple]) -> bool:
 		""" 建物ポリゴンと領域が閾値以上一致しているか判別
 
 		Args:
@@ -353,37 +341,7 @@ class RegionProcessing():
 		# 建物ポリゴンとの一致率
 		agreement = (building_counter / region_counter)
 
-		if (agreement > 0.3):
-			return True
-		else:
-			return False
-
-
-	@staticmethod
-	def __is_sediment_or_vegetation(image: ImageData, centroid: tuple[int, int]) -> bool:
-		""" 土砂・植生領域かどうかを判別
-
-		Args:
-				image (ImageData): 画像データ
-				centroid (tuple[int, int]): 該当領域の重心座標
-
-		Returns:
-				bool: 土砂・植生領域フラグ
-		"""
-		# Lab表色系に変換
-		Lp, ap, bp = cv2.split(
-			cv2.cvtColor(
-				image.div_img.astype(np.uint8), 
-				cv2.COLOR_BGR2Lab)
-		)
-		Lp, ap, bp = Lp * 255, ap * 255, bp * 255
-
-		# 土砂
-		sediment   = (Lp[centroid] > 125) & (ap[centroid] > 130)
-		# 植生
-		vegetation = (ap[centroid] < 110) | (bp[centroid] <  70)
-
-		if (sediment | vegetation):
+		if (agreement > self.bld_polygon_th):
 			return True
 		else:
 			return False

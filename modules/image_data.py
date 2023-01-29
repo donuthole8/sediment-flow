@@ -28,7 +28,9 @@ class ImageData():
 		self.degree     = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
 		# 画像
-		self.mask          = cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
+		self.mask          = cv2.split(
+			cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
+		)[0]
 		self.ortho         = cv2.imread(path_list[5]).astype(np.float32)
 		self.masked_ortho  = None
 		self.slope         = None

@@ -176,7 +176,7 @@ class CalcMovementMesh():
 		"""
 		# マスク画像より土砂の判別
 		try:
-			if (image.mask[self.center_coord][0] == 0):
+			if (image.mask[self.center_coord] == 0):
 				return True
 			else:
 				return False
@@ -282,11 +282,10 @@ class CalcMovementMesh():
 		# NOTE: 画素単位で3方向に土砂追跡するか,領域単位でとりあえず3領域取得するか
 		# NOTE: 加重平均等にした方が良いのか
 		sediment_pix_num = 0
-		mask = cv2.split(image.mask)[0]
 		average_direction = 0.0
 		for coord in self.mesh_coords:
 			# 土砂マスクの領域のみ
-			if (mask[coord] == 0):
+			if (image.mask[coord] == 0):
 				average_direction += image.degree[coord]
 				sediment_pix_num  += 1
 
@@ -393,11 +392,10 @@ class CalcMovementMesh():
 				float: 平均標高値
 		"""
 		sediment_pix_num = 0
-		mask = cv2.split(image.mask)[0]
 		average_height = 0.0
 		for coord in self.get_mesh_coords(image.size_3d, label[0], label[1]):
 			# 土砂マスクの領域のみ
-			if (mask[coord] == 0):
+			if (image.mask[coord] == 0):
 				average_height   += image.dsm_after[coord]
 				sediment_pix_num += 1
 
@@ -417,12 +415,11 @@ class CalcMovementMesh():
 		Returns:
 				tuple[int, int]: 
 		"""
-		mask = cv2.split(image.mask)[0]
 		min_height = 999
 		min_height_coord = ()
 		for coord in self.get_mesh_coords(image.size_3d, label[0], label[1]):
 			# 土砂マスクの領域のみ
-			if (mask[coord] == 0):
+			if (image.mask[coord] == 0):
 				if (image.dsm_after[coord] < min_height):
 					min_height = image.dsm_after[coord] 
 					min_height_coord = coord

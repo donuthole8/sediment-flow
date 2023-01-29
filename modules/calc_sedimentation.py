@@ -18,7 +18,7 @@ class CalcSedimentation():
 		image.dsm_sub = image.dsm_after - image.dem_before
 
 		# 土砂領域以外を除外
-		idx_mask = np.where(image.mask[0] == 255)
+		idx_mask = np.where(image.mask == 0)
 		image.dsm_sub[idx_mask] = np.nan
 
 		# 堆積領域と侵食領域で二値化

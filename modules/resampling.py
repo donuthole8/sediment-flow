@@ -14,8 +14,8 @@ class Resampling():
 		Args:
 				image (ImageData): 画像データ
 		"""
-		# 3次元に変更
-		image.mask = cv2.merge((image.mask, image.mask, image.mask))
+		# # 3次元に変更
+		# image.mask = cv2.merge((image.mask, image.mask, image.mask))
 
 		# バイキュービック補間で解像度の統一
 		image.dem_before = cv2.resize(image.dem_before, image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
@@ -38,8 +38,8 @@ class Resampling():
 		# image.ortho[idx]    = 0
 		# image.bld_gsi[idx]  = 255
 
-		# 1次元に戻す
-		image.mask = cv2.split(image.mask)[0]
+		# # 1次元に戻す
+		# image.mask = cv2.split(image.mask)[0]
 
 		# # 画像の保存
 		# tiff_util._save_tif(
@@ -48,8 +48,8 @@ class Resampling():
 		# 	"./outputs/" + image.experiment + "/dem_resampling.tif" 
 		# )
 
-		# # 画像サイズの確認
-		# image_util.show_image_size(image)
+		# 画像サイズの確認
+		image_util.show_image_size(image)
 
 		# # 入力画像の最大最小値確認
 		# image_util.show_max_min(image)

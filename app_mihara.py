@@ -65,14 +65,6 @@ def main() -> None:
 	print("# 領域分割結果から領域データ抽出・ラベル画像の生成")
 	RegionProcessing().get_region_data(image)
 
-	# 土砂マスクの前処理
-	# TODO: 土砂マスク画像の作成に中山さんの手法を適用する・海領域の除去・影領域の対処・前後差分の検討
-	print("# マスク画像の前処理")
-	# NOTE: こっちでマスク画像作成するとエラーになる
-	# NOTE: 別リポジトリで作成
-	# MaskProcessing().norm_mask(image, 16666, 3)
-	image.mask = cv2.imread("./inputs/mihara/trim/normed_mask.png")
-
 	# 土砂マスク
 	# TODO: 隣接領域抽出のコスト削減のためにこれを行う
 	print("# 土砂マスクによる土砂領域抽出")
