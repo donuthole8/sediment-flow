@@ -176,11 +176,12 @@ class CalcMovementMesh():
 		"""
 		# マスク画像より土砂の判別
 		try:
-			if (image.mask[self.center_coord] == 0):
+			if (image.mask[self.center_coord] == 255):
 				return True
 			else:
 				return False
-		except:
+		except Exception as e:
+			print("er!!", e)
 			return False
 
 
@@ -196,7 +197,7 @@ class CalcMovementMesh():
 		# 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
 		average_direction = self.__get_average_direction()
 		# # 中心座標の傾斜方位
-		# average_direction = image.degree[center]
+		# average_direction = image.aspect[center]
 
 		# # 精度評価用のデータを保存
 		# self.calc_movement_result.append({"direction": average_direction, "center": center})
@@ -285,42 +286,45 @@ class CalcMovementMesh():
 		average_direction = 0.0
 		for coord in self.mesh_coords:
 			# 土砂マスクの領域のみ
-			if (image.mask[coord] == 0):
-				average_direction += image.degree[coord]
+			if (image.mask[coord] == 255):
+				average_direction += image.aspect[coord]
 				sediment_pix_num  += 1
+		try:
+			return average_direction / sediment_pix_num
+		except:
+			print("error")
+			return 0
 
-		return average_direction / sediment_pix_num
 
-
-	def __get_directions(self, degree: float) -> tuple[tuple]:
+	def __get_directions(self, aspect: float) -> tuple[tuple]:
 		""" 傾斜方位を画素インデックスに変換し傾斜方位と隣接2方向を取得
 
 		Args:
-				degree (float): 角度
+				aspect (float): 角度
 
 		Returns:
 				tuple[tuple]: 傾斜方位と隣接2方向
 		"""
 		# FIXME: 傾斜方位が限定的になっている
 		# 注目画素からの移動画素
-		if   (math.isnan(degree)):
+		if   (math.isnan(aspect)):
 			# NOTE: 返り値違うかも
 			return np.nan, np.nan
-		elif (degree > 337.5) or  (degree <= 22.5):
+		elif (aspect > 337.5) or  (aspect <= 22.5):
 			return self.DIRECTION[7], self.DIRECTION[0], self.DIRECTION[1]
-		elif (degree > 22.5)  and (degree <= 67.5):
+		elif (aspect > 22.5)  and (aspect <= 67.5):
 			return self.DIRECTION[0], self.DIRECTION[1], self.DIRECTION[2]
-		elif (degree > 67.5)  and (degree <= 112.5):
+		elif (aspect > 67.5)  and (aspect <= 112.5):
 			return self.DIRECTION[1], self.DIRECTION[2], self.DIRECTION[3]
-		elif (degree > 112.5) and (degree <= 157.5):
+		elif (aspect > 112.5) and (aspect <= 157.5):
 			return self.DIRECTION[2], self.DIRECTION[3], self.DIRECTION[4]
-		elif (degree > 157.5) and (degree <= 202.5):
+		elif (aspect > 157.5) and (aspect <= 202.5):
 			return self.DIRECTION[3], self.DIRECTION[4], self.DIRECTION[5]
-		elif (degree > 202.5) and (degree <= 247.5):
+		elif (aspect > 202.5) and (aspect <= 247.5):
 			return self.DIRECTION[4], self.DIRECTION[5], self.DIRECTION[6]
-		elif (degree > 247.5) and (degree <= 292.5):
+		elif (aspect > 247.5) and (aspect <= 292.5):
 			return self.DIRECTION[5], self.DIRECTION[6], self.DIRECTION[7]
-		elif (degree > 292.5) and (degree <= 337.5):
+		elif (aspect > 292.5) and (aspect <= 337.5):
 			return self.DIRECTION[6], self.DIRECTION[7], self.DIRECTION[0]
 
 

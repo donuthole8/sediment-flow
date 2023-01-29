@@ -382,12 +382,6 @@ class RegionProcessing():
 					# TODO: subも検討
 					# image.dsm_sub[coords] -= 10
 
-				tiff_util._save_tif(
-					image.normed_dsm,
-					image.path_list[0],
-					"./outputs/" + image.experiment + "/normed_dsm3.tif"
-				)
-
 			else:
 				pass
 

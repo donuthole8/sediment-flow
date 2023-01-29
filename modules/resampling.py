@@ -14,13 +14,11 @@ class Resampling():
 		Args:
 				image (ImageData): 画像データ
 		"""
-		# # 3次元に変更
-		# image.mask = cv2.merge((image.mask, image.mask, image.mask))
-
 		# バイキュービック補間で解像度の統一
 		image.dem_before = cv2.resize(image.dem_before, image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 		image.dem      = cv2.resize(image.dem,      image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
-		image.degree   = cv2.resize(image.degree,   image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
+		image.aspect   = cv2.resize(image.aspect,   image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
+		image.slope    = cv2.resize(image.slope,    image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 		image.mask     = cv2.resize(image.mask,     image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 		image.ortho    = cv2.resize(image.ortho,    image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 		image.bld_gsi  = cv2.resize(image.bld_gsi,  image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
@@ -33,25 +31,29 @@ class Resampling():
 		# image.dsm_after[idx]  = np.nan
 		# image.dem_before[idx] = np.nan
 		# image.dem[idx]      = np.nan 
-		# image.degree[idx]   = np.nan
+		# image.aspect[idx]   = np.nan
 		# image.mask[idx]     = 0
 		# image.ortho[idx]    = 0
 		# image.bld_gsi[idx]  = 255
 
-		# # 1次元に戻す
-		# image.mask = cv2.split(image.mask)[0]
-
-		# # 画像の保存
-		# tiff_util._save_tif(
-		# 	cv2.merge((image.dem, image.dem, image.dem)), 
-		# 	image.path_list[0],
-		# 	"./outputs/" + image.experiment + "/dem_resampling.tif" 
-		# )
+		# 画像を保存
+		tiff_util._save_tif(
+			image.dem,
+			image.path_list[0],
+			"./outputs/" + image.experiment + "/dem_resampling.tif"
+		)
+		tiff_util._save_tif(
+			image.aspect,
+			image.path_list[0],
+			"./outputs/" + image.experiment + "/aspect_resampling.tif"
+		)
+		tiff_util._save_tif(
+			image.slope,
+			image.path_list[0],
+			"./outputs/" + image.experiment + "/slope_resampling.tif"
+		)
 
 		# 画像サイズの確認
 		image_util.show_image_size(image)
-
-		# # 入力画像の最大最小値確認
-		# image_util.show_max_min(image)
 
 		return

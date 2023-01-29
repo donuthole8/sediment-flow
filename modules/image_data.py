@@ -25,7 +25,8 @@ class ImageData():
 		self.dsm_after  = cv2.imread(path_list[0], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.dem_before = cv2.imread(path_list[1], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.dem        = cv2.imread(path_list[2], cv2.IMREAD_ANYDEPTH).astype(np.float32)
-		self.degree     = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.aspect     = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
+		self.slope      = cv2.imread(path_list[7], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
 		# 画像
 		self.mask          = cv2.split(
@@ -33,7 +34,6 @@ class ImageData():
 		)[0]
 		self.ortho         = cv2.imread(path_list[5]).astype(np.float32)
 		self.masked_ortho  = None
-		self.slope         = None
 		self.div_img       = None
 		self.label_table   = None
 		self.dissimilarity = None

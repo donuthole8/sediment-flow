@@ -31,27 +31,41 @@ class CalcGeoData():
 
 
 	@staticmethod
-	def norm_degree(image: ImageData) -> None:
+	def norm_geo_v1(image: ImageData) -> None:
 		"""
 		入力された傾斜方位（0-255）を実際の角度（0-360）に正規化
 		"""
-		# 0-360度に変換
-		image.degree = image.degree / 255 * 360
+		asp_max = np.nanmax(image.aspect)
+		asp_min = np.nanmin(image.aspect)
+		slp_max = np.nanmax(image.slope)
+		slp_min = np.nanmin(image.slope)
+
+		print(asp_max, asp_min, slp_max, slp_min)
+
+		# 0-360,0-90度に変換
+		image.aspect = image.aspect / 255 * 360
+		image.slope  = image.slope  / 255 * 360
 
 		return
 
 
 	@staticmethod
-	def norm_degree_v2(image: ImageData) -> None:
+	def norm_geo_v2(image: ImageData) -> None:
 		"""
 		入力された傾斜方位（負値含む）を実際の角度（0-360）に正規化
 		"""
 		# 最大・最小
-		deg_max = np.nanmax(image.degree)
-		deg_min = np.nanmin(image.degree)
+		asp_max = np.nanmax(image.aspect)
+		asp_min = np.nanmin(image.aspect)
+		slp_max = np.nanmax(image.slope)
+		slp_min = np.nanmin(image.slope)
 
-		# 0-360度に変換
-		image.degree = (image.degree - deg_min) / (deg_max - deg_min) * 360
+		print(asp_max, asp_min, slp_max, slp_min)
+
+		# 0-360,0-90度に変換
+		# TODO: QGISの範囲見て360，90を変更しないといけないかも
+		image.aspect = (image.aspect - asp_min) / (asp_max - asp_min) * 360
+		image.slope  = (image.aspect - slp_min) / (slp_max - slp_min) * 90
 
 		return
 
@@ -75,9 +89,9 @@ class CalcGeoData():
 				for j in range(-1,2):
 					for i in range(-1,2):
 						if i in index and j in index:
-							angle = math.degrees(math.atan((float(abs(dem[y+j+1, x+i+1] - dem[y+1, x+1])) / float(size_mesh * pow(2, 0.5)))))
+							angle = math.aspects(math.atan((float(abs(dem[y+j+1, x+i+1] - dem[y+1, x+1])) / float(size_mesh * pow(2, 0.5)))))
 						else:
-							angle = math.degrees(math.atan((float(abs(dem[y+j+1, x+i+1] - dem[y+1, x+1])) / float(size_mesh))))
+							angle = math.aspects(math.atan((float(abs(dem[y+j+1, x+i+1] - dem[y+1, x+1])) / float(size_mesh))))
 						if angle > max:
 							max = angle
 				slope[y,x] = angle

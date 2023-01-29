@@ -16,7 +16,7 @@ def show_image_size(image) -> None:
 	print("- uav-size  :", image.dsm_after.shape)
 	print("- heli-size :", image.dem_before.shape)
 	print("- dem-size  :", image.dem.shape)
-	print("- deg-size  :", image.degree.shape)
+	print("- deg-size  :", image.aspect.shape)
 	print("- mask-size :", image.mask.shape)
 	print("- img-size  :", image.ortho.shape)
 	print("- bld-size  :", image.bld_gsi.shape)
@@ -35,6 +35,6 @@ def show_max_min(image) -> None:
 	print("- after (min, max):", calculation_util.calc_min_max(image.dsm_after))
 	print("- before(min, max):", calculation_util.calc_min_max(image.dem_before))
 	print("- dem   (min, max):", calculation_util.calc_min_max(image.dem))
-	print("- deg   (min, max):", calculation_util.calc_min_max(image.degree))
+	print("- deg   (min, max):", calculation_util.calc_min_max(image.aspect))
 
 	return

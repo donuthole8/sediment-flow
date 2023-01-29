@@ -73,15 +73,6 @@ def is_ground(image: ImageData, coordinate: tuple[int, int]) -> bool:
 	Returns:
 			bool: 判別結果
 	"""
-	# # 建物領域の場合
-	# if (image.bld_mask[coordinate] == 255):
-	# 	print("bld")
-	# 	return False
-	# else:
-	# 	return True
-
-
-
 	# 建物領域の場合
 	if (image.bld_mask[coordinate] == 255):
 		return False

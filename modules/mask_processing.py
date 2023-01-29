@@ -19,7 +19,7 @@ class MaskProcessing():
 		image.dsm_after  = self.__masking(image, image.dsm_after,  image.mask)
 		image.dem_before = self.__masking(image, image.dem_before, image.mask)
 		image.dem        = self.__masking(image, image.dem,        image.mask)
-		image.degree     = self.__masking(image, image.degree,     image.mask)
+		image.aspect     = self.__masking(image, image.aspect,     image.mask)
 
 		return
 

@@ -19,7 +19,8 @@ from modules.accuracy_valuation import AccuracyValuation
 path1 = './inputs/mihara/trim/dsm_raw.tif'
 path2 = './inputs/mihara/trim/dem_raw.tif'
 path3 = './inputs/mihara/trim/dem_raw.tif'
-path4 = './inputs/mihara/trim/degree.tif'
+path4 = './inputs/mihara/trim/aspect.tif'
+# path4 = './inputs/mihara/trim/aspect_zeven.tif'
 path5 = './inputs/mihara/trim/normed_mask.png'
 path6 = './inputs/mihara/trim/ortho_img.tif'
 path7 = './inputs/mihara/trim/building_polygon.png'
@@ -45,7 +46,7 @@ def main() -> None:
 	# 傾斜方位データの正規化（0-255 -> 0-360）
 	# TODO: 値がおかしい
 	print("# 傾斜方位データの正規化")
-	CalcGeoData().norm_degree_v2(image)
+	CalcGeoData().norm_geo_v1(image)
 
 	# DSMとDEMの切り抜き・リサンプリング
 	print("# 災害前DEM切り抜き・解像度のリサンプリング")
