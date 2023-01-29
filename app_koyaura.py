@@ -15,7 +15,7 @@ from modules.accuracy_valuation import AccuracyValuation
 
 
 # 画像のファイルパス
-path1 = './inputs/koyaura/trim/dsm_after.tif'
+path1 = './inputs/koyaura/trim/dsm_raw.tif'
 # path2 = './inputs/koyaura/trim/dem_heli_not_used.tif'
 path2 = './inputs/koyaura/trim/dem.tif'
 path3 = './inputs/koyaura/trim/dem.tif'
@@ -29,7 +29,7 @@ path6 = './inputs/koyaura/trim/ortho_img.tif'
 path7 = './inputs/koyaura/trim/heli_img.tif'
 path8 = './outputs/koyaura/texture/dissimilarity.tif'
 path9 = './outputs/koyaura/building_mask.png'
-path10 = './inputs/koyaura/trim/building_gsi.png'
+path10 = './inputs/koyaura/trim/building_polygon.png'
 
 path_list = [path1, path2, path3, path4, path5, path6, path10]
 

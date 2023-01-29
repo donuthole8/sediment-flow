@@ -12,6 +12,19 @@ from modules.image_data import ImageData
 
 
 class RegionProcessing():
+	# 傾斜方位への座標(Δy, Δx)
+	DIRECTION: list[int] = [
+		(-1, 0),		# 北
+		(-1, 1),		# 北東
+		(0,  1),		# 東
+		(1,  1),		# 南東
+		(1,  0),		# 南
+		(1,  -1),		# 南西
+		(0,  -1),		# 西
+		(-1, -1),		# 北西
+	]
+
+
 	@common_util.stop_watch
 	def area_division(
 			self, 
@@ -348,60 +361,56 @@ class RegionProcessing():
 
 
 	def norm_building(self, image: ImageData) -> None:
-		""" 建物領域の標高値を地表面と同等に補正する
-
-		Args:
-				image (ImageData): 画像データ
-		"""
-		# 標高データを補正
-		self.__norm_building(image)
-
-		return
-
-
-	def __norm_building(self, image: ImageData) -> None:
 		"""	建物領域の標高値を地表面と同等に補正する
 
 		Args:
 				image (ImageData): 画像データ
 		"""
 		# 正規化後のDSM標高値
-		# image.normed_dsm = self.dsm_after.copy()
-
-		# 比較用
-		# cv2.imwrite("./outputs/" + image.experiment + "/uav_dsm.tif",  image.dsm_after)
+		image.normed_dsm = image.dsm_after.copy()
 
 		# 建物領域毎に処理
 		for bld in image.building:
-			# 建物領域の周囲領域の地表面標高値を取得
-			neighbor_height = self.__get_neighbor_region(image, bld["coords"])
+			# 注目建物領域の隣接領域（建物領域・土砂マスク外は除く）のラベルを取得
+			neighbor_labels = self.__get_neighbor_regions(image, bld["coords"])
 
-			# TODO: できるか試す
-			# image.dsm_after[bld["coords"]] = neighbor_height
+			if (len(neighbor_labels) > 0):
+				# 地表面領域（上記処理の領域）より標高値（平均か何か）を取得
+				normed_height = self.__get_neighbor_height(image, neighbor_labels)
+				print("標高値", normed_height)
 
-			# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
-			# NOTE: DEMを使う場合はコメントアウトのままで良い
-			# TODO: 航空画像を使う場合は航空画像からも建物領域を検出
-			# neighbor_height_heli = self.__get_neighbor_region(image, coords)
 
-			for coords in bld["coords"]:
 				# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
-				# image.normed_dsm[coords] = neighbor_height
-				image.dsm_after[coords] = neighbor_height
+				for coords in bld["coords"]:
+					# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
+					image.normed_dsm[coords] = normed_height
 
-				# TODO: subも検討
-				# image.dsm_sub[coords] -= 10
+					# TODO: subも検討
+					# image.dsm_sub[coords] -= 10
 
-		# 画像の保存
-		# cv2.imwrite("./outputs/" + image.experiment + "/normed_uav_dsm.tif",  image.normed_dsm)
-		# cv2.imwrite("./outputs/" + image.experiment + "/normed_uav_dsm.tif",  image.dsm_after)
-		# cv2.imwrite("normed_uav_heli.tif", image.dem_before)
+
+
+				tiff_util._save_tif(
+					image.normed_dsm,
+					image.path_list[0],
+					"./outputs/" + image.experiment + "/normed_dsm3.tif"
+				)
+
+				img = (image.normed_dsm - np.min(image.normed_dsm)) / (np.max(image.normed_dsm) - np.min(image.normed_dsm)) * 255
+
+				
+				cv2.imwrite("./outputs/" + image.experiment + "/normed_dsm3.png", img)
+				
+				print(aaa)
+
+			else:
+				print("隣接で地表面領域無し")
 
 		# 建物領域データの開放
 		image.building = None
 
 		tiff_util._save_tif(
-			image.dsm_after,
+			image.normed_dsm,
 			image.path_list[0],
 			"./outputs/" + image.experiment + "/normed_dsm2.tif"
 		)
@@ -409,18 +418,15 @@ class RegionProcessing():
 		return
 
 
-	@staticmethod
-	def __get_neighbor_region(image: ImageData, coords: tuple[int, int]) -> list[int]:
-		"""	建物領域でない隣接領域の標高値を取得
-				TODO: 新しく作成した隣接領域検出を使えないか検討
-				TODO: 隣接領域中で最も低い領域が良い気がする
+	def __get_neighbor_regions(self, image: ImageData, coords: tuple[int, int]) -> list[int]:
+		"""	建物領域でない隣接領域ラベルを取得
 
 		Args:
 				image (ImageData): 画像データ
 				coords (tuple[int, int]): 注目領域の座標群
 
 		Returns:
-				list[int]: 隣接領域の標高値
+				list[int]: 隣接領域のラベル
 		"""
 		# キャンパス描画
 		campus = np.zeros(image.size_2d)
@@ -437,10 +443,6 @@ class RegionProcessing():
 			cv2.CHAIN_APPROX_SIMPLE
 		)
 
-		# 面積
-		area_float = cv2.contourArea(contours[0])
-		area = int(area_float)
-
 		# 輪郭の重心
 		M = cv2.moments(contours[0])
 		try:
@@ -449,94 +451,135 @@ class RegionProcessing():
 		except:
 			cx, cy = 0, 0
 
-		# 輪郭の周囲長
-		arc_len = cv2.arcLength(contours[0], True)
+		# 輪郭データから座標データを取得
+		contour_coordinates = [(c[0, 1], c[0, 0]) for c in contours[0]]
 
-		# 疑似半径
-		r1 = int(math.sqrt(area / math.pi))
-		r2 = int(arc_len / (2 * math.pi))
+		# 8方向それぞれの隣接領域を取得
+		neighbor_region_labels = []
+		mean_height = 0.0
+		for i in range(0, 8):
+			# 輪郭の一番端座標からDIRECTION[i]の方向の座標を取得
+			neighbor_coordinate = self.__get_neighbor_coordinate(
+				self.DIRECTION[i], 
+				contour_coordinates, 
+				(cy, cx)
+			)
 
-		try:
-			if (image.bld_mask[     cy - r2, cx - r2] == 0):
-				return image.dsm_after[(cy - r2, cx - r2)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy - r2, cx     ] == 0):
-				return image.dsm_after[(cy - r2, cx     )]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy - r2, cx + r2] == 0):
-				return image.dsm_after[(cy - r2, cx + r2)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy     , cx + r2] == 0):
-				return image.dsm_after[(cy     , cx + r2)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy + r2, cx + r2] == 0):
-				return image.dsm_after[(cy + r2, cx + r2)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy + r2, cx     ] == 0):
-				return image.dsm_after[(cy + r2, cx     )]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy + r2, cx - r2] == 0):
-				return image.dsm_after[(cy + r2, cx - r2)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy     , cx - r2] == 0):
-				return image.dsm_after[(cy     , cx - r2)]
-		except:
-			pass
+			# 取得した隣接座標が画像領域内に存在するか
+			if (common_util.is_index(image.dsm_after.shape, neighbor_coordinate)):
+				# 隣接座標は建物領域でないか・土砂マスクの領域内か
+					if (common_util.is_ground(image, neighbor_coordinate)):
+						# ラベルIDを保存
+						neighbor_region_labels.append(
+							image.label_table[neighbor_coordinate]
+						)
+		
 
-		# 隣接領域の画素を取得
-		try:
-			if (image.bld_mask[     cy - r1, cx - r1] == 0):
-				return image.dsm_after[(cy - r1, cx - r1)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy - r1, cx     ] == 0):
-				return image.dsm_after[(cy - r1, cx     )]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy - r1, cx + r1] == 0):
-				return image.dsm_after[(cy - r1, cx + r1)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy     , cx + r1] == 0):
-				return image.dsm_after[(cy     , cx + r1)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy + r1, cx + r1] == 0):
-				return image.dsm_after[(cy + r1, cx + r1)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy + r1, cx     ] == 0):
-				return image.dsm_after[(cy + r1, cx     )]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy + r1, cx - r1] == 0):
-				return image.dsm_after[(cy + r1, cx - r1)]
-		except:
-			pass
-		try:
-			if (image.bld_mask[     cy     , cx - r1] == 0):
-				return image.dsm_after[(cy     , cx - r1)]
-		except:
-			pass
 
-		return image.dsm_after[(cy, cx)]
+		# 重複を削除
+		# FIXME: Noneがある場合があるので削除
+		return list(set(neighbor_region_labels))
+
+
+	def __get_neighbor_coordinate(self, direction, contour_coordinates, centroids):
+		"""
+		注目座標の輪郭に隣接した領域の座標を1点取得
+		direction: 注目方向
+		contour_coordinates: 注目領域の輪郭座標群
+		centroids: 注目座標の重心座標
+		"""
+		try:
+			# 注目方向によって処理を変更
+			if   (direction == self.DIRECTION[0]):		# 北
+				return (
+					np.min([c[0] for c in contour_coordinates]) + self.DIRECTION[0][0], 
+					centroids[1] + self.DIRECTION[0][1]
+				)
+
+			elif (direction == self.DIRECTION[1]):		# 北東
+				# y = -x + (Δy + Δx) の1次関数
+				linear_function = [
+					c for c in contour_coordinates 
+					if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+				]
+				# 注目領域内でx座標の最も大きい座標を取得
+				coord = max(linear_function, key=lambda x:x[1])
+
+				return (coord[0] + self.DIRECTION[1][0], coord[1] + self.DIRECTION[1][1])
+
+			elif (direction == self.DIRECTION[2]):		# 東
+				return (
+					centroids[0] + self.DIRECTION[2][0], 
+					np.max([c[1] for c in contour_coordinates]) + self.DIRECTION[2][1]
+				)
+
+			elif (direction == self.DIRECTION[3]):		# 南東
+				# y = x + (Δy - Δx) の1次関数
+				linear_function = [
+					c for c in contour_coordinates 
+					if (c[1] == c[0] + (centroids[1] - centroids[0]))
+				]
+				# 注目領域内でx座標の最も大きい座標を取得
+				coord = max(linear_function, key=lambda x:x[1])
+
+				return (coord[0] + self.DIRECTION[3][0], coord[1] + self.DIRECTION[3][1])
+
+			elif (direction == self.DIRECTION[4]):		# 南
+							return (
+					np.max([c[0] for c in contour_coordinates]) + self.DIRECTION[4][0], 
+					centroids[1] + self.DIRECTION[4][1]
+				)
+
+			elif (direction == self.DIRECTION[5]):		# 南西
+				# y = -x + (Δy + Δx) の1次関数
+				linear_function = [
+					c for c in contour_coordinates 
+					if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
+				]
+				# 注目領域内でy座標の最も大きい座標を取得
+				coord = max(linear_function, key=lambda x:x[0])
+
+				return (coord[0] + self.DIRECTION[5][0], coord[1] + self.DIRECTION[5][1])
+
+			elif (direction == self.DIRECTION[6]):		# 西
+				return (
+					centroids[0] + self.DIRECTION[6][0], 
+					np.min([c[1] for c in contour_coordinates]) + self.DIRECTION[6][1]
+				)
+
+			elif (direction == self.DIRECTION[7]):		# 北西
+				# y = x + (Δy - Δx) の1次関数
+				linear_function = [
+					c for c in contour_coordinates 
+					if (c[1] == c[0] + (centroids[1] - centroids[0]))
+				]
+				# 注目領域内でy座標の最も小さい座標を取得
+				coord = min(linear_function, key=lambda x:x[0])
+
+				return (coord[0] + self.DIRECTION[7][0], coord[1] + self.DIRECTION[7][1])
+		except:
+			# 領域内に１次関数が存在しない場合
+			return (-1, -1)
+
+
+	def __get_neighbor_height(self, image: ImageData, label_list: list[int]) -> float:
+		"""	地表面領域の平均標高値を取得
+
+		Args:
+				image (ImageData): 画像データ
+				label_list (list[int]): 地表面領域ラベルのリスト
+
+		Returns:
+				float: 標高値
+		"""
+		# return image.dsm_after[list(zip(*np.where(image.label_table == label_list[0])))[0]]
+
+		# 平均標高値を取得
+		mean_height = 0.0
+		for label in label_list:
+			idx = list(zip(*np.where(image.label_table == label)))
+			mean_height += np.nanmean(image.dsm_after[idx])
+			return mean_height
+
+		return mean_height / len(label_list)
+

@@ -1,6 +1,8 @@
 import time
 from functools import wraps
 
+from modules.image_data import ImageData
+
 
 def stop_watch(func: callable) -> callable:
 	"""	関数の実行時間測定
@@ -59,3 +61,26 @@ def is_index(size: tuple[int, int, int], coordinate: tuple[int, int]) -> bool:
 		return True
 	else:
 		return False
+
+
+def is_ground(image: ImageData, coordinate: tuple[int, int]) -> bool:
+	"""	地表面領域か判別
+
+	Args:
+			image (ImageData): 画像データ
+			coordinate (tuple[int, int]): タプル型座標
+
+	Returns:
+			bool: 判別結果
+	"""
+	# 建物領域の場合
+	if (image.bld_mask[coordinate] == 255):
+		print("bld")
+		return False
+	else:
+		return True
+	# # 土砂マスク外の場合
+	# if (image.mask[coordinate] == 0):
+	# 	return False
+	# # 地表面領域の場合
+	# return True
