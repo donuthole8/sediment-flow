@@ -371,24 +371,16 @@ class RegionProcessing():
 
 		# 建物領域毎に処理
 		for bld in image.building:
-			# 注目建物領域の隣接領域（建物領域・土砂マスク外は除く）のラベルを取得
-			neighbor_labels = self.__get_neighbor_regions(image, bld["coords"])
+			# 注目建物領域の隣接領域（建物領域・土砂マスク外は除く）の標高値を取得
+			h = self.__get_neighbor_regions(image, bld["coords"])
 
-			if (len(neighbor_labels) > 0):
-				# 地表面領域（上記処理の領域）より標高値（平均か何か）を取得
-				normed_height = self.__get_neighbor_height(image, neighbor_labels)
-				print("標高値", normed_height)
-
-
+			if (h != -1):
 				# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
 				for coords in bld["coords"]:
-					# UAVのDSMの建物領域を周囲領域の地表面と同じ標高値にする
-					image.normed_dsm[coords] = normed_height
+					image.normed_dsm[coords] = h
 
 					# TODO: subも検討
 					# image.dsm_sub[coords] -= 10
-
-
 
 				tiff_util._save_tif(
 					image.normed_dsm,
@@ -396,15 +388,8 @@ class RegionProcessing():
 					"./outputs/" + image.experiment + "/normed_dsm3.tif"
 				)
 
-				img = (image.normed_dsm - np.min(image.normed_dsm)) / (np.max(image.normed_dsm) - np.min(image.normed_dsm)) * 255
-
-				
-				cv2.imwrite("./outputs/" + image.experiment + "/normed_dsm3.png", img)
-				
-				print(aaa)
-
 			else:
-				print("隣接で地表面領域無し")
+				pass
 
 		# 建物領域データの開放
 		image.building = None
@@ -451,112 +436,94 @@ class RegionProcessing():
 		except:
 			cx, cy = 0, 0
 
-		# 輪郭データから座標データを取得
-		contour_coordinates = [(c[0, 1], c[0, 0]) for c in contours[0]]
+		# 面積
+		area_float = cv2.contourArea(contours[0])
+		area = int(area_float)
 
-		# 8方向それぞれの隣接領域を取得
-		neighbor_region_labels = []
-		mean_height = 0.0
+		# 輪郭の周囲長
+		arc_len = cv2.arcLength(contours[0], True)
+
+		# 疑似半径
+		r1 = int(math.sqrt(area / math.pi))
+		r2 = int(arc_len / (2 * math.pi))
+
+		height = 0.0
+		c = 0
+
 		for i in range(0, 8):
-			# 輪郭の一番端座標からDIRECTION[i]の方向の座標を取得
-			neighbor_coordinate = self.__get_neighbor_coordinate(
-				self.DIRECTION[i], 
-				contour_coordinates, 
+			_cy, _cx = self.__get_neighbor_coordinate(
+				self.DIRECTION[i],
+				(r1+r2)/2 * 2,
 				(cy, cx)
 			)
+
+			neighbor_coordinate = int(_cy), int(_cx)
 
 			# 取得した隣接座標が画像領域内に存在するか
 			if (common_util.is_index(image.dsm_after.shape, neighbor_coordinate)):
 				# 隣接座標は建物領域でないか・土砂マスクの領域内か
 					if (common_util.is_ground(image, neighbor_coordinate)):
-						# ラベルIDを保存
-						neighbor_region_labels.append(
-							image.label_table[neighbor_coordinate]
-						)
+						
+						height += image.dsm_after[neighbor_coordinate]
+						c += 1
+
+		try:
+			return height / c
+		except:
+			return -1
 		
+		# # 重複を削除
+		# # FIXME: Noneがある場合があるので削除
+		# return list(set(neighbor_region_labels))
 
 
-		# 重複を削除
-		# FIXME: Noneがある場合があるので削除
-		return list(set(neighbor_region_labels))
+	def __get_neighbor_coordinate(self, direction, r, centroids):
+		""" 注目座標から指定距離移動した座標を取得
 
-
-	def __get_neighbor_coordinate(self, direction, contour_coordinates, centroids):
-		"""
-		注目座標の輪郭に隣接した領域の座標を1点取得
 		direction: 注目方向
-		contour_coordinates: 注目領域の輪郭座標群
-		centroids: 注目座標の重心座標
+		r: 半径
+		centroids(cy, cx): 注目座標の重心座標
 		"""
 		try:
+			r_sqrt = r / math.sqrt(2)
+
 			# 注目方向によって処理を変更
 			if   (direction == self.DIRECTION[0]):		# 北
 				return (
-					np.min([c[0] for c in contour_coordinates]) + self.DIRECTION[0][0], 
-					centroids[1] + self.DIRECTION[0][1]
+					centroids[0] - r, 
+					centroids[1]
 				)
 
 			elif (direction == self.DIRECTION[1]):		# 北東
-				# y = -x + (Δy + Δx) の1次関数
-				linear_function = [
-					c for c in contour_coordinates 
-					if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
-				]
-				# 注目領域内でx座標の最も大きい座標を取得
-				coord = max(linear_function, key=lambda x:x[1])
-
-				return (coord[0] + self.DIRECTION[1][0], coord[1] + self.DIRECTION[1][1])
+				return (centroids[0] - r_sqrt, centroids[1] + r_sqrt)
 
 			elif (direction == self.DIRECTION[2]):		# 東
 				return (
-					centroids[0] + self.DIRECTION[2][0], 
-					np.max([c[1] for c in contour_coordinates]) + self.DIRECTION[2][1]
+					centroids[0],
+					centroids[1] + r
 				)
 
 			elif (direction == self.DIRECTION[3]):		# 南東
-				# y = x + (Δy - Δx) の1次関数
-				linear_function = [
-					c for c in contour_coordinates 
-					if (c[1] == c[0] + (centroids[1] - centroids[0]))
-				]
-				# 注目領域内でx座標の最も大きい座標を取得
-				coord = max(linear_function, key=lambda x:x[1])
-
-				return (coord[0] + self.DIRECTION[3][0], coord[1] + self.DIRECTION[3][1])
+				return (centroids[0] + r_sqrt, centroids[1] + r_sqrt)
 
 			elif (direction == self.DIRECTION[4]):		# 南
 							return (
-					np.max([c[0] for c in contour_coordinates]) + self.DIRECTION[4][0], 
-					centroids[1] + self.DIRECTION[4][1]
+								centroids[0] + r, 
+								centroids[1]
 				)
 
 			elif (direction == self.DIRECTION[5]):		# 南西
-				# y = -x + (Δy + Δx) の1次関数
-				linear_function = [
-					c for c in contour_coordinates 
-					if (c[1] == (-1 * c[0]) + (centroids[1] + centroids[0]))
-				]
-				# 注目領域内でy座標の最も大きい座標を取得
-				coord = max(linear_function, key=lambda x:x[0])
-
-				return (coord[0] + self.DIRECTION[5][0], coord[1] + self.DIRECTION[5][1])
+				return (centroids[0] + r_sqrt, centroids[1] - r_sqrt)
 
 			elif (direction == self.DIRECTION[6]):		# 西
 				return (
-					centroids[0] + self.DIRECTION[6][0], 
-					np.min([c[1] for c in contour_coordinates]) + self.DIRECTION[6][1]
+					centroids[0],
+					centroids[1] - r
 				)
 
 			elif (direction == self.DIRECTION[7]):		# 北西
-				# y = x + (Δy - Δx) の1次関数
-				linear_function = [
-					c for c in contour_coordinates 
-					if (c[1] == c[0] + (centroids[1] - centroids[0]))
-				]
-				# 注目領域内でy座標の最も小さい座標を取得
-				coord = min(linear_function, key=lambda x:x[0])
+				return (centroids[0] - r_sqrt, centroids[1] - r_sqrt)
 
-				return (coord[0] + self.DIRECTION[7][0], coord[1] + self.DIRECTION[7][1])
 		except:
 			# 領域内に１次関数が存在しない場合
 			return (-1, -1)
