@@ -28,6 +28,9 @@ class ImageData():
 		self.aspect     = cv2.imread(path_list[3], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 		self.slope      = cv2.imread(path_list[7], cv2.IMREAD_ANYDEPTH).astype(np.float32)
 
+		self.aspect2    = cv2.imread("./inputs/koyaura/trim/dsm_aspect.tif", cv2.IMREAD_ANYDEPTH).astype(np.float32)
+
+
 		# 画像
 		self.mask          = cv2.split(
 			cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)

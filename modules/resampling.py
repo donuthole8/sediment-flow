@@ -23,6 +23,9 @@ class Resampling():
 		image.ortho    = cv2.resize(image.ortho,    image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 		image.bld_gsi  = cv2.resize(image.bld_gsi,  image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
 
+
+		image.aspect2  = cv2.resize(image.aspect2,  image.size_2d_xy, interpolation=cv2.INTER_CUBIC)
+
 		# UAV画像のDSMの最小値を算出（領域外の透過背景値）
 		background_pix = np.min(image.dsm_after)
 

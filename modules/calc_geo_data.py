@@ -45,6 +45,7 @@ class CalcGeoData():
 		# 0-360,0-90度に変換
 		image.aspect = image.aspect / 255 * 360
 		image.slope  = image.slope  / 255 * 360
+		image.aspect2 = image.aspect2 / 255 * 360
 
 		return
 

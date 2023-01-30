@@ -1,7 +1,6 @@
 import cv2
 import math
 import numpy as np
-from tqdm import trange
 
 from modules.utils import common_util
 from modules.utils import drawing_util
@@ -53,7 +52,6 @@ class CalcMovementMesh():
 		drawing_util.draw_mesh(self, image)
 
 		# メッシュ中心が土砂の場合各注目領域に対して処理を行う
-		# for y in trange(self.mesh_height):
 		for y in range(self.mesh_height):
 			for x in range(self.mesh_width):
 				# 注目メッシュの成分を保存
@@ -68,7 +66,7 @@ class CalcMovementMesh():
 				# 注目メッシュの中心座標が土砂領域か判別
 				# TODO: 中心座標で判別するのではなくメッシュ内の土砂領域画素数（中心座標から数十ピクセル）で判別
 				if (self.__is_sedimentation_mask(image)):
-				# if (self.is_sedimentation(image, mesh_coords)):	# 精度悪い
+				# if (self.__is_sedimentation(image)):
 					# 点を描画
 					cv2.circle(
 						img=image.ortho,	# 画像
@@ -140,7 +138,7 @@ class CalcMovementMesh():
 		return coords
 
 
-	def __is_sedimentation(self, image: ImageData, coords: list[tuple]) -> bool:
+	def __is_sedimentation(self, image: ImageData) -> bool:
 		""" 土砂領域かどうかを判別
 
 		Args:
@@ -155,12 +153,13 @@ class CalcMovementMesh():
 		is_not_sedimentation = 0
 
 		# 全画素について調べる
-		for coord in coords:
-			if (self.__is_sedimentation_mask(image, coord)):
+		for coord in self.mesh_coords:
+			if (self.__is_sedimentation_mask_v2(image, coord)):
 				is_sedimentation     += 1
 			else:
 				is_not_sedimentation += 1
 
+		# print(is_sedimentation+is_not_sedimentation, is_sedimentation, is_not_sedimentation)
 		# 画素数の多い方を返却
 		return True if (is_sedimentation > is_not_sedimentation) else False
 
@@ -181,7 +180,25 @@ class CalcMovementMesh():
 			else:
 				return False
 		except Exception as e:
-			print("er!!", e)
+			return False
+
+
+	def __is_sedimentation_mask_v2(self, image: ImageData, coord) -> bool:
+		""" 土砂マスク画像を用いて土砂領域かどうかを判別
+
+		Args:
+				image (ImageData): 画像データ
+
+		Returns:
+				bool: 土砂領域フラグ
+		"""
+		# マスク画像より土砂の判別
+		try:
+			if (image.mask[coord] == 255):
+				return True
+			else:
+				return False
+		except Exception as e:
 			return False
 
 
@@ -240,7 +257,14 @@ class CalcMovementMesh():
 				list[tuple]: 隣接領域データ
 		"""
 		# 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
-		average_direction = self.__get_average_direction(image)
+		average_direction1 = self.__get_average_direction_v1(image)
+		# average_direction2 = self.__get_average_direction_v2(image)
+		# print(average_direction1, average_direction2, )
+		# average_direction = (average_direction1 + average_direction2) / 2
+
+		# average_direction = average_direction2
+		average_direction = average_direction1
+
 
 		try:
 			# 傾斜方位データを取得
@@ -270,7 +294,7 @@ class CalcMovementMesh():
 		return neighbor_mesh_labels
 
 
-	def __get_average_direction(self, image: ImageData) -> float:
+	def __get_average_direction_v1(self, image: ImageData) -> float:
 		""" 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
 
 		Args:
@@ -288,6 +312,35 @@ class CalcMovementMesh():
 			# 土砂マスクの領域のみ
 			if (image.mask[coord] == 255):
 				average_direction += image.aspect[coord]
+				sediment_pix_num  += 1
+		try:
+			return average_direction / sediment_pix_num
+		except:
+			print("error")
+			return 0
+
+
+	def __get_average_direction_v2(self, image: ImageData) -> float:
+		""" 注目メッシュの土砂領域マスク内の平均傾斜方位を取得
+
+		Args:
+				image (ImageData): 画像データ
+
+		Returns:
+				float: 平均傾斜方位データ
+		"""
+		# TODO: ここを中山さんの手法に修正(flow.py)
+		# NOTE: 画素単位で3方向に土砂追跡するか,領域単位でとりあえず3領域取得するか
+		# NOTE: 加重平均等にした方が良いのか
+		sediment_pix_num = 0
+		average_direction = 0.0
+		for coord in self.mesh_coords:
+			# 土砂マスクの領域のみ
+			if (image.mask[coord] == 255):
+				if (image.aspect2[coord] > 180):
+					average_direction += image.aspect2[coord] - 180
+				else:
+					average_direction += image.aspect2[coord] + 180
 				sediment_pix_num  += 1
 		try:
 			return average_direction / sediment_pix_num

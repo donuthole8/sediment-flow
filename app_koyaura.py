@@ -111,7 +111,7 @@ def main() -> None:
 
 	# 精度評価
 	print("# 精度評価")
-	AccuracyValuation(calc_movement_result).main(image)
+	AccuracyValuation(calc_movement_result, image.experiment).main(image)
 
 
 # メイン関数
