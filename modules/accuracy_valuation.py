@@ -13,93 +13,98 @@ class AccuracyValuation():
 	# 小屋浦切り抜き画像正解データ
 	# 約 400m x 400m
 	# 5mメッシュ -> 80 x 80
-	CORRECT_DATA_KOYAURA_100: list[dict[int, float]] = [
+	CORRECT_DATA_KOYAURA: list[dict[int, float]] = [
 		# 1 - 3 rows
 		[
-		{"direction": 170, "distance": 5}, {"direction": 175, "distance": 5}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction":220, "distance": 5}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": 170}, {"direction": 175}, {"direction": 185}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": 210}, {"direction":230}, {"direction": np.nan}, 
 		], [
-		{"direction": 160, "distance": 5}, {"direction": 170, "distance": 5}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": 220, "distance": 5}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": 160}, {"direction": 170}, {"direction": 230}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": 200}, {"direction": np.nan}, {"direction": np.nan}, 
 		], [
-		{"direction": 160, "distance": 5}, {"direction": 170, "distance": 5}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": 200, "distance": 5},
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": 160}, {"direction": 170}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": 200},
+		{"direction": 195}, {"direction": np.nan}, {"direction": np.nan}, 
 		], 
 
 		# 4 - 6 rows
 		[
-		{"direction": 135, "distance": 5}, {"direction": 175, "distance": 5}, {"direction": 190, "distance": 5},
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": 190, "distance": 5},
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": 135}, {"direction": 175}, {"direction": 190},
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": 190},
+		{"direction": 200}, {"direction": np.nan}, {"direction": np.nan}, 
 		], [
-		{"direction": np.nan, "distance": np.nan}, {"direction": 170, "distance": 5}, {"direction": 200, "distance": 5},
-		{"direction": 225, "distance": 5}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": 190, "distance": 5}, {"direction": 200, "distance": 5}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan},
+		{"direction": np.nan}, {"direction": 170}, {"direction": 200},
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": 190}, {"direction": 200}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan},
 		], [
-		{"direction": np.nan, "distance": np.nan}, {"direction": 225, "distance": 5}, {"direction": 225, "distance": 5},
-		{"direction": 230, "distance": 5}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": 225, "distance": 5}, {"direction": 220, "distance": 5}, {"direction": 250, "distance": 5}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan},
+		{"direction": np.nan}, {"direction": 220}, {"direction": 225},
+		{"direction": 230}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": 215}, {"direction": 200}, {"direction": 230}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan},
 		],
 
 		# 7 - 9 rows
 		[
-		{"direction": 250, "distance": 5}, {"direction": 250, "distance": 5}, {"direction": 250, "distance": 5},
-		{"direction": 245, "distance": 5}, {"direction": 245, "distance": 5}, {"direction": 225, "distance": 5},
-		{"direction": 225, "distance": 5}, {"direction": 225, "distance": 5}, {"direction": 225, "distance": 5},
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan},
+		{"direction": 200}, {"direction": 220}, {"direction": 240},
+		{"direction": 245}, {"direction": 245}, {"direction": 220},
+		{"direction": 220}, {"direction": 185}, {"direction": 240},
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan},
 		], [
-		{"direction": 250, "distance": 5}, {"direction": 250, "distance": 5}, {"direction": 260, "distance": 5},
-		{"direction": 260, "distance": 5}, {"direction": 260, "distance": 5}, {"direction": 260, "distance": 5},
-		{"direction": 260, "distance": 5}, {"direction": 250, "distance": 5}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": 195}, {"direction": 215}, {"direction": 235},
+		{"direction": 250}, {"direction": 250}, {"direction": 250},
+		{"direction": 210}, {"direction": 205}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
 		], [
-		{"direction": 265, "distance": 5}, {"direction": 275, "distance": 5}, {"direction": 270, "distance": 5},
-		{"direction": 275, "distance": 5}, {"direction": 270, "distance": 5}, {"direction": 270, "distance": 5},
-		{"direction": 250, "distance": 5}, {"direction": 225, "distance": 5}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": 245}, {"direction": 255}, {"direction": 250},
+		{"direction": 250}, {"direction": 255}, {"direction": 230},
+		{"direction": 235}, {"direction": 230}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
 		], 
 
 		# 10 - 13 row
 		[
-		{"direction": 290, "distance": 5}, {"direction": 290, "distance": 5}, {"direction": 275, "distance": 5},
-		{"direction": 280, "distance": 5}, {"direction": 275, "distance": 5}, {"direction": 290, "distance": 5},
-		{"direction": 275, "distance": 5}, {"direction": 275, "distance": 5}, {"direction": 275, "distance": 5},
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": 290}, {"direction": 290}, {"direction": 275},
+		{"direction": 280}, {"direction": 275}, {"direction": 290},
+		{"direction": 280}, {"direction": 290}, {"direction": 275},
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
 		], [
-		{"direction": 290, "distance": 5}, {"direction": 290, "distance": 5}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": 325, "distance": 5}, {"direction": 320, "distance": 5}, {"direction": 325, "distance": 5},
-		{"direction": 295, "distance": 5}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": 290}, {"direction": 285}, {"direction": 280}, 
+		{"direction": 285}, {"direction": 280}, {"direction":280},
+		{"direction": 295}, {"direction": 310}, {"direction": 305}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
 		], [
-		{"direction": np.nan, "distance": np.nan}, {"direction": 325, "distance": 5}, {"direction": 325, "distance": 5},
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": np.nan}, {"direction": 325}, {"direction": 320},
+		{"direction": 320}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": 310}, {"direction": np.nan}, {"direction": np.nan}, 
 		], [
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
-		{"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, {"direction": np.nan, "distance": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
 		], 
 	]
 
 
-	def __init__(self, calc_movement_mesh: list[float, tuple]) -> None:
+	def __init__(self, calc_movement_mesh: list[float, tuple], experiment: str) -> None:
 		# 精度評価用の土砂移動推定結果データ
 		self.calc_movement_mesh = calc_movement_mesh
 		self.calc_movement_result = calc_movement_mesh.calc_movement_result
 
 		# 正解データ
-		self.answer = self.CORRECT_DATA_KOYAURA_100
+		if   (experiment == "koyaura"):
+			self.answer = self.CORRECT_DATA_KOYAURA
+		elif (experiment == "mihara"):
+			self.answer = self.CORRECT_DATA_KOYAURA
+		elif (experiment == "atami"):
+			self.answer = self.CORRECT_DATA_KOYAURA
 
 		return
 

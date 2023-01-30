@@ -448,6 +448,16 @@ def write_answer(image: ImageData, mesh: CalcMovementMesh, answer: list[dict[int
 					color=(0, 0, 255),	# 色
 					thickness=2,	# 太さ
 				)
+
+				# 点を描画
+				cv2.circle(
+					img=image.answer,	# 画像
+					center=(x, y),	# 中心
+					radius=3,	# 半径
+					color=(0, 0, 255),	# 色
+					thickness=mesh.mesh_size // 20,	# 太さ
+				)
+
 			except Exception as e:
 				pass
 
