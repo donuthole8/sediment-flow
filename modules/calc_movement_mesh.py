@@ -65,8 +65,8 @@ class CalcMovementMesh():
 
 				# 注目メッシュの中心座標が土砂領域か判別
 				# TODO: 中心座標で判別するのではなくメッシュ内の土砂領域画素数（中心座標から数十ピクセル）で判別
-				if (self.__is_sedimentation_mask(image)):
-				# if (self.__is_sedimentation(image)):
+				# if (self.__is_sedimentation_mask(image)):
+				if (self.__is_sedimentation(image)):
 					# 点を描画
 					cv2.circle(
 						img=image.ortho,	# 画像
@@ -161,7 +161,9 @@ class CalcMovementMesh():
 
 		# print(is_sedimentation+is_not_sedimentation, is_sedimentation, is_not_sedimentation)
 		# 画素数の多い方を返却
-		return True if (is_sedimentation > is_not_sedimentation) else False
+		# return True if (is_sedimentation > is_not_sedimentation) else False
+		return True if (is_sedimentation > 1500) else False
+		# return True if (is_sedimentation > 2000) else False
 
 
 	def __is_sedimentation_mask(self, image: ImageData) -> bool:

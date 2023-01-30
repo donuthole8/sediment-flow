@@ -24,8 +24,9 @@ path4 = './inputs/mihara/trim/aspect.tif'
 path5 = './inputs/mihara/trim/normed_mask.png'
 path6 = './inputs/mihara/trim/ortho_img.tif'
 path7 = './inputs/mihara/trim/building_polygon.png'
+path8 = './inputs/mihara/trim/slope.tif'
 
-path_list = [path1, path2, path3, path4, path5, path6, path7]
+path_list = [path1, path2, path3, path4, path5, path6, path7, path8]
 
 
 # TODO: ラプラシアンフィルタとかを領域に使って勾配を求める
@@ -94,8 +95,8 @@ def main() -> None:
 
 	# 建物領域の検出
 	print("# 建物領域を検出する")
-	RegionProcessing().extract_building(image)
-	# image.bld_mask = cv2.imread(path9)
+	RegionProcessing().extract_building(image, 40, 0.3)
+	# image.bld_mask = cv2.imread("./outputs/mihara/building_mask.png")
 
 	# 建物領域の標高値補正
 	print("# 建物領域の標高値を地表面標高値に補正")
@@ -108,11 +109,11 @@ def main() -> None:
 
 	# メッシュベースでの土砂移動推定
 	print("# メッシュベースでの土砂移動推定")
-	calc_movement_result = CalcMovementMesh(100, image.size_2d).main(image)
+	calc_movement_result = CalcMovementMesh(110, image.size_2d).main(image)
 
 	# 精度評価
 	print("# 精度評価")
-	AccuracyValuation(calc_movement_result).main()
+	AccuracyValuation(calc_movement_result, image.experiment).main(image)
 
 
 def building_masking():
@@ -144,8 +145,8 @@ def building_masking():
 
 # メイン関数
 if __name__ == "__main__":
-	try:
-		if (sys.argv[1] == "bld"):
-			building_masking()
-	except:
+	# try:
+	# 	if (sys.argv[1] == "bld"):
+	# 		building_masking()
+	# except:
 		main()

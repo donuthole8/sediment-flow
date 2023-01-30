@@ -93,6 +93,74 @@ class AccuracyValuation():
 	]
 
 
+	## 違うかも
+	# 三原切り抜き画像正解データ
+	# 110 x 110 mesh
+	# (w,h) = 11 x 10
+	CORRECT_DATA_MIHARA: list[dict[int, float]] = [
+		# 1 - 3 rows
+		[
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": 340}, {"direction": np.nan}, {"direction": 25}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], [
+		{"direction": np.nan}, {"direction": 355}, {"direction": 335}, 
+		{"direction": 340}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": 50}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], [
+		{"direction": 45}, {"direction": 330}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": 80}, {"direction": 40}, 
+		{"direction": 95}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], 
+
+		# 4 - 6 rows
+		[
+		{"direction": np.nan}, {"direction": 35}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": 290}, {"direction": 285}, 
+		{"direction": 260}, {"direction": np.nan}, 
+		], [
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], [
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": 50}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": 55}, 
+		{"direction": 60}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], 
+
+		# 7 - 10 rows
+		[
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": 70}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], [
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], [
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": 280}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], [
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, {"direction": np.nan}, 
+		{"direction": np.nan}, {"direction": np.nan}, 
+		], 
+
+	]
+
+
+
 	def __init__(self, calc_movement_mesh: list[float, tuple], experiment: str) -> None:
 		# 精度評価用の土砂移動推定結果データ
 		self.calc_movement_mesh = calc_movement_mesh
@@ -102,7 +170,7 @@ class AccuracyValuation():
 		if   (experiment == "koyaura"):
 			self.answer = self.CORRECT_DATA_KOYAURA
 		elif (experiment == "mihara"):
-			self.answer = self.CORRECT_DATA_KOYAURA
+			self.answer = self.CORRECT_DATA_MIHARA
 		elif (experiment == "atami"):
 			self.answer = self.CORRECT_DATA_KOYAURA
 
