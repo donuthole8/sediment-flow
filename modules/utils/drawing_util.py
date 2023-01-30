@@ -318,6 +318,35 @@ def draw_mesh(mesh: CalcMovementMesh, image: ImageData) -> None:
 	# ラベルテーブルの保存
 	mesh.mesh_label = mesh_label
 
+	# 正解画像
+	image.answer = image.org_img.copy()
+
+	# x軸に平行な格子線を描画
+	for y in range(mesh.mesh_height):
+		cv2.line(
+			img=image.answer,   			# 画像
+			pt1=(0, mesh.mesh_size * y),  # 始点
+			pt2=(
+				image.size_2d[1], 
+				mesh.mesh_size * y
+			),														# 終点
+			color=(255, 255, 255),  			# 色
+			thickness=2,        					# 太さ
+		)
+
+	# y軸に並行な格子線を描画
+	for x in range(mesh.mesh_width):
+		cv2.line(
+			img=image.answer,     		# 画像
+			pt1=(mesh.mesh_size * x, 0),  # 始点
+			pt2=(
+				mesh.mesh_size * x, 
+				image.size_2d[0]
+			),														# 終点
+			color=(255, 255, 255),  			# 色
+			thickness=2,        					# 太さ
+		)
+
 	return
 
 
@@ -381,5 +410,47 @@ def draw_min_height(mesh: CalcMovementMesh, image: ImageData, coord: tuple[int, 
 	except Exception as e:
 		pass
 		# print(e, ", coord: ", coord)
+
+	return
+
+
+def write_answer(image: ImageData, mesh: CalcMovementMesh, answer: list[dict[int, float]]) -> None:
+	""" 正解画像を出力
+
+	Args:
+			image (ImageData): 画像データ
+			mesh (CalcMovementMesh): メッシュデータ
+			answer (list[dict[int, float]])r: 正解データ
+	"""
+	# 正解データを描画
+	for i, ans1 in enumerate(answer):
+		for j, ans2 in enumerate(ans1):
+			try:
+				# 傾斜方位の角度データを三角関数用の表記に変更
+				average_direction_trig = 0
+				if (ans2["direction"] >= 90):
+					average_direction_trig = ans2["direction"] - 90
+				else:
+					average_direction_trig = 270 + ans2["direction"]
+
+				y = (mesh.mesh_size // 2) + i * mesh.mesh_size
+				x = (mesh.mesh_size // 2) + j * mesh.mesh_size
+
+				# 傾斜方位の座標取得
+				y_coord = int((mesh.mesh_size // 2) * math.sin(math.radians(average_direction_trig))) + y
+				x_coord = int((mesh.mesh_size // 2) * math.cos(math.radians(average_direction_trig))) + x
+
+				# 矢印を描画
+				cv2.arrowedLine(
+					img=image.answer,	# 画像
+					pt1=(x, y), # 始点
+					pt2=(x_coord, y_coord),	# 終点
+					color=(0, 0, 255),	# 色
+					thickness=2,	# 太さ
+				)
+			except Exception as e:
+				pass
+
+	cv2.imwrite("./outputs/" + image.experiment + "/answer.png", image.answer)
 
 	return

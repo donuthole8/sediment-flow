@@ -78,6 +78,15 @@ class CalcMovementMesh():
 						thickness=self.mesh_size // 20,	# 太さ
 					)
 
+					# 点を描画
+					cv2.circle(
+						img=image.answer,	# 画像
+						center=(self.center_coord[1], self.center_coord[0]),	# 中心
+						radius=3,	# 半径
+						color=(0, 0, 255),	# 色
+						thickness=self.mesh_size // 20,	# 太さ
+					)
+
 					# 傾斜方位のと隣接2方向の3方向に対しての隣接領域を取得
 					labels = self.__extract_neighbor(image)
 
@@ -92,9 +101,9 @@ class CalcMovementMesh():
 		# メッシュ画像を保存
 		cv2.imwrite("./outputs/" + image.experiment + "/mesh.png", image.ortho)
 		# 隣接領域抽出での土砂流れ方向検知結果
-		cv2.imwrite("./outputs/" + image.experiment + "/sediment_flow.png", image.ortho)
+		cv2.imwrite("./outputs/" + image.experiment + "/mesh_result.png", image.ortho)
 
-		return self.calc_movement_result
+		return self
 
 
 	def __get_center_coord(self) -> tuple[int, int]:

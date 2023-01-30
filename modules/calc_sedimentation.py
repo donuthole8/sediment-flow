@@ -15,7 +15,7 @@ class CalcSedimentation():
 				image (ImageData): 画像データ
 		"""
 		# 標高差分を算出
-		image.dsm_sub = image.dsm_after - image.dem_before
+		image.dsm_sub = image.normed_dsm - image.dem_before
 
 		# 土砂領域以外を除外
 		idx_mask = np.where(image.mask == 0)

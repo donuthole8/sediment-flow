@@ -1,5 +1,7 @@
 import numpy as np
 
+from modules.utils import drawing_util
+
 
 class AccuracyValuation():
 	# (w, h) = 12 x 13
@@ -11,7 +13,7 @@ class AccuracyValuation():
 	# 小屋浦切り抜き画像正解データ
 	# 約 400m x 400m
 	# 5mメッシュ -> 80 x 80
-	CORRECT_DATA_TRIM_100: list[dict[int, float]] = [
+	CORRECT_DATA_KOYAURA_100: list[dict[int, float]] = [
 		# 1 - 3 rows
 		[
 		{"direction": 170, "distance": 5}, {"direction": 175, "distance": 5}, {"direction": np.nan, "distance": np.nan}, 
@@ -91,18 +93,31 @@ class AccuracyValuation():
 	]
 
 
-	def __init__(self, calc_movement_result: list[float, tuple]) -> None:
+	def __init__(self, calc_movement_mesh: list[float, tuple]) -> None:
 		# 精度評価用の土砂移動推定結果データ
-		self.calc_movement_result = calc_movement_result
+		self.calc_movement_mesh = calc_movement_mesh
+		self.calc_movement_result = calc_movement_mesh.calc_movement_result
 
 		# 正解データ
-		self.answer = self.CORRECT_DATA_TRIM_100
+		self.answer = self.CORRECT_DATA_KOYAURA_100
 
 		return
 
 
-	def main(self) -> None:
+	def main(self, image) -> None:
 		""" メッシュベースでの精度評価
+		"""
+		# 正解画像を作成
+		drawing_util.write_answer(image, self.calc_movement_mesh, self.answer)
+
+		# 精度評価を実施
+		self.__accuracy_valuation()
+
+		return
+
+
+	def __accuracy_valuation(self):
+		""" 精度評価
 		"""
 		mesh_num = 0
 		accuracies = []

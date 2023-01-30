@@ -33,6 +33,7 @@ class ImageData():
 			cv2.imread(path_list[4], cv2.IMREAD_GRAYSCALE)
 		)[0]
 		self.ortho         = cv2.imread(path_list[5]).astype(np.float32)
+		self.org_img       = cv2.imread(path_list[5]).astype(np.float32)
 		self.masked_ortho  = None
 		self.div_img       = None
 		self.label_table   = None
@@ -42,6 +43,7 @@ class ImageData():
 		self.normed_dsm    = None
 		self.dsm_sub       = None
 		self.bld_gsi       = cv2.imread(path_list[6], cv2.IMREAD_GRAYSCALE)
+		self.answer        = None
 
 		# 2値化
 		# NOTE: いらないかも？
